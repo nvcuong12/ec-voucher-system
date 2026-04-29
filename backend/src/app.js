@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 
+// Error handling middleware
+import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
+
 // Route imports (will be expanded in Phase 3+)
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -39,18 +42,10 @@ app.use(`${API}/admin`, adminRoutes);
 app.use(`${API}/reviews`, reviewRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────
-app.use((_req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+app.use(notFoundHandler);
 
 // ─── Global Error Handler ──────────────────────────────────────────
-app.use((err, _req, res, _next) => {
-  console.error("❌ Error:", err.message);
-  const status = err.status || 500;
-  res.status(status).json({
-    error: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
-});
+// PHẢI ở cuối cùng, sau tất cả các route và middleware
+app.use(errorHandler);
 
 export default app;
