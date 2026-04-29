@@ -76,6 +76,14 @@ CREATE TABLE IF NOT EXISTS vouchers (
   CONSTRAINT chk_stock CHECK (stock >= 0)
 );
 
+-- 1) Bảng trung gian N-N: voucher <-> chi nhánh áp dụng
+CREATE TABLE IF NOT EXISTS voucher_applicable_branches (
+  voucher_id   UUID NOT NULL REFERENCES vouchers(id) ON DELETE CASCADE,
+  branch_id    UUID NOT NULL REFERENCES partner_branches(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (voucher_id, branch_id)
+);
+
 -- ─── Orders ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -154,6 +162,8 @@ CREATE INDEX idx_issued_code        ON issued_vouchers(code);
 CREATE INDEX idx_reviews_voucher    ON reviews(voucher_id);
 CREATE INDEX idx_logs_user          ON system_logs(user_id);
 CREATE INDEX idx_logs_created       ON system_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vab_voucher ON voucher_applicable_branches(voucher_id);
+CREATE INDEX IF NOT EXISTS idx_vab_branch  ON voucher_applicable_branches(branch_id);
 
 -- ─── Seed: Default Admin ─────────────────────────────────────────
 -- Password: Admin@123 (bcrypt hash, change in production!)
