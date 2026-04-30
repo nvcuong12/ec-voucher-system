@@ -8,8 +8,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import VouchersPage from "./pages/VouchersPage";
 import {
-  VouchersPage,
   CartPage,
   MyVouchersPage,
   AdminDashboardPage,

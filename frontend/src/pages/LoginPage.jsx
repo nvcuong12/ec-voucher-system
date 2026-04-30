@@ -1,82 +1,146 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "./AuthPage.css";
+import "./GlassAuth.css";
 
 const LoginPage = () => {
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const handleChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setError("");
-    setLoading(true);
     try {
-      const user = await login(form.email, form.password);
-      // Redirect based on role
-      if (user.role === "ADMIN") navigate("/admin", { replace: true });
-      else if (user.role === "PARTNER") navigate("/partner", { replace: true });
-      else navigate(from, { replace: true });
+      await login(formData.username, formData.password);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || "Đăng nhập thất bại");
+      setError(
+        err.response?.data?.message ||
+          "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card card">
-        <h1 className="auth-title">Đăng nhập</h1>
-        <p className="auth-sub text-muted">Chào mừng trở lại VoucherHub!</p>
+    <div className="auth-split-layout">
+      {/* ── Left Side: Banner ── */}
+      <div className="auth-banner">
+        <div className="auth-banner-overlay"></div>
+        <div className="auth-banner-content">
+          <Link to="/" className="auth-logo">
+            🎟️ VoucherHub
+          </Link>
+          <h1>Trọn gói ưu đãi, mở lối niềm vui!</h1>
+          <p>
+            Hàng ngàn ưu đãi hấp dẫn đang chờ bạn khám phá. Đăng nhập ngay để
+            không bỏ lỡ deal hot mỗi ngày.
+          </p>
+        </div>
+      </div>
 
-        {error && <div className="auth-error">{error}</div>}
+      {/* ── Right Side: Form ── */}
+      <div className="auth-form-side">
+        <div className="auth-form-wrapper">
+          <h2 className="auth-title">Đăng Nhập</h2>
+          <p className="auth-subtitle">Vui lòng nhập thông tin để tiếp tục</p>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              className="input"
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              autoFocus
-            />
+          <form onSubmit={handleSubmit}>
+            <div className="auth-form-group">
+              <label>Tên đăng nhập hoặc Email</label>
+              <div className="auth-input-wrap">
+                <input
+                  type="text"
+                  name="username"
+                  className="auth-input"
+                  placeholder="Nhập tên đăng nhập của bạn"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="auth-form-group">
+              <label>Mật khẩu</label>
+              <div className="auth-input-wrap">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  className="auth-input"
+                  placeholder="Nhập mật khẩu"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-pwd-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {error && <div className="auth-error-msg">⚠️ {error}</div>}
+            </div>
+
+            <div className="auth-options">
+              <label className="auth-checkbox-label">
+                <input type="checkbox" className="auth-checkbox" />
+                Ghi nhớ đăng nhập
+              </label>
+              <Link to="/forgot-password" className="auth-forgot">
+                Quên mật khẩu?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary auth-submit-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? "Đang xử lý..." : "Đăng Nhập"}
+            </button>
+          </form>
+
+          {/* ── Social Login ── */}
+          <div className="auth-divider">HOẶC</div>
+
+          <div className="auth-social-btns">
+            <button className="auth-social-btn">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
+                alt="Google"
+                className="auth-social-icon"
+              />
+              Google
+            </button>
+            <button className="auth-social-btn">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/124/124010.png"
+                alt="Facebook"
+                className="auth-social-icon"
+              />
+              Facebook
+            </button>
           </div>
 
-          <div className="form-group">
-            <label>Mật khẩu</label>
-            <input
-              className="input"
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
+          <div className="auth-footer">
+            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
           </div>
-
-          <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center" }}>
-            {loading ? <span className="spinner" /> : "Đăng nhập"}
-          </button>
-        </form>
-
-        <p className="auth-footer text-muted">
-          Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
-        </p>
+        </div>
       </div>
     </div>
   );
