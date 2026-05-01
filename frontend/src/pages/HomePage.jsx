@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./HomePage.css";
 
-const HomePage = () => (
+const HomePage = () => {
+  const { user } = useAuth();
+  return (
   <div className="home">
     <section className="hero">
       <div className="container hero__inner">
@@ -15,7 +18,9 @@ const HomePage = () => (
         </p>
         <div className="hero__cta">
           <Link to="/vouchers" className="btn btn-primary btn-lg">Khám phá ngay</Link>
-          <Link to="/register" className="btn btn-outline btn-lg">Đăng ký miễn phí</Link>
+          <Link to={user ? (user.role === 'PARTNER' ? '/partner/vouchers' : user.role === 'ADMIN' ? '/admin/vouchers' : '/my-vouchers') : '/register'} className="btn btn-outline btn-lg">
+            {user ? (user.role === 'PARTNER' ? '🏪 Quản lý voucher' : user.role === 'ADMIN' ? '🛡️ Duyệt voucher' : '📋 Voucher của tôi') : 'Đăng ký miễn phí'}
+          </Link>
         </div>
       </div>
     </section>
@@ -37,6 +42,7 @@ const HomePage = () => (
       </div>
     </section>
   </div>
-);
+  );
+};
 
 export default HomePage;

@@ -9,14 +9,18 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import {
-  VouchersPage,
   CartPage,
   MyVouchersPage,
   AdminDashboardPage,
-  PartnerDashboardPage,
   UnauthorizedPage,
   NotFoundPage,
 } from "./pages/PlaceholderPages";
+
+import VouchersList from "./pages/VouchersList";
+import VoucherDetail from "./pages/VoucherDetail";
+import PartnerVouchers from "./pages/PartnerVouchers";
+import PartnerVoucherForm from "./pages/PartnerVoucherForm";
+import AdminVoucherReview from "./pages/AdminVoucherReview";
 
 const App = () => (
   <BrowserRouter>
@@ -29,7 +33,8 @@ const App = () => (
             <Route path="/"          element={<HomePage />} />
             <Route path="/login"     element={<LoginPage />} />
             <Route path="/register"  element={<RegisterPage />} />
-            <Route path="/vouchers"  element={<VouchersPage />} />
+            <Route path="/vouchers"  element={<VouchersList />} />
+            <Route path="/vouchers/:id" element={<VoucherDetail />} />
 
             {/* ─── Customer ────────────────────────────── */}
             <Route path="/cart" element={
@@ -44,13 +49,28 @@ const App = () => (
             } />
 
             {/* ─── Partner ─────────────────────────────── */}
-            <Route path="/partner/*" element={
+            <Route path="/partner/vouchers" element={
               <ProtectedRoute roles={["PARTNER"]}>
-                <PartnerDashboardPage />
+                <PartnerVouchers />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/vouchers/new" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerVoucherForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/vouchers/:id/edit" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerVoucherForm />
               </ProtectedRoute>
             } />
 
             {/* ─── Admin ───────────────────────────────── */}
+            <Route path="/admin/vouchers" element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <AdminVoucherReview />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/*" element={
               <ProtectedRoute roles={["ADMIN"]}>
                 <AdminDashboardPage />
