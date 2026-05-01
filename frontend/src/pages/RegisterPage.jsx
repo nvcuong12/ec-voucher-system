@@ -1,124 +1,241 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "./AuthPage.css";
+import { getApiErrorMessage } from "../services/auth.service";
+import "./GlassAuth.css";
 
 const RegisterPage = () => {
-  const { register } = useAuth();
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    phone: "",
-    role: "CUSTOMER",
+    role: "CUSTOMER", // Default role
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { register, getDefaultRedirectPath } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setError("");
-    if (form.password !== form.confirmPassword) {
-      return setError("Mật khẩu xác nhận không khớp");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      setIsLoading(false);
+      return;
     }
-    if (form.password.length < 6) {
-      return setError("Mật khẩu phải ít nhất 6 ký tự");
-    }
-    setLoading(true);
+
     try {
-      const { confirmPassword, ...payload } = form;
-      const user = await register(payload);
-      if (user.role === "PARTNER") navigate("/partner", { replace: true });
-      else navigate("/", { replace: true });
+      const user = await register({
+        full_name: formData.full_name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+      navigate(getDefaultRedirectPath(user.role), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || "Đăng ký thất bại");
+      setError(getApiErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại."));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card auth-card--wide card">
-        <h1 className="auth-title">Đăng ký tài khoản</h1>
-        <p className="auth-sub text-muted">Tham gia VoucherHub ngay hôm nay</p>
+    <div className="auth-split-layout">
+      {/* ── Left Side: Banner ── */}
+      <div className="auth-banner">
+        <div className="auth-banner-overlay"></div>
+        <div className="auth-banner-content">
+          <Link to="/" className="auth-logo">
+            🎟️ VoucherHub
+          </Link>
+          <h1>Bắt đầu hành trình tiết kiệm!</h1>
+          <p>
+            Tạo tài khoản ngay hôm nay để nhận voucher giảm giá 50% cho đơn hàng
+            đầu tiên của bạn.
+          </p>
+        </div>
+      </div>
 
-        {error && <div className="auth-error">{error}</div>}
+      {/* ── Right Side: Form ── */}
+      <div className="auth-form-side">
+        <div className="auth-form-wrapper">
+          <h2 className="auth-title">Đăng Ký Tài Khoản</h2>
+          <p className="auth-subtitle">Gia nhập cộng đồng mua sắm thông minh</p>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {/* Role selector */}
-          <div className="form-group">
-            <label>Loại tài khoản</label>
-            <div className="role-selector">
-              {[
-                { value: "CUSTOMER", label: "👤 Khách hàng", desc: "Mua voucher giảm giá" },
-                { value: "PARTNER",  label: "🏪 Đối tác",    desc: "Bán voucher của bạn" },
-              ].map((r) => (
-                <label
-                  key={r.value}
-                  className={`role-option ${form.role === r.value ? "role-option--active" : ""}`}
-                >
+          <form onSubmit={handleSubmit}>
+            <div className="auth-role-select">
+              <button
+                type="button"
+                className={`role-btn ${formData.role === "CUSTOMER" ? "active" : ""}`}
+                onClick={() => setFormData({ ...formData, role: "CUSTOMER" })}
+              >
+                Khách hàng
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${formData.role === "PARTNER" ? "active" : ""}`}
+                onClick={() => setFormData({ ...formData, role: "PARTNER" })}
+              >
+                Đối tác
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <div className="auth-form-group" style={{ flex: 1 }}>
+                <label>Tên đăng nhập</label>
+                <div className="auth-input-wrap">
                   <input
-                    type="radio"
-                    name="role"
-                    value={r.value}
-                    checked={form.role === r.value}
+                    type="text"
+                    name="full_name"
+                    className="auth-input"
+                    placeholder="Nhập họ và tên"
+                    value={formData.full_name}
                     onChange={handleChange}
+                    required
                   />
-                  <span className="role-label">{r.label}</span>
-                  <span className="role-desc text-muted">{r.desc}</span>
-                </label>
-              ))}
+                </div>
+              </div>
+
+              <div className="auth-form-group" style={{ flex: 1 }}>
+                <label>Địa chỉ Email</label>
+                <div className="auth-input-wrap">
+                  <input
+                    type="email"
+                    name="email"
+                    className="auth-input"
+                    placeholder="Nhập email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
             </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <div className="auth-form-group" style={{ flex: 1 }}>
+                <label>Mật khẩu</label>
+                <div className="auth-input-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    className="auth-input"
+                    placeholder="Tạo mật khẩu"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-pwd-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="auth-form-group" style={{ flex: 1 }}>
+                <label>Xác nhận</label>
+                <div className="auth-input-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    className="auth-input"
+                    placeholder="Nhập lại"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            {error && (
+              <div className="auth-error-msg" style={{ marginBottom: "1rem" }}>
+                ⚠️ {error}
+              </div>
+            )}
+
+            <div className="auth-options" style={{ marginBottom: "1.5rem" }}>
+              <label
+                className="auth-checkbox-label"
+                style={{ fontSize: "0.85rem" }}
+              >
+                <input type="checkbox" className="auth-checkbox" required />
+                Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary auth-submit-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? "Đang xử lý..." : "Đăng Ký Ngay"}
+            </button>
+          </form>
+
+          {/* ── Social Login ── */}
+          <div className="auth-divider">HOẶC ĐĂNG KÝ BẰNG</div>
+
+          <div className="auth-social-btns">
+            <button className="auth-social-btn">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
+                alt="Google"
+                className="auth-social-icon"
+              />
+              Google
+            </button>
+            <button className="auth-social-btn">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/124/124010.png"
+                alt="Facebook"
+                className="auth-social-icon"
+              />
+              Facebook
+            </button>
           </div>
 
-          <div className="grid-2">
-            <div className="form-group">
-              <label>Họ và tên</label>
-              <input className="input" name="full_name" value={form.full_name}
-                onChange={handleChange} placeholder="Nguyễn Văn A" required />
-            </div>
-            <div className="form-group">
-              <label>Số điện thoại</label>
-              <input className="input" name="phone" value={form.phone}
-                onChange={handleChange} placeholder="0901234567" />
-            </div>
+          <div
+            className="auth-footer"
+            style={{
+              marginTop: "1rem",
+              padding: "1.2rem",
+              background: "rgba(139, 92, 246, 0.08)",
+              borderRadius: "12px",
+              border: "1px solid rgba(139, 92, 246, 0.3)",
+            }}
+          >
+            <span
+              style={{
+                marginRight: "0.5rem",
+                color: "var(--color-text-muted)",
+              }}
+            >
+              Nếu bạn đã có tài khoản, hãy
+            </span>
+            <Link
+              to="/login"
+              style={{
+                fontWeight: "800",
+                fontSize: "1.05rem",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Đăng nhập
+            </Link>
           </div>
-
-          <div className="form-group">
-            <label>Email</label>
-            <input className="input" type="email" name="email" value={form.email}
-              onChange={handleChange} placeholder="you@example.com" required />
-          </div>
-
-          <div className="grid-2">
-            <div className="form-group">
-              <label>Mật khẩu</label>
-              <input className="input" type="password" name="password" value={form.password}
-                onChange={handleChange} placeholder="••••••••" required />
-            </div>
-            <div className="form-group">
-              <label>Xác nhận mật khẩu</label>
-              <input className="input" type="password" name="confirmPassword"
-                value={form.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
-            </div>
-          </div>
-
-          <button className="btn btn-primary" type="submit" disabled={loading}
-            style={{ width: "100%", justifyContent: "center" }}>
-            {loading ? <span className="spinner" /> : "Tạo tài khoản"}
-          </button>
-        </form>
-
-        <p className="auth-footer text-muted">
-          Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-        </p>
+        </div>
       </div>
     </div>
   );
