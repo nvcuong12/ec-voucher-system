@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getApiErrorMessage } from "../services/auth.service";
 import "./GlassAuth.css";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, getDefaultRedirectPath } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const successMessage = location.state?.message;
   const from = location.state?.from?.pathname || "/";
 
   const handleChange = (e) =>
@@ -22,13 +24,11 @@ const LoginPage = () => {
     setIsLoading(true);
     setError("");
     try {
-      await login(formData.username, formData.password);
-      navigate(from, { replace: true });
+      const user = await login(formData.email, formData.password);
+      const target = from === "/" ? getDefaultRedirectPath(user.role) : from;
+      navigate(target, { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
-      );
+      setError(getApiErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
     } finally {
       setIsLoading(false);
     }
@@ -56,17 +56,25 @@ const LoginPage = () => {
         <div className="auth-form-wrapper">
           <h2 className="auth-title">Đăng Nhập</h2>
           <p className="auth-subtitle">Vui lòng nhập thông tin để tiếp tục</p>
+          {successMessage && (
+            <div
+              className="auth-error-msg"
+              style={{ background: "rgba(34, 197, 94, 0.15)", borderColor: "#22c55e" }}
+            >
+              ✅ {successMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="auth-form-group">
-              <label>Tên đăng nhập hoặc Email</label>
+              <label>Email</label>
               <div className="auth-input-wrap">
                 <input
-                  type="text"
-                  name="username"
+                  type="email"
+                  name="email"
                   className="auth-input"
-                  placeholder="Nhập tên đăng nhập của bạn"
-                  value={formData.username}
+                  placeholder="Nhập email của bạn"
+                  value={formData.email}
                   onChange={handleChange}
                   required
                 />

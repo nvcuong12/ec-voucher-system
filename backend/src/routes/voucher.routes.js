@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+import { getVouchers, getVoucherById } from "../controllers/voucher.controller.js";
 
 const router = Router();
 
 // Public routes
-router.get("/", (_req, res) => res.json({ message: "GET /vouchers - Phase 5" }));
-router.get("/:id", (_req, res) => res.json({ message: "GET /vouchers/:id - Phase 5" }));
+router.get("/", asyncHandler(getVouchers));
+router.get("/:id", asyncHandler(getVoucherById));
 
 // Partner routes
 router.post("/", authenticate, authorize("PARTNER"), (_req, res) =>

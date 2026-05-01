@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getApiErrorMessage } from "../services/auth.service";
 import "./GlassAuth.css";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    full_name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -15,7 +16,7 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register } = useAuth();
+  const { register, getDefaultRedirectPath } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -33,14 +34,15 @@ const RegisterPage = () => {
     }
 
     try {
-      await register(formData);
-      navigate("/login", {
-        state: { message: "Đăng ký thành công! Vui lòng đăng nhập." },
+      const user = await register({
+        full_name: formData.full_name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
       });
+      navigate(getDefaultRedirectPath(user.role), { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.",
-      );
+      setError(getApiErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại."));
     } finally {
       setIsLoading(false);
     }
@@ -93,10 +95,10 @@ const RegisterPage = () => {
                 <div className="auth-input-wrap">
                   <input
                     type="text"
-                    name="username"
+                    name="full_name"
                     className="auth-input"
-                    placeholder="Nhập tên"
-                    value={formData.username}
+                    placeholder="Nhập họ và tên"
+                    value={formData.full_name}
                     onChange={handleChange}
                     required
                   />
