@@ -6,7 +6,9 @@ export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "No token provided", traceId: req.traceId },
+      });
     }
 
     const token = authHeader.split(" ")[1];
@@ -19,17 +21,29 @@ export const authenticate = async (req, res, next) => {
     );
 
     const user = result.rows[0];
-    if (!user) return res.status(401).json({ error: "User not found" });
-    if (!user.is_active) return res.status(403).json({ error: "Account suspended" });
+    if (!user) {
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "User not found", traceId: req.traceId },
+      });
+    }
+    if (!user.is_active) {
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Account suspended", traceId: req.traceId },
+      });
+    }
 
     req.user = user;
     next();
   } catch (err) {
     if (err.name === "JsonWebTokenError") {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "Invalid token", traceId: req.traceId },
+      });
     }
     if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Token expired" });
+      return res.status(401).json({
+        error: { code: "UNAUTHORIZED", message: "Token expired", traceId: req.traceId },
+      });
     }
     next(err);
   }
@@ -39,7 +53,11 @@ export const authenticate = async (req, res, next) => {
 export const authorize = (...roles) => (req, res, next) => {
   if (!roles.includes(req.user?.role)) {
     return res.status(403).json({
-      error: `Access denied. Required role: ${roles.join(" or ")}`,
+      error: {
+        code: "FORBIDDEN",
+        message: `Access denied. Required role: ${roles.join(" or ")}`,
+        traceId: req.traceId,
+      },
     });
   }
   next();

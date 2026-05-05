@@ -17,6 +17,7 @@ import {
   UnauthorizedPage,
   NotFoundPage,
 } from "./pages/PlaceholderPages";
+import ProfilePage from "./pages/ProfilePage";
 
 const App = () => (
   <BrowserRouter>
@@ -30,6 +31,13 @@ const App = () => (
             <Route path="/login"     element={<LoginPage />} />
             <Route path="/register"  element={<RegisterPage />} />
             <Route path="/vouchers"  element={<VouchersPage />} />
+
+            {/* ─── Authenticated (All Roles) ───────────── */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
 
             {/* ─── Customer ────────────────────────────── */}
             <Route path="/cart" element={

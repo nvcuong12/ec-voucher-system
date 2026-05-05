@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import { v4 as uuidv4 } from "uuid";
 
 // Route imports (will be expanded in Phase 3+)
 import authRoutes from "./routes/auth.routes.js";
@@ -23,13 +24,27 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Health Check ──────────────────────────────────────────────────
+// Trace ID Middleware
+app.use((req, res, next) => {
+  req.traceId = req.headers["x-trace-id"] || uuidv4();
+  next();
+});
+
+// ─── Health Check & Welcome ──────────────────────────────────────────
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// ─── API Routes ────────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.json({ message: "Voucher System Backend is active 🚀" });
+});
+
 const API = "/api";
+app.get(API, (_req, res) => {
+  res.json({ message: "Voucher System API is active 🚀", version: "1.0.0" });
+});
+
+// ─── API Routes ────────────────────────────────────────────────────
 app.use(`${API}/auth`, authRoutes);
 app.use(`${API}/users`, userRoutes);
 app.use(`${API}/vouchers`, voucherRoutes);
@@ -44,11 +59,16 @@ app.use((_req, res) => {
 });
 
 // ─── Global Error Handler ──────────────────────────────────────────
-app.use((err, _req, res, _next) => {
-  console.error("❌ Error:", err.message);
+app.use((err, req, res, _next) => {
+  console.error(`❌ [${req.traceId}] Error:`, err.message);
   const status = err.status || 500;
+  
   res.status(status).json({
-    error: err.message || "Internal Server Error",
+    error: {
+      code: err.code || "INTERNAL_SERVER_ERROR",
+      message: err.message || "Internal Server Error",
+      traceId: req.traceId,
+    },
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });

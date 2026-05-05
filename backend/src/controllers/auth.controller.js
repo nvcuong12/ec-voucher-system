@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "../config/database.js";
+import { BusinessException } from "../utils/BusinessException.js";
 
 const signToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -13,7 +14,7 @@ export const register = async (req, res, next) => {
 
     // Validate required fields
     if (!email || !password || !full_name) {
-      return res.status(400).json({ error: "email, password, full_name are required" });
+      return next(new BusinessException("VALIDATION_FAILED", "email, password, full_name are required", 400));
     }
 
     // Only allow CUSTOMER & PARTNER self-registration
@@ -23,7 +24,7 @@ export const register = async (req, res, next) => {
     // Check duplicate email
     const existing = await query("SELECT id FROM users WHERE email = $1", [email]);
     if (existing.rows.length) {
-      return res.status(409).json({ error: "Email already registered" });
+      return next(new BusinessException("USER_DUPLICATE_EMAIL", "Email already registered", 409));
     }
 
     // Hash password (bcrypt, 12 rounds)
@@ -50,7 +51,7 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "email and password are required" });
+      return next(new BusinessException("VALIDATION_FAILED", "email and password are required", 400));
     }
 
     const result = await query(
@@ -61,11 +62,11 @@ export const login = async (req, res, next) => {
     const user = result.rows[0];
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return next(new BusinessException("INVALID_CREDENTIALS", "Invalid credentials", 401));
     }
 
     if (!user.is_active) {
-      return res.status(403).json({ error: "Account suspended" });
+      return next(new BusinessException("FORBIDDEN", "Account suspended", 403));
     }
 
     const token = signToken(user.id);

@@ -27,7 +27,7 @@ const LoginPage = () => {
       else if (user.role === "PARTNER") navigate("/partner", { replace: true });
       else navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || "Đăng nhập thất bại");
+      setError(err.response?.data?.error?.message || err.response?.data?.error || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,9 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email">Email</label>
             <input
+              id="email"
               className="input"
               type="email"
               name="email"
@@ -57,8 +58,9 @@ const LoginPage = () => {
           </div>
 
           <div className="form-group">
-            <label>Mật khẩu</label>
+            <label htmlFor="password">Mật khẩu</label>
             <input
+              id="password"
               className="input"
               type="password"
               name="password"

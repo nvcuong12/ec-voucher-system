@@ -37,7 +37,7 @@ const RegisterPage = () => {
       if (user.role === "PARTNER") navigate("/partner", { replace: true });
       else navigate("/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || "Đăng ký thất bại");
+      setError(err.response?.data?.error?.message || err.response?.data?.error || "Đăng ký thất bại");
     } finally {
       setLoading(false);
     }
@@ -80,32 +80,32 @@ const RegisterPage = () => {
 
           <div className="grid-2">
             <div className="form-group">
-              <label>Họ và tên</label>
-              <input className="input" name="full_name" value={form.full_name}
+              <label htmlFor="full_name">Họ và tên</label>
+              <input id="full_name" className="input" name="full_name" value={form.full_name}
                 onChange={handleChange} placeholder="Nguyễn Văn A" required />
             </div>
             <div className="form-group">
-              <label>Số điện thoại</label>
-              <input className="input" name="phone" value={form.phone}
+              <label htmlFor="phone">Số điện thoại</label>
+              <input id="phone" className="input" name="phone" value={form.phone}
                 onChange={handleChange} placeholder="0901234567" />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Email</label>
-            <input className="input" type="email" name="email" value={form.email}
+            <label htmlFor="email">Email</label>
+            <input id="email" className="input" type="email" name="email" value={form.email}
               onChange={handleChange} placeholder="you@example.com" required />
           </div>
 
           <div className="grid-2">
             <div className="form-group">
-              <label>Mật khẩu</label>
-              <input className="input" type="password" name="password" value={form.password}
+              <label htmlFor="password">Mật khẩu</label>
+              <input id="password" className="input" type="password" name="password" value={form.password}
                 onChange={handleChange} placeholder="••••••••" required />
             </div>
             <div className="form-group">
-              <label>Xác nhận mật khẩu</label>
-              <input className="input" type="password" name="confirmPassword"
+              <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+              <input id="confirmPassword" className="input" type="password" name="confirmPassword"
                 value={form.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
             </div>
           </div>

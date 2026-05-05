@@ -45,11 +45,10 @@ const Navbar = () => {
                 </Link>
               )}
 
-              <Link to={dashboardPath()} className="navbar__user">
+              <Link to="/profile" className="navbar__user">
                 <span className="navbar__avatar">{user.full_name[0]}</span>
                 <span className="navbar__username">{user.full_name}</span>
               </Link>
-
               <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
                 Đăng xuất
               </button>
