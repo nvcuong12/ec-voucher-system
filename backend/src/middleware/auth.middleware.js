@@ -1,14 +1,13 @@
 import jwt from "jsonwebtoken";
 import { query } from "../config/database.js";
+import { BusinessException } from "../utils/BusinessException.js";
 
 // Verify JWT and attach user to req
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({
-        error: { code: "UNAUTHORIZED", message: "No token provided", traceId: req.traceId },
-      });
+      return next(new BusinessException("UNAUTHORIZED", "No token provided", 401));
     }
 
     const token = authHeader.split(" ")[1];
@@ -22,28 +21,20 @@ export const authenticate = async (req, res, next) => {
 
     const user = result.rows[0];
     if (!user) {
-      return res.status(401).json({
-        error: { code: "UNAUTHORIZED", message: "User not found", traceId: req.traceId },
-      });
+      return next(new BusinessException("UNAUTHORIZED", "User not found", 401));
     }
     if (!user.is_active) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Account suspended", traceId: req.traceId },
-      });
+      return next(new BusinessException("FORBIDDEN", "Account suspended", 403));
     }
 
     req.user = user;
     next();
   } catch (err) {
     if (err.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        error: { code: "UNAUTHORIZED", message: "Invalid token", traceId: req.traceId },
-      });
+      return next(new BusinessException("UNAUTHORIZED", "Invalid token", 401));
     }
     if (err.name === "TokenExpiredError") {
-      return res.status(401).json({
-        error: { code: "UNAUTHORIZED", message: "Token expired", traceId: req.traceId },
-      });
+      return next(new BusinessException("UNAUTHORIZED", "Token expired", 401));
     }
     next(err);
   }
@@ -52,13 +43,13 @@ export const authenticate = async (req, res, next) => {
 // Role-based access control factory
 export const authorize = (...roles) => (req, res, next) => {
   if (!roles.includes(req.user?.role)) {
-    return res.status(403).json({
-      error: {
-        code: "FORBIDDEN",
-        message: `Access denied. Required role: ${roles.join(" or ")}`,
-        traceId: req.traceId,
-      },
-    });
+    return next(
+      new BusinessException(
+        "FORBIDDEN",
+        `Access denied. Required role: ${roles.join(" or ")}`,
+        403
+      )
+    );
   }
   next();
 };

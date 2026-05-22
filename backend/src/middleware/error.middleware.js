@@ -16,6 +16,9 @@ export const errorHandler = (err, _req, res, _next) => {
   // Mặc định
   let status = err.status || 500;
   let message = err.message || "Internal Server Error";
+  let code = err.code || (err.name === 'BusinessException' ? 'BUSINESS_ERROR' : 'INTERNAL_SERVER_ERROR');
+  // Try to include traceId if provided by middleware
+  const traceId = err.traceId || (err.req && err.req.traceId) || undefined;
 
   // ─── Xử lý các loại lỗi cụ thể ───
 
@@ -55,14 +58,21 @@ export const errorHandler = (err, _req, res, _next) => {
     message = err.message;
   }
 
-  // Respond with error
-  res.status(status).json({
-    error: message,
-    ...(process.env.NODE_ENV === "development" && {
-      code: err.code,
-      stack: err.stack,
-    }),
-  });
+  // Respond with standardized error shape
+  const payload = {
+    error: {
+      code,
+      message,
+    },
+  };
+
+  if (traceId) payload.error.traceId = traceId;
+  if (process.env.NODE_ENV === "development") {
+    payload.error.stack = err.stack;
+    if (err.code) payload.error.code = err.code;
+  }
+
+  res.status(status).json(payload);
 };
 
 /**
