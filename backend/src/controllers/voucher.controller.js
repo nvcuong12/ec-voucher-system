@@ -4,6 +4,7 @@
 // ================================================================
 
 import { query, getClient, withTransaction } from "../config/database.js";
+import { BusinessException } from "../utils/BusinessException.js";
 import {
   VOUCHER_STATUS,
   EDITABLE_STATUSES,
@@ -125,18 +126,22 @@ export const createVoucher = async (req, res, next) => {
     // 1. Lấy partner của user đang login
     const partner = await getPartnerForUser(req.user.id);
     if (!partner) {
-      return res.status(403).json({ error: "Partner profile not found" });
+      return next(new BusinessException("FORBIDDEN", "Partner profile not found", 403));
     }
     if (partner.status !== "APPROVED") {
-      return res.status(403).json({
-        error: "Partner account must be approved before creating vouchers",
-      });
+      return next(
+        new BusinessException(
+          "FORBIDDEN",
+          "Partner account must be approved before creating vouchers",
+          403
+        )
+      );
     }
 
     // 2. Validate body
     const errors = validateVoucherBody(req.body, false);
     if (errors.length) {
-      return res.status(400).json({ error: errors.join("; ") });
+      return next(new BusinessException("VALIDATION_FAILED", errors.join("; "), 400));
     }
 
     const {
@@ -161,14 +166,12 @@ export const createVoucher = async (req, res, next) => {
       const uniqueBranchIds = Array.from(new Set(branch_ids.map(String)));
       const allValid = uniqueBranchIds.every(isValidUuid);
       if (!allValid) {
-        return res.status(400).json({ error: "One or more branch_ids are invalid UUIDs" });
+        return next(new BusinessException("VALIDATION_FAILED", "One or more branch_ids are invalid UUIDs", 400));
       }
 
       const owned = await query(checkBranchesOwnedQuery, [uniqueBranchIds, partner.id]);
       if (owned.rows.length !== uniqueBranchIds.length) {
-        return res.status(400).json({
-          error: "Some branches do not belong to your partner account",
-        });
+        return next(new BusinessException("VALIDATION_FAILED", "Some branches do not belong to your partner account", 400));
       }
       validatedBranchIds = uniqueBranchIds;
     }
@@ -222,13 +225,13 @@ export const updateVoucher = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid voucher id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
     }
 
     // 1. Lấy partner
     const partner = await getPartnerForUser(req.user.id);
     if (!partner) {
-      return res.status(403).json({ error: "Partner profile not found" });
+      return next(new BusinessException("FORBIDDEN", "Partner profile not found", 403));
     }
 
     // 2. Kiểm tra voucher tồn tại và thuộc partner
@@ -236,15 +239,19 @@ export const updateVoucher = async (req, res, next) => {
     const voucher = existing.rows[0];
 
     if (!voucher) {
-      return res.status(404).json({ error: "Voucher not found" });
+      return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
     }
     if (voucher.partner_id !== partner.id) {
-      return res.status(403).json({ error: "You can only edit your own vouchers" });
+      return next(new BusinessException("FORBIDDEN", "You can only edit your own vouchers", 403));
     }
     if (!EDITABLE_STATUSES.includes(voucher.status)) {
-      return res.status(409).json({
-        error: `Cannot edit voucher with status '${voucher.status}'. Only DRAFT or REJECTED vouchers can be edited`,
-      });
+      return next(
+        new BusinessException(
+          "CONFLICT",
+          `Cannot edit voucher with status '${voucher.status}'. Only DRAFT or REJECTED vouchers can be edited`,
+          409
+        )
+      );
     }
 
     // 3. Validate body (partial update)
@@ -273,9 +280,7 @@ export const updateVoucher = async (req, res, next) => {
     const newOp = original_price !== null ? parseFloat(original_price) : parseFloat(voucher.original_price);
     const newSp = sale_price !== null ? parseFloat(sale_price) : parseFloat(voucher.sale_price);
     if (newSp >= newOp) {
-      return res.status(400).json({
-        error: "sale_price must be less than original_price (RB-02)",
-      });
+      return next(new BusinessException("VALIDATION_FAILED", "sale_price must be less than original_price (RB-02)", 400));
     }
 
     // 5. Validate branches nếu có (deduplicate before ownership check)
@@ -286,13 +291,11 @@ export const updateVoucher = async (req, res, next) => {
         uniqueBranchIds = Array.from(new Set(branch_ids.map(String)));
         const allValid = uniqueBranchIds.every(isValidUuid);
         if (!allValid) {
-          return res.status(400).json({ error: "One or more branch_ids are invalid UUIDs" });
+          return next(new BusinessException("VALIDATION_FAILED", "One or more branch_ids are invalid UUIDs", 400));
         }
         const owned = await query(checkBranchesOwnedQuery, [uniqueBranchIds, partner.id]);
         if (owned.rows.length !== uniqueBranchIds.length) {
-          return res.status(400).json({
-            error: "Some branches do not belong to your partner account",
-          });
+          return next(new BusinessException("VALIDATION_FAILED", "Some branches do not belong to your partner account", 400));
         }
       }
       updatedBranchIds = uniqueBranchIds; // có thể be []
@@ -341,7 +344,7 @@ export const updateVoucher = async (req, res, next) => {
     });
 
     if (!updatedId) {
-      return res.status(409).json({ error: "Update failed: voucher state changed concurrently" });
+      return next(new BusinessException("CONFLICT", "Update failed: voucher state changed concurrently", 409));
     }
 
     const full = await query(getVoucherByIdFullQuery, [id]);
@@ -357,7 +360,7 @@ export const getVoucherById = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid voucher id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
     }
 
     const user = req.user; // có thể null nếu route không require auth
@@ -380,7 +383,7 @@ export const getVoucherById = async (req, res, next) => {
     if (user?.role === "ADMIN") {
       result = await query(getVoucherByIdFullQuery, [id]);
       const voucher = result.rows[0];
-      if (!voucher) return res.status(404).json({ error: "Voucher not found" });
+      if (!voucher) return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
       return sendSuccess(res, { voucher });
     }
 
@@ -388,7 +391,7 @@ export const getVoucherById = async (req, res, next) => {
     result = await query(getPublicVoucherByIdQuery, [id]);
     const voucher = result.rows[0];
     if (!voucher) {
-      return res.status(404).json({ error: "Voucher not found" });
+      return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
     }
     return sendSuccess(res, { voucher });
   } catch (err) {

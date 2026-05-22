@@ -2,16 +2,21 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 import { query } from "../config/database.js";
 import { getPartnerByUserIdQuery } from "../models/voucher.queries.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+import { BusinessException } from "../utils/BusinessException.js";
 
 const router = Router();
 
-router.get("/branches", authenticate, authorize("PARTNER"), async (req, res, next) => {
-  try {
+router.get(
+  "/branches",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(async (req, res, next) => {
     const partnerResult = await query(getPartnerByUserIdQuery, [req.user.id]);
     const partner = partnerResult.rows[0];
 
     if (!partner) {
-      return res.status(404).json({ error: "Partner profile not found" });
+      return next(new BusinessException("NOT_FOUND", "Partner profile not found", 404));
     }
 
     const branchesResult = await query(
@@ -26,10 +31,8 @@ router.get("/branches", authenticate, authorize("PARTNER"), async (req, res, nex
     );
 
     return res.json({ data: { branches: branchesResult.rows } });
-  } catch (err) {
-    next(err);
-  }
-});
+  })
+);
 
 router.post("/register", authenticate, authorize("PARTNER"), (_req, res) =>
   res.json({ message: "POST /partners/register - Phase 4" })
