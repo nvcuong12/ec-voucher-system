@@ -181,7 +181,7 @@ const Navbar = () => {
                 {user.role === 'ADMIN' ? '🛡️ Quản lý' : user.role === 'PARTNER' ? '🏪 Quản lý' : '📋 Tài khoản'}
               </Link>
 
-              <Link to={dashboardPath()} className="navbar__user">
+              <Link to="/profile" className="navbar__user">
                 <span className="navbar__avatar">
                   {user.full_name[0].toUpperCase()}
                 </span>
