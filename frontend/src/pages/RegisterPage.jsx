@@ -10,7 +10,7 @@ const RegisterPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "CUSTOMER", // Default role
+    role: "CUSTOMER",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -50,7 +50,6 @@ const RegisterPage = () => {
 
   return (
     <div className="auth-split-layout">
-      {/* ── Left Side: Banner ── */}
       <div className="auth-banner">
         <div className="auth-banner-overlay"></div>
         <div className="auth-banner-content">
@@ -65,7 +64,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* ── Right Side: Form ── */}
       <div className="auth-form-side">
         <div className="auth-form-wrapper">
           <h2 className="auth-title">Đăng Ký Tài Khoản</h2>
@@ -159,6 +157,7 @@ const RegisterPage = () => {
                 </div>
               </div>
             </div>
+
             {error && (
               <div className="auth-error-msg" style={{ marginBottom: "1rem" }}>
                 ⚠️ {error}
@@ -184,7 +183,6 @@ const RegisterPage = () => {
             </button>
           </form>
 
-          {/* ── Social Login ── */}
           <div className="auth-divider">HOẶC ĐĂNG KÝ BẰNG</div>
 
           <div className="auth-social-btns">

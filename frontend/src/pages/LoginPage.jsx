@@ -28,7 +28,9 @@ const LoginPage = () => {
       const target = from === "/" ? getDefaultRedirectPath(user.role) : from;
       navigate(target, { replace: true });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
+      setError(
+        getApiErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +38,6 @@ const LoginPage = () => {
 
   return (
     <div className="auth-split-layout">
-      {/* ── Left Side: Banner ── */}
       <div className="auth-banner">
         <div className="auth-banner-overlay"></div>
         <div className="auth-banner-content">
@@ -51,7 +52,6 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* ── Right Side: Form ── */}
       <div className="auth-form-side">
         <div className="auth-form-wrapper">
           <h2 className="auth-title">Đăng Nhập</h2>
@@ -123,7 +123,6 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* ── Social Login ── */}
           <div className="auth-divider">HOẶC</div>
 
           <div className="auth-social-btns">

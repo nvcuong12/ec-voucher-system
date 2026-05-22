@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import api from "../services/api";
 import { getMeRequest, loginRequest, registerRequest } from "../services/auth.service";
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser]       = useState(null);
@@ -54,9 +54,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, getDefaultRedirectPath }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        updateUser,
+        getDefaultRedirectPath,
+      }}
     >
       {children}
     </AuthContext.Provider>

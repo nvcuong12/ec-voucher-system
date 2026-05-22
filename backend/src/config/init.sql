@@ -170,7 +170,17 @@ CREATE INDEX IF NOT EXISTS idx_vab_branch  ON voucher_applicable_branches(branch
 INSERT INTO users (email, password, full_name, role)
 VALUES (
   'admin@vouchersystem.com',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/o3oLNXj8a',
+  '$2a$12$Z1wqUjLWalUisyhunqUu8u9GmJhNK1CYyKOVoQahqYdWeTgeb1J16',
   'System Administrator',
   'ADMIN'
+) ON CONFLICT (email) DO NOTHING;
+
+-- ─── Seed: Default Customer ──────────────────────────────────────
+-- Password: Customer@123 (bcrypt hash)
+INSERT INTO users (email, password, full_name, role)
+VALUES (
+  'customer@vouchersystem.com',
+  '$2a$12$i2bDyI/5uo22unsFUphB2eeTkXv8QyvSitbCpMmhIX0H.iF6Id6Tm',
+  'Demo Customer',
+  'CUSTOMER'
 ) ON CONFLICT (email) DO NOTHING;
