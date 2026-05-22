@@ -21,9 +21,7 @@ export class ValidationError extends Error {
 export const validateRequired = (fields) => (req, res, next) => {
   const missing = fields.filter((f) => !req.body[f]);
   if (missing.length) {
-    return res.status(400).json({
-      error: `Missing required fields: ${missing.join(", ")}`,
-    });
+    return next(new ValidationError(`Missing required fields: ${missing.join(", ")}`));
   }
   next();
 };
@@ -38,9 +36,7 @@ export const validateEmail = (field = "email") => (req, res, next) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (email && !emailRegex.test(email)) {
-    return res.status(400).json({
-      error: `Invalid ${field} format`,
-    });
+    return next(new ValidationError(`Invalid ${field} format`, field));
   }
   next();
 };
@@ -55,9 +51,7 @@ export const validateLength = (field, min, max) => (req, res, next) => {
   if (!value) return next();
 
   if (value.length < min || value.length > max) {
-    return res.status(400).json({
-      error: `${field} must be between ${min} and ${max} characters`,
-    });
+    return next(new ValidationError(`${field} must be between ${min} and ${max} characters`, field));
   }
   next();
 };
@@ -70,9 +64,7 @@ export const validateLength = (field, min, max) => (req, res, next) => {
 export const validateEnum = (field, allowedValues) => (req, res, next) => {
   const value = req.body[field];
   if (value && !allowedValues.includes(value)) {
-    return res.status(400).json({
-      error: `${field} must be one of: ${allowedValues.join(", ")}`,
-    });
+    return next(new ValidationError(`${field} must be one of: ${allowedValues.join(", ")}`, field));
   }
   next();
 };
