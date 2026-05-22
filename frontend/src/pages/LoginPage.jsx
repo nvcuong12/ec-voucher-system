@@ -146,7 +146,7 @@ const LoginPage = () => {
           </div>
 
           <div className="auth-footer">
-            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+            Chưa có tài khoản? <Link to="/register">Đăng ký tài khoản</Link>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import "./Navbar.css";
@@ -132,8 +132,8 @@ const Navbar = () => {
 
   const dashboardPath = () => {
     if (!user) return "/login";
-    if (user.role === "ADMIN") return "/admin";
-    if (user.role === "PARTNER") return "/partner";
+    if (user.role === "ADMIN") return "/admin/vouchers";
+    if (user.role === "PARTNER") return "/partner/vouchers";
     return "/my-vouchers";
   };
 
@@ -197,7 +197,7 @@ const Navbar = () => {
           ) : (
             <>
               <Link
-                to="/register"
+                to="/login"
                 className="btn btn-primary btn-sm"
                 style={{
                   display: "flex",
@@ -206,8 +206,7 @@ const Navbar = () => {
                   padding: "0.5rem 1rem",
                 }}
               >
-                <span style={{ fontSize: "1.1rem" }}>👤</span> Đăng nhập / Đăng
-                ký
+                <span style={{ fontSize: "1.1rem" }}>👤</span> Đăng nhập
               </Link>
             </>
           )}
