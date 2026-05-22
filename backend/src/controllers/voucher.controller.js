@@ -257,7 +257,7 @@ export const updateVoucher = async (req, res, next) => {
     // 3. Validate body (partial update)
     const errors = validateVoucherBody(req.body, true);
     if (errors.length) {
-      return res.status(400).json({ error: errors.join("; ") });
+      return next(new BusinessException("VALIDATION_FAILED", errors.join("; "), 400));
     }
 
     const {
@@ -412,22 +412,20 @@ export const listVouchers = async (req, res, next) => {
 
     // Validate partner_id nếu có
     if (partner_id && !isValidUuid(partner_id)) {
-      return res.status(400).json({ error: "Invalid partner id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid partner id", 400));
     }
 
     // ── Partner: xem danh sách voucher của chính mình ──────────
     if (user?.role === "PARTNER") {
       const partnerRecord = await getPartnerForUser(user.id);
       if (!partnerRecord) {
-        return res.status(403).json({ error: "Partner profile not found" });
+        return next(new BusinessException("FORBIDDEN", "Partner profile not found", 403));
       }
 
       // Validate status nếu có
       const allowedStatuses = Object.values(VOUCHER_STATUS);
       if (status && !allowedStatuses.includes(status.toUpperCase())) {
-        return res.status(400).json({
-          error: `Invalid status. Must be one of: ${allowedStatuses.join(", ")}`,
-        });
+        return next(new BusinessException("VALIDATION_FAILED", `Invalid status. Must be one of: ${allowedStatuses.join(", ")}`, 400));
       }
 
       const [rows, count] = await Promise.all([
