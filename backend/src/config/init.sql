@@ -215,7 +215,7 @@ WITH partner_user AS (
 ),
 partner_insert AS (
   INSERT INTO partners (user_id, business_name, business_license, representative, address, status)
-  SELECT id, 'Sunrise Coffee', 'BL-001', 'Nguyen An', 'Quan 1, TP.HCM', 'APPROVED'
+  SELECT id, 'Sunrise Coffee', 'BL-001', 'Nguyen An', 'Quan 1, TP.HCM', 'APPROVED'::partner_status
   FROM partner_user
   WHERE NOT EXISTS (
     SELECT 1 FROM partners WHERE user_id = (SELECT id FROM partner_user)
@@ -267,7 +267,7 @@ voucher_rows AS (
     NOW() + INTERVAL '60 days',
     'Ap dung tai chi nhanh Sunrise Coffee. Dat truoc 2 gio.',
     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
@@ -282,7 +282,7 @@ voucher_rows AS (
     NOW() + INTERVAL '45 days',
     'Khong ap dung vao le/tet.',
     'https://images.unsplash.com/photo-1542444459-db37a1f5d3b4?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
@@ -297,7 +297,7 @@ voucher_rows AS (
     NOW() + INTERVAL '90 days',
     'Can dat lich truoc 1 ngay.',
     'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
@@ -312,7 +312,7 @@ voucher_rows AS (
     NOW() + INTERVAL '60 days',
     'Vui long den som 10 phut truoc gio hoc.',
     'https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
@@ -327,7 +327,7 @@ voucher_rows AS (
     NOW() + INTERVAL '90 days',
     'Bao gom xe dua don va huong dan vien.',
     'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
@@ -342,7 +342,7 @@ voucher_rows AS (
     NOW() + INTERVAL '10 days',
     'Voucher het han khong hoan lai.',
     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
-    'APPROVED'
+    'APPROVED'::voucher_status
   FROM partner_ref
   RETURNING id
 ),
