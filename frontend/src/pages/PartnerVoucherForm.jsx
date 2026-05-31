@@ -152,12 +152,12 @@ const PartnerVoucherForm = () => {
 
   const validateBeforeSubmit = () => {
     if (!form.name.trim()) return "Vui lòng nhập tên voucher";
-    if (!form.original_price || !form.sale_price) return "Vui lòng nhập giá gốc và giá sale";
+    if (!form.original_price || !form.sale_price) return "Vui lòng nhập giá gốc và giá bán";
 
     const original = Number(form.original_price);
     const sale = Number(form.sale_price);
     if (!Number.isFinite(original) || !Number.isFinite(sale) || sale >= original) {
-      return "Giá sale phải nhỏ hơn giá gốc";
+      return "Giá bán phải nhỏ hơn giá gốc";
     }
 
     if (!form.stock && form.stock !== 0) return "Vui lòng nhập tồn kho";
@@ -259,7 +259,7 @@ const PartnerVoucherForm = () => {
           </div>
 
           <div className="pvf-group">
-            <label htmlFor="sale_price">Giá sale</label>
+            <label htmlFor="sale_price">Giá bán</label>
             <input
               id="sale_price"
               name="sale_price"
@@ -333,7 +333,7 @@ const PartnerVoucherForm = () => {
                 ))}
               </div>
             ) : (
-              <div className="pvf-help">Không tải được danh sách branch, dùng fallback bằng branch ID.</div>
+              <div className="pvf-help">Không tải được danh sách chi nhánh, dùng ID chi nhánh dự phòng.</div>
             )}
 
             <div className="pvf-help">Đã chọn: {selectedCount} chi nhánh</div>
@@ -341,12 +341,12 @@ const PartnerVoucherForm = () => {
 
           {branches.length === 0 && (
             <div className="pvf-group pvf-full">
-              <label htmlFor="branch_ids_fallback">Branch IDs fallback</label>
+              <label htmlFor="branch_ids_fallback">ID chi nhánh (dự phòng)</label>
               <input
                 id="branch_ids_fallback"
                 value={branchText}
                 onChange={handleBranchTextChange}
-                placeholder="Dán branch ID, ngăn cách bằng dấu phẩy"
+                placeholder="Dán ID chi nhánh, ngăn cách bằng dấu phẩy"
               />
             </div>
           )}

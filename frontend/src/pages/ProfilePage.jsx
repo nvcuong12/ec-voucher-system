@@ -19,6 +19,15 @@ const ProfilePage = () => {
   });
   const [passwordMessage, setPasswordMessage] = useState("");
 
+  const roleLabel = (role) => {
+    const map = {
+      ADMIN: "Quản trị viên",
+      PARTNER: "Đối tác",
+      CUSTOMER: "Khách hàng",
+    };
+    return map[role] || role;
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
@@ -44,10 +53,10 @@ const ProfilePage = () => {
     setPasswordMessage("");
     try {
       await changePasswordRequest(passwordForm);
-      setPasswordMessage("Doi mat khau thanh cong");
+      setPasswordMessage("Đổi mật khẩu thành công");
       setPasswordForm({ current_password: "", new_password: "" });
     } catch (err) {
-      setPasswordMessage(err.response?.data?.error?.message || "Khong the doi mat khau");
+      setPasswordMessage(err.response?.data?.error?.message || "Không thể đổi mật khẩu");
     }
   };
 
@@ -72,8 +81,8 @@ const ProfilePage = () => {
             </div>
             <div>
               <h2 style={{ fontSize: "1.2rem", fontWeight: "600" }}>{user.full_name || "Chưa cập nhật"}</h2>
-              <p className="text-muted" style={{ marginBottom: "0.75rem" }}>{user.email || user.phone || "Chua cap nhat"}</p>
-              <span className="user-role-badge">{user.role}</span>
+              <p className="text-muted" style={{ marginBottom: "0.75rem" }}>{user.email || user.phone || "Chưa cập nhật"}</p>
+              <span className="user-role-badge">{roleLabel(user.role)}</span>
             </div>
           </div>
 
@@ -132,11 +141,11 @@ const ProfilePage = () => {
           </div>
 
           <div className="profile-card">
-            <h2 className="profile-card__title">Doi mat khau</h2>
+            <h2 className="profile-card__title">Đổi mật khẩu</h2>
             {passwordMessage && <div className="auth-error">{passwordMessage}</div>}
             <form onSubmit={handlePasswordChange} className="auth-form">
               <div className="form-group">
-                <label htmlFor="current_password">Mat khau hien tai</label>
+                <label htmlFor="current_password">Mật khẩu hiện tại</label>
                 <input
                   id="current_password"
                   type="password"
@@ -146,7 +155,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="new_password">Mat khau moi</label>
+                <label htmlFor="new_password">Mật khẩu mới</label>
                 <input
                   id="new_password"
                   type="password"
@@ -156,7 +165,7 @@ const ProfilePage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-outline">
-                Cap nhat mat khau
+                Cập nhật mật khẩu
               </button>
             </form>
           </div>

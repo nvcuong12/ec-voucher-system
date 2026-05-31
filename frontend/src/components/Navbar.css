@@ -70,6 +70,13 @@
   font-size: 1.2rem;
 }
 
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
 .navbar__mega-menu {
   position: absolute;
   top: 100%;

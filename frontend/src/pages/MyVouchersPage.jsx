@@ -12,6 +12,16 @@ const statusBadge = (status) => {
   return "badge badge-blue";
 };
 
+const issuedStatusLabel = (status) => {
+  const map = {
+    UNUSED: "Chưa dùng",
+    USED: "Đã dùng",
+    EXPIRED: "Hết hạn",
+    CANCELLED: "Đã hủy",
+  };
+  return map[status] || status;
+};
+
 const MyVouchersPage = () => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +44,7 @@ const MyVouchersPage = () => {
         <h1>Voucher của tôi</h1>
       </div>
       <p className="text-muted my-vouchers-hint">
-        Xem chi tiet don hang tai trang <Link to="/orders">Don hang</Link>.
+        Xem chi tiết đơn hàng tại trang <Link to="/orders">Đơn hàng</Link>.
       </p>
 
       {loading ? (
@@ -57,14 +67,14 @@ const MyVouchersPage = () => {
                   <p className="text-muted">Đối tác: {voucher.business_name}</p>
                   <p className="text-muted">Mã: <strong>{voucher.code}</strong></p>
                 </div>
-                <span className={statusBadge(voucher.status)}>{voucher.status}</span>
+                <span className={statusBadge(voucher.status)}>{issuedStatusLabel(voucher.status)}</span>
               </div>
               <div className="my-voucher-grid">
                 <div className="text-muted">Hết hạn: {formatDate(voucher.expires_at)}</div>
                 <div className="text-muted">Đã dùng: {formatDate(voucher.used_at)}</div>
               </div>
               <div className="card my-voucher-qr">
-                <p className="text-muted">QR mock:</p>
+                <p className="text-muted">QR mô phỏng:</p>
                 <code>{`QR:${voucher.code}`}</code>
               </div>
             </div>

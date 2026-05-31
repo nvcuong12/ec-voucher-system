@@ -17,7 +17,7 @@ const VouchersList = () => {
     return () => (mounted = false);
   }, []);
 
-  if (loading) return <div className="container">Loading vouchers...</div>;
+  if (loading) return <div className="container">Đang tải voucher...</div>;
 
   return (
     <div className="container" style={{ padding: "2rem 1rem" }}>
@@ -31,7 +31,7 @@ const VouchersList = () => {
             <Link to={`/vouchers/${v.id}`}>Xem chi tiết</Link>
           </div>
         ))}
-        {vouchers.length === 0 && <div>No vouchers available</div>}
+        {vouchers.length === 0 && <div>Chưa có voucher nào</div>}
       </div>
     </div>
   );

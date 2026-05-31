@@ -16,8 +16,8 @@ const VoucherDetail = () => {
     return () => (mounted = false);
   }, [id]);
 
-  if (loading) return <div className="container">Loading...</div>;
-  if (!voucher) return <div className="container">Voucher not found</div>;
+  if (loading) return <div className="container">Đang tải...</div>;
+  if (!voucher) return <div className="container">Không tìm thấy voucher</div>;
 
   return (
     <div className="container" style={{ padding: "2rem 1rem" }}>

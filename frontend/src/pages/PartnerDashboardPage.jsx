@@ -8,6 +8,16 @@ const formatMoney = (value) =>
     Number(value || 0)
   );
 
+const partnerStatusLabel = (status) => {
+  const map = {
+    PENDING: "Chờ duyệt",
+    APPROVED: "Đã duyệt",
+    REJECTED: "Từ chối",
+    SUSPENDED: "Tạm khóa",
+  };
+  return map[status] || status;
+};
+
 const PartnerDashboardPage = () => {
   const [dashboard, setDashboard] = useState(null);
   const [branches, setBranches] = useState([]);
@@ -71,10 +81,10 @@ const PartnerDashboardPage = () => {
   return (
     <div className="container partner-page">
       <div className="partner-header">
-        <h1>Partner Dashboard</h1>
+        <h1>Bảng điều khiển đối tác</h1>
         <div className="partner-actions">
-        <Link to="/partner/vouchers" className="btn btn-ghost btn-sm">Quan ly voucher</Link>
-        <Link to="/partner/scan" className="btn btn-outline btn-sm">Xac thuc voucher</Link>
+        <Link to="/partner/vouchers" className="btn btn-ghost btn-sm">Quản lý voucher</Link>
+        <Link to="/partner/scan" className="btn btn-outline btn-sm">Xác thực voucher</Link>
         </div>
       </div>
       {error && <p className="text-danger">{error}</p>}
@@ -94,7 +104,7 @@ const PartnerDashboardPage = () => {
           </div>
           <div className="card partner-stat-card">
             <h3>Trạng thái</h3>
-            <p className="text-muted">{dashboard.partner.status}</p>
+            <p className="text-muted">{partnerStatusLabel(dashboard.partner.status)}</p>
           </div>
         </section>
       ) : (

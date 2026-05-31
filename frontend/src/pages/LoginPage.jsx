@@ -1,5 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  RiTicket2Line,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiCheckboxCircleLine,
+  RiErrorWarningLine,
+} from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import { getApiErrorMessage } from "../services/auth.service";
 import "./GlassAuth.css";
@@ -42,7 +49,7 @@ const LoginPage = () => {
         <div className="auth-banner-overlay"></div>
         <div className="auth-banner-content">
           <Link to="/" className="auth-logo">
-            🎟️ VoucherHub
+            <RiTicket2Line className="auth-logo-icon" /> VoucherHub
           </Link>
           <h1>Trọn gói ưu đãi, mở lối niềm vui!</h1>
           <p>
@@ -61,7 +68,7 @@ const LoginPage = () => {
               className="auth-error-msg"
               style={{ background: "rgba(34, 197, 94, 0.15)", borderColor: "#22c55e" }}
             >
-              ✅ {successMessage}
+              <RiCheckboxCircleLine className="auth-msg-icon" /> {successMessage}
             </div>
           )}
 
@@ -98,10 +105,14 @@ const LoginPage = () => {
                   className="auth-pwd-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? "🙈" : "👁️"}
+                  {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
                 </button>
               </div>
-              {error && <div className="auth-error-msg">⚠️ {error}</div>}
+              {error && (
+                <div className="auth-error-msg">
+                  <RiErrorWarningLine className="auth-msg-icon" /> {error}
+                </div>
+              )}
             </div>
 
             <div className="auth-options">

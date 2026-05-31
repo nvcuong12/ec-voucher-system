@@ -37,7 +37,7 @@ const CartPage = () => {
     setLoading(true);
     setError("");
     if (!form.recipient_name || !form.recipient_phone) {
-      setError("Vui long nhap ten va so dien thoai nguoi nhan");
+      setError("Vui lòng nhập tên và số điện thoại người nhận");
       setLoading(false);
       return;
     }
@@ -111,25 +111,25 @@ const CartPage = () => {
           <aside className="card cart-panel cart-summary">
             <h3>Tổng kết</h3>
             <div className="form-group cart-field">
-              <label>Ten nguoi nhan</label>
+              <label>Tên người nhận</label>
               <input className="input" value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} />
             </div>
             <div className="form-group cart-field">
-              <label>So dien thoai</label>
+              <label>Số điện thoại</label>
               <input className="input" value={form.recipient_phone} onChange={(e) => setForm({ ...form, recipient_phone: e.target.value })} />
             </div>
             <div className="form-group cart-field">
-              <label>Email (tuy chon)</label>
+              <label>Email (tùy chọn)</label>
               <input className="input" value={form.recipient_email} onChange={(e) => setForm({ ...form, recipient_email: e.target.value })} />
             </div>
             <div className="form-group cart-field">
-              <label>Phuong thuc thanh toan</label>
+              <label>Phương thức thanh toán</label>
               <select className="input" value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
-                <option value="COD">Thanh toan mo phong</option>
+                <option value="COD">Thanh toán mô phỏng</option>
               </select>
             </div>
             <div className="form-group cart-field">
-              <label>Ghi chu</label>
+              <label>Ghi chú</label>
               <input className="input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             </div>
             <div className="cart-total-row">

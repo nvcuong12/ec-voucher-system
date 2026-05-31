@@ -71,6 +71,10 @@
   margin-bottom: 3rem;
   transition: transform var(--transition);
 }
+.auth-logo-icon {
+  margin-right: 0.5rem;
+  vertical-align: -0.15em;
+}
 .auth-logo:hover {
   transform: scale(1.05);
 }
@@ -205,6 +209,9 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
+}
+.auth-msg-icon {
+  font-size: 1rem;
 }
 
 /* ── Options (Remember & Forgot) ── */

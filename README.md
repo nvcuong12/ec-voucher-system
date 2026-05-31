@@ -49,8 +49,26 @@ Sau khi khởi động:
 | Admin | admin@vouchersystem.com    | Admin@123  |
 
 ### Ghi chú khách hàng
-- Dang nhap bang email hoac so dien thoai
-- Tim kiem voucher theo tu khoa, khoang gia, muc giam, khu vuc, trang thai
+- Đăng nhập bằng email hoặc số điện thoại
+- Tìm kiếm voucher theo từ khóa, khoảng giá, mức giảm, khu vực, trạng thái
+
+### Lưu ý khi cập nhật dependencies
+Nếu có thay đổi trong `frontend/package.json` (ví dụ thêm `react-icons`), cần rebuild hoặc cài lại trong container:
+
+```bash
+# Cách 1: rebuild toàn bộ
+docker compose up --build
+
+# Cách 2: chỉ cài lại dependencies frontend
+docker compose exec frontend npm install
+```
+
+### Seed dữ liệu mẫu
+Nếu DB đã tồn tại trước đó, script seed sẽ không tự chạy lại. Bạn có thể seed thủ công:
+
+```bash
+docker exec -i voucher_db psql -U voucheruser -d voucherdb < backend/src/config/init.sql
+```
 
 ---
 

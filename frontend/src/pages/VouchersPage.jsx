@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { RiLoader4Line, RiErrorWarningLine, RiEmotionSadLine } from "react-icons/ri";
 import { getApiErrorMessage } from "../services/auth.service";
 import { getVouchersRequest } from "../services/voucher.service";
 import "./VouchersPage.css";
@@ -187,11 +188,11 @@ const VouchersPage = () => {
           </div>
 
           <div className="vp-filter-box">
-            <h3 className="vp-filter-title">Khoang gia</h3>
+            <h3 className="vp-filter-title">Khoảng giá</h3>
             <input
               type="number"
               className="vp-search-input"
-              placeholder="Gia toi thieu"
+              placeholder="Giá tối thiểu"
               value={minPrice}
               onChange={(e) => {
                 setMinPrice(e.target.value);
@@ -201,7 +202,7 @@ const VouchersPage = () => {
             <input
               type="number"
               className="vp-search-input"
-              placeholder="Gia toi da"
+              placeholder="Giá tối đa"
               value={maxPrice}
               onChange={(e) => {
                 setMaxPrice(e.target.value);
@@ -212,11 +213,11 @@ const VouchersPage = () => {
           </div>
 
           <div className="vp-filter-box">
-            <h3 className="vp-filter-title">Muc giam (%)</h3>
+            <h3 className="vp-filter-title">Mức giảm (%)</h3>
             <input
               type="number"
               className="vp-search-input"
-              placeholder="Giam tu"
+              placeholder="Giảm từ"
               value={minDiscount}
               onChange={(e) => {
                 setMinDiscount(e.target.value);
@@ -226,11 +227,11 @@ const VouchersPage = () => {
           </div>
 
           <div className="vp-filter-box">
-            <h3 className="vp-filter-title">Khu vuc</h3>
+            <h3 className="vp-filter-title">Khu vực</h3>
             <input
               type="text"
               className="vp-search-input"
-              placeholder="Nhap khu vuc"
+              placeholder="Nhập khu vực"
               value={area}
               onChange={(e) => {
                 setArea(e.target.value);
@@ -240,7 +241,7 @@ const VouchersPage = () => {
           </div>
 
           <div className="vp-filter-box">
-            <h3 className="vp-filter-title">Trang thai</h3>
+            <h3 className="vp-filter-title">Trạng thái</h3>
             <select
               className="vp-sort-select"
               value={activeStatus}
@@ -249,9 +250,9 @@ const VouchersPage = () => {
                 handleFilterChange("active_status", e.target.value);
               }}
             >
-              <option value="ALL">Tat ca</option>
-              <option value="ACTIVE">Con hieu luc</option>
-              <option value="EXPIRED">Het hieu luc</option>
+              <option value="ALL">Tất cả</option>
+              <option value="ACTIVE">Còn hiệu lực</option>
+              <option value="EXPIRED">Hết hiệu lực</option>
             </select>
           </div>
         </aside>
@@ -280,12 +281,16 @@ const VouchersPage = () => {
           {/* Grid */}
           {loading ? (
             <div className="vp-empty">
-              <span className="vp-empty-icon">⏳</span>
+              <span className="vp-empty-icon" aria-hidden="true">
+                <RiLoader4Line />
+              </span>
               <h3>Đang tải danh sách voucher...</h3>
             </div>
           ) : error ? (
             <div className="vp-empty">
-              <span className="vp-empty-icon">⚠️</span>
+              <span className="vp-empty-icon" aria-hidden="true">
+                <RiErrorWarningLine />
+              </span>
               <h3>Tải dữ liệu thất bại</h3>
               <p>{error}</p>
               <button
@@ -303,7 +308,9 @@ const VouchersPage = () => {
             </div>
           ) : (
             <div className="vp-empty">
-              <span className="vp-empty-icon">😢</span>
+              <span className="vp-empty-icon" aria-hidden="true">
+                <RiEmotionSadLine />
+              </span>
               <h3>Không tìm thấy voucher nào</h3>
               <p>Vui lòng thử lại với từ khóa hoặc danh mục khác.</p>
               <button

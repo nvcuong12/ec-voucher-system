@@ -10,6 +10,16 @@ const PartnerVoucherScan = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const issuedStatusLabel = (status) => {
+    const map = {
+      UNUSED: "Chưa dùng",
+      USED: "Đã dùng",
+      EXPIRED: "Hết hạn",
+      CANCELLED: "Đã hủy",
+    };
+    return map[status] || status;
+  };
+
   useEffect(() => {
     getPartnerBranchesRequest()
       .then((data) => setBranches(data))
@@ -59,7 +69,7 @@ const PartnerVoucherScan = () => {
         <div className="card scan-result">
           <h3>Voucher hợp lệ</h3>
           <p className="text-muted">Mã: {result.issued.code}</p>
-          <p className="text-muted">Trạng thái: {result.issued.status}</p>
+          <p className="text-muted">Trạng thái: {issuedStatusLabel(result.issued.status)}</p>
           <p className="text-muted">Tên voucher: {result.voucher.name}</p>
         </div>
       )}

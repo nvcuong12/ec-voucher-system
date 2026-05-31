@@ -18,9 +18,9 @@ const ForgotPasswordPage = () => {
     try {
       const data = await forgotPasswordRequest({ identifier });
       setResetToken(data.data.reset_token);
-      setMessage("Da tao ma dat lai. Vui long nhap mat khau moi.");
+      setMessage("Đã tạo mã đặt lại. Vui lòng nhập mật khẩu mới.");
     } catch (err) {
-      setError(err.response?.data?.error?.message || "Khong the tao ma dat lai");
+      setError(err.response?.data?.error?.message || "Không thể tạo mã đặt lại");
     } finally {
       setLoading(false);
     }
@@ -33,9 +33,9 @@ const ForgotPasswordPage = () => {
     setMessage("");
     try {
       await resetPasswordRequest({ reset_token: resetToken, new_password: newPassword });
-      setMessage("Dat lai mat khau thanh cong. Hay dang nhap lai.");
+      setMessage("Đặt lại mật khẩu thành công. Hãy đăng nhập lại.");
     } catch (err) {
-      setError(err.response?.data?.error?.message || "Khong the dat lai mat khau");
+      setError(err.response?.data?.error?.message || "Không thể đặt lại mật khẩu");
     } finally {
       setLoading(false);
     }
@@ -43,23 +43,23 @@ const ForgotPasswordPage = () => {
 
   return (
     <div className="container" style={{ padding: "2rem 0" }}>
-      <h1>Quen mat khau</h1>
+      <h1>Quên mật khẩu</h1>
       <form className="card" style={{ padding: "1.5rem", marginTop: "1rem" }} onSubmit={handleRequest}>
-        <label>Email hoac so dien thoai</label>
+        <label>Email hoặc số điện thoại</label>
         <input className="input" value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
         <button className="btn btn-primary" style={{ marginTop: "1rem" }} disabled={loading}>
-          {loading ? "Dang xu ly..." : "Tao ma dat lai"}
+          {loading ? "Đang xử lý..." : "Tạo mã đặt lại"}
         </button>
       </form>
 
       {resetToken && (
         <form className="card" style={{ padding: "1.5rem", marginTop: "1rem" }} onSubmit={handleReset}>
-          <label>Ma dat lai</label>
+          <label>Mã đặt lại</label>
           <input className="input" value={resetToken} onChange={(e) => setResetToken(e.target.value)} />
-          <label style={{ marginTop: "0.75rem" }}>Mat khau moi</label>
+          <label style={{ marginTop: "0.75rem" }}>Mật khẩu mới</label>
           <input className="input" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           <button className="btn btn-outline" style={{ marginTop: "1rem" }} disabled={loading}>
-            Dat lai mat khau
+            Đặt lại mật khẩu
           </button>
         </form>
       )}
@@ -68,7 +68,7 @@ const ForgotPasswordPage = () => {
       {error && <p className="text-danger" style={{ marginTop: "1rem" }}>{error}</p>}
 
       <Link to="/login" style={{ display: "inline-block", marginTop: "1rem" }}>
-        Quay lai dang nhap
+        Quay lại đăng nhập
       </Link>
     </div>
   );

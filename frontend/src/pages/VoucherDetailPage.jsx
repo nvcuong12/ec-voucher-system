@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { RiLoader4Line } from "react-icons/ri";
 import { getApiErrorMessage } from "../services/auth.service";
 import { getVoucherByIdRequest } from "../services/voucher.service";
 import { useCart } from "../context/CartContext";
@@ -75,7 +76,9 @@ const VoucherDetailPage = () => {
     return (
       <div className="container vd-page">
         <div className="vd-box vd-center">
-          <p>⏳ Đang tải chi tiết voucher...</p>
+          <p>
+            <RiLoader4Line aria-hidden="true" /> Đang tải chi tiết voucher...
+          </p>
         </div>
       </div>
     );
@@ -137,16 +140,16 @@ const VoucherDetailPage = () => {
                 : "Không giới hạn"}
             </p>
             <p>
-              <strong>Thoi han ban:</strong>{" "}
+              <strong>Thời hạn bán:</strong>{" "}
               {voucher.sale_end
                 ? new Date(voucher.sale_end).toLocaleDateString("vi-VN")
-                : "Khong gioi han"}
+                : "Không giới hạn"}
             </p>
             <p>
               <strong>Đối tác:</strong> {voucher.business_name || "Đang cập nhật"}
             </p>
             <p>
-              <strong>So luong con lai:</strong> {voucher.stock}
+              <strong>Số lượng còn lại:</strong> {voucher.stock}
             </p>
           </div>
 
@@ -161,8 +164,8 @@ const VoucherDetailPage = () => {
           </div>
 
           <div className="vd-section">
-            <h3>Chinh sach hoan huy</h3>
-            <p>{voucher.terms || "Theo quy dinh cua doi tac."}</p>
+            <h3>Chính sách hoàn hủy</h3>
+            <p>{voucher.terms || "Theo quy định của đối tác."}</p>
           </div>
 
           {user?.role === "CUSTOMER" && (
@@ -190,17 +193,17 @@ const VoucherDetailPage = () => {
       </div>
 
       <div className="vd-box" style={{ marginTop: "1.5rem" }}>
-        <h3>Danh gia</h3>
+        <h3>Đánh giá</h3>
         {reviews.length === 0 ? (
-          <p>Chua co danh gia.</p>
+          <p>Chưa có đánh giá.</p>
         ) : (
           <ul className="vd-branches">
             {reviews.map((review) => (
               <li key={review.id}>
                 <strong>{review.full_name}</strong>
-                <span>Danh gia: {review.rating}/5</span>
-                <span>{review.comment || "(Khong co binh luan)"}</span>
-                {review.partner_reply && <span>Phan hoi: {review.partner_reply}</span>}
+                <span>Đánh giá: {review.rating}/5</span>
+                <span>{review.comment || "(Không có bình luận)"}</span>
+                {review.partner_reply && <span>Phản hồi: {review.partner_reply}</span>}
               </li>
             ))}
           </ul>
@@ -221,20 +224,20 @@ const VoucherDetailPage = () => {
                 setReviews((prev) => [review, ...prev]);
                 setReviewForm({ rating: "5", comment: "", issued_voucher_id: "" });
               } catch (err) {
-                setReviewError(err.response?.data?.error?.message || "Khong the gui danh gia");
+                setReviewError(err.response?.data?.error?.message || "Không thể gửi đánh giá");
               }
             }}
             style={{ marginTop: "1rem" }}
           >
             {reviewError && <p className="text-danger">{reviewError}</p>}
             <div className="form-group">
-              <label>Voucher da mua</label>
+              <label>Voucher đã mua</label>
               <select
                 className="input"
                 value={reviewForm.issued_voucher_id}
                 onChange={(e) => setReviewForm({ ...reviewForm, issued_voucher_id: e.target.value })}
               >
-                <option value="">Chon ma voucher</option>
+                <option value="">Chọn mã voucher</option>
                 {issuedOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.code}
@@ -243,7 +246,7 @@ const VoucherDetailPage = () => {
               </select>
             </div>
             <div className="form-group" style={{ marginTop: "0.75rem" }}>
-              <label>So sao</label>
+              <label>Số sao</label>
               <select
                 className="input"
                 value={reviewForm.rating}
@@ -255,7 +258,7 @@ const VoucherDetailPage = () => {
               </select>
             </div>
             <div className="form-group" style={{ marginTop: "0.75rem" }}>
-              <label>Binh luan</label>
+              <label>Bình luận</label>
               <textarea
                 className="input"
                 value={reviewForm.comment}

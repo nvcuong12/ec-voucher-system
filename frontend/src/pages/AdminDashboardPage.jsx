@@ -14,6 +14,16 @@ const formatMoney = (value) =>
     Number(value || 0)
   );
 
+const orderStatusLabel = (status) => {
+  const map = {
+    PENDING: "Chờ thanh toán",
+    PAID: "Đã thanh toán",
+    CANCELLED: "Đã hủy",
+    REFUNDED: "Hoàn tiền",
+  };
+  return map[status] || status;
+};
+
 const AdminDashboardPage = () => {
   const [dashboard, setDashboard] = useState(null);
   const [partners, setPartners] = useState([]);
@@ -50,7 +60,7 @@ const AdminDashboardPage = () => {
   const handlePartner = async (id, action) => {
     try {
       if (action === "approve") await approvePartnerRequest(id);
-      else await rejectPartnerRequest(id, "Rejected by admin");
+      else await rejectPartnerRequest(id, "Bị từ chối bởi quản trị viên");
       setPartners((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       alert(err.response?.data?.error?.message || "Thao tác thất bại");
@@ -64,7 +74,7 @@ const AdminDashboardPage = () => {
   return (
     <div className="container admin-page">
       <div className="admin-hero">
-        <h1>Admin Dashboard</h1>
+        <h1>Bảng điều khiển quản trị</h1>
       </div>
 
       {error && <p className="text-danger">{error}</p>}
@@ -130,7 +140,7 @@ const AdminDashboardPage = () => {
               <div key={order.id} className="card admin-item">
                 <strong>{order.customer_name}</strong>
                 <p className="text-muted">{order.customer_email}</p>
-                <p className="text-muted">Trạng thái: {order.status}</p>
+                <p className="text-muted">Trạng thái: {orderStatusLabel(order.status)}</p>
                 <p className="text-muted">Tổng: {formatMoney(order.total_amount)}</p>
               </div>
             ))}
@@ -147,7 +157,7 @@ const AdminDashboardPage = () => {
             {logs.slice(0, 5).map((log) => (
               <div key={log.id} className="card admin-item admin-log-item">
                 <p className="text-muted">{log.action} - {log.entity}</p>
-                <p className="text-muted">{log.user_email || "system"} • {new Date(log.created_at).toLocaleString("vi-VN")}</p>
+                <p className="text-muted">{log.user_email || "Hệ thống"} • {new Date(log.created_at).toLocaleString("vi-VN")}</p>
               </div>
             ))}
           </div>

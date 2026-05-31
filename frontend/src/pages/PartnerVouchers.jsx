@@ -13,6 +13,18 @@ const STATUS_OPTIONS = [
   { value: "SOLD_OUT", label: "Hết lượt" },
 ];
 
+const statusLabel = (status) => {
+  const map = {
+    DRAFT: "Nháp",
+    PENDING_APPROVAL: "Chờ duyệt",
+    APPROVED: "Đã duyệt",
+    REJECTED: "Bị từ chối",
+    EXPIRED: "Hết hạn",
+    SOLD_OUT: "Hết lượt",
+  };
+  return map[status] || status;
+};
+
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
     Number(value || 0)
@@ -33,7 +45,7 @@ const PartnerVouchers = () => {
       const { data } = await api.get("/vouchers", { params });
       setVouchers(data?.data?.vouchers || []);
     } catch (err) {
-      setError(err.response?.data?.error || "Khong tai duoc danh sach voucher partner");
+      setError(err.response?.data?.error || "Không tải được danh sách voucher đối tác");
       setVouchers([]);
     } finally {
       setLoading(false);
@@ -50,17 +62,17 @@ const PartnerVouchers = () => {
     <div className="pv-container container">
       <section className="pv-header">
         <div>
-          <h1>Voucher cua doi tac</h1>
-          <p>Quan ly danh sach voucher, trang thai duyet va thao tac chinh sua.</p>
+          <h1>Voucher của đối tác</h1>
+          <p>Quản lý danh sách voucher, trạng thái duyệt và thao tác chỉnh sửa.</p>
         </div>
         <Link to="/partner/vouchers/new" className="btn btn-primary btn-lg">
-          + Tao voucher moi
+          + Tạo voucher mới
         </Link>
       </section>
 
       <section className="pv-toolbar">
         <div className="pv-filter">
-          <label htmlFor="statusFilter">Loc trang thai:</label>
+          <label htmlFor="statusFilter">Lọc trạng thái:</label>
           <select
             id="statusFilter"
             value={status}
@@ -73,27 +85,27 @@ const PartnerVouchers = () => {
             ))}
           </select>
         </div>
-        <span className="text-muted">Tong: {statusCount} voucher</span>
+        <span className="text-muted">Tổng: {statusCount} voucher</span>
       </section>
 
       {loading ? (
-        <div className="pv-empty">Dang tai voucher...</div>
+        <div className="pv-empty">Đang tải voucher...</div>
       ) : error ? (
         <div className="pv-empty">
           <p>{error}</p>
           <button className="btn btn-primary" onClick={() => fetchVouchers(status)}>
-            Thu lai
+            Thử lại
           </button>
         </div>
       ) : vouchers.length === 0 ? (
-        <div className="pv-empty">Chua co voucher nao o bo loc hien tai.</div>
+        <div className="pv-empty">Chưa có voucher nào ở bộ lọc hiện tại.</div>
       ) : (
         <section className="pv-grid">
           {vouchers.map((voucher) => (
             <article key={voucher.id} className="pv-card">
-              <div className={`pv-badge ${voucher.status}`}>{voucher.status}</div>
+              <div className={`pv-badge ${voucher.status}`}>{statusLabel(voucher.status)}</div>
               <h3>{voucher.name}</h3>
-              <p>{voucher.description || "Chua co mo ta"}</p>
+              <p>{voucher.description || "Chưa có mô tả"}</p>
 
               <div className="pv-price">
                 <span className="pv-price-new">{formatMoney(voucher.sale_price)}</span>
@@ -101,15 +113,15 @@ const PartnerVouchers = () => {
               </div>
 
               <div className="pv-meta">
-                <span>Ton kho: {voucher.stock}</span>
+                <span>Tồn kho: {voucher.stock}</span>
                 <span>
-                  Ban den: {voucher.sale_end ? new Date(voucher.sale_end).toLocaleDateString("vi-VN") : "Khong gioi han"}
+                  Bán đến: {voucher.sale_end ? new Date(voucher.sale_end).toLocaleDateString("vi-VN") : "Không giới hạn"}
                 </span>
               </div>
 
               <div className="pv-actions">
                 <Link className="btn btn-outline btn-sm" to={`/partner/vouchers/${voucher.id}/edit`}>
-                  Sua voucher
+                  Sửa voucher
                 </Link>
               </div>
             </article>

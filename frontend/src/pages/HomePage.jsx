@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {
+  RiRestaurantLine,
+  RiPlaneLine,
+  RiSparkling2Line,
+  RiMovie2Line,
+  RiShoppingBag3Line,
+  RiHeartPulseLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
+  RiFlashlightLine,
+} from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import "./HomePage.css";
@@ -13,12 +24,12 @@ const calculateDiscount = (oldPrice, newPrice) => {
 };
 
 const CATEGORIES = [
-  { id: "food", label: "Ẩm thực", icon: "🍔", to: "/vouchers?category=Ẩm thực" },
-  { id: "travel", label: "Du lịch", icon: "✈️", to: "/vouchers?category=Du lịch" },
-  { id: "beauty", label: "Spa & Làm đẹp", icon: "💆", to: "/vouchers?category=Làm đẹp" },
-  { id: "ent", label: "Giải trí", icon: "🎡", to: "/vouchers?category=Giải trí" },
-  { id: "shop", label: "Mua sắm", icon: "🛍️", to: "/vouchers?category=Mua sắm" },
-  { id: "health", label: "Sức khỏe", icon: "🏥", to: "/vouchers?category=Sức khỏe" },
+  { id: "food", label: "Ẩm thực", icon: RiRestaurantLine, to: "/vouchers?category=Ẩm thực", color: "#f97316" },
+  { id: "travel", label: "Du lịch", icon: RiPlaneLine, to: "/vouchers?category=Du lịch", color: "#0ea5e9" },
+  { id: "beauty", label: "Spa & Làm đẹp", icon: RiSparkling2Line, to: "/vouchers?category=Làm đẹp", color: "#f43f5e" },
+  { id: "ent", label: "Giải trí", icon: RiMovie2Line, to: "/vouchers?category=Giải trí", color: "#8b5cf6" },
+  { id: "shop", label: "Mua sắm", icon: RiShoppingBag3Line, to: "/vouchers?category=Mua sắm", color: "#22c55e" },
+  { id: "health", label: "Sức khỏe", icon: RiHeartPulseLine, to: "/vouchers?category=Sức khỏe", color: "#ef4444" },
 ];
 
 const VoucherCard = ({ voucher }) => {
@@ -97,13 +108,13 @@ const HomePage = () => {
               className="hero-arrow prev"
               onClick={() => setCurrentSlide((prev) => (prev - 1 + vouchers.length) % vouchers.length)}
             >
-              ❮
+              <RiArrowLeftSLine />
             </button>
             <button
               className="hero-arrow next"
               onClick={() => setCurrentSlide((prev) => (prev + 1) % vouchers.length)}
             >
-              ❯
+              <RiArrowRightSLine />
             </button>
 
             <div className="hero-slide-content-full container">
@@ -115,12 +126,12 @@ const HomePage = () => {
                 </Link>
                 {user?.role === "PARTNER" && (
                   <Link to="/partner/vouchers" className="btn btn-outline btn-lg">
-                    Quan ly voucher
+                    Quản lý voucher
                   </Link>
                 )}
                 {user?.role === "ADMIN" && (
                   <Link to="/admin/vouchers" className="btn btn-outline btn-lg">
-                    Duyet voucher
+                    Duyệt voucher
                   </Link>
                 )}
               </div>
@@ -143,7 +154,9 @@ const HomePage = () => {
         <div className="qc-grid">
           {CATEGORIES.map((cat) => (
             <Link key={cat.id} to={cat.to} className="qc-item">
-              <div className="qc-icon">{cat.icon}</div>
+              <div className="qc-icon" style={{ color: cat.color, background: `${cat.color}1a` }}>
+                <cat.icon aria-hidden="true" />
+              </div>
               <span className="qc-label">{cat.label}</span>
             </Link>
           ))}
@@ -154,7 +167,9 @@ const HomePage = () => {
       {flashSaleVouchers.length > 0 && (
         <section className="home-flash-sale container">
           <div className="section-header fs-header">
-            <h2 className="section-title">⚡ Flash Sale</h2>
+            <h2 className="section-title">
+              <RiFlashlightLine aria-hidden="true" /> Khuyến mãi giờ vàng
+            </h2>
             <Link to="/vouchers" className="fs-view-all">
               Xem tất cả ➔
             </Link>

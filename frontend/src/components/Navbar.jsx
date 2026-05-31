@@ -1,5 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  RiTicket2Line,
+  RiMenuLine,
+  RiSearchLine,
+  RiShoppingCartLine,
+  RiUserLine,
+  RiShieldUserLine,
+  RiStore2Line,
+  RiUser3Line,
+  RiRestaurantLine,
+  RiPlaneLine,
+  RiSparkling2Line,
+  RiMovie2Line,
+  RiShoppingBag3Line,
+  RiHeartPulseLine,
+} from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import "./Navbar.css";
@@ -9,42 +25,42 @@ const CATEGORIES = [
   {
     id: "food",
     label: "Ẩm thực",
-    icon: "🍔",
+    icon: RiRestaurantLine,
     to: "/vouchers?category=Ẩm+thực",
     color: "var(--cat-food)",
   },
   {
     id: "travel",
     label: "Du lịch",
-    icon: "✈️",
+    icon: RiPlaneLine,
     to: "/vouchers?category=Du+lịch",
     color: "var(--cat-travel)",
   },
   {
     id: "beauty",
     label: "Spa & Làm đẹp",
-    icon: "💆",
+    icon: RiSparkling2Line,
     to: "/vouchers?category=Làm+đẹp",
     color: "var(--cat-beauty)",
   },
   {
     id: "ent",
     label: "Giải trí",
-    icon: "🎡",
+    icon: RiMovie2Line,
     to: "/vouchers?category=Giải+trí",
     color: "var(--cat-ent)",
   },
   {
     id: "shop",
     label: "Mua sắm",
-    icon: "🛍️",
+    icon: RiShoppingBag3Line,
     to: "/vouchers?category=Mua+sắm",
     color: "var(--cat-shop)",
   },
   {
     id: "health",
     label: "Sức khỏe",
-    icon: "🏥",
+    icon: RiHeartPulseLine,
     to: "/vouchers?category=Sức+khỏe",
     color: "var(--cat-health)",
   },
@@ -74,7 +90,7 @@ const MegaMenu = () => {
         onMouseEnter={() => setOpen(true)}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="menu-icon">☰</span> Danh mục
+        <RiMenuLine className="menu-icon" /> Danh mục
       </button>
 
       {open && (
@@ -94,7 +110,7 @@ const MegaMenu = () => {
                     color: cat.color,
                   }}
                 >
-                  {cat.icon}
+                  <cat.icon />
                 </div>
                 <span className="mega-menu-label">{cat.label}</span>
               </Link>
@@ -130,6 +146,12 @@ const Navbar = () => {
     }
   };
 
+  const DashboardIcon = user?.role === "ADMIN"
+    ? RiShieldUserLine
+    : user?.role === "PARTNER"
+    ? RiStore2Line
+    : RiUser3Line;
+
   const dashboardPath = () => {
     if (!user) return "/login";
     if (user.role === "ADMIN") return "/admin/vouchers";
@@ -142,7 +164,7 @@ const Navbar = () => {
       <div className="container navbar__inner">
         {/* Brand */}
         <Link to="/" className="navbar__brand">
-          <span className="brand-icon">🎟️</span>
+          <RiTicket2Line className="brand-icon" />
           <span className="brand-text">VoucherHub</span>
         </Link>
 
@@ -158,7 +180,7 @@ const Navbar = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
           <button type="submit" aria-label="Tìm kiếm">
-            🔍
+            <RiSearchLine />
           </button>
         </form>
 
@@ -169,7 +191,7 @@ const Navbar = () => {
               {/* Cart (customers only) */}
               {user.role === "CUSTOMER" && (
                 <Link to="/cart" className="navbar__cart">
-                  <span className="cart-icon">🛒</span>
+                  <RiShoppingCartLine className="cart-icon" />
                   {count > 0 && (
                     <span className="navbar__cart-badge">{count}</span>
                   )}
@@ -178,12 +200,19 @@ const Navbar = () => {
               )}
               {user.role === "CUSTOMER" && (
                 <Link to="/orders" className="btn btn-ghost btn-sm">
-                  Don hang
+                  Đơn hàng
                 </Link>
               )}
 
               <Link to={dashboardPath()} className="btn btn-ghost btn-sm">
-                {user.role === 'ADMIN' ? '🛡️ Quản lý' : user.role === 'PARTNER' ? '🏪 Quản lý' : '📋 Tài khoản'}
+                <span className="btn-icon" aria-hidden="true">
+                  <DashboardIcon />
+                </span>
+                {user.role === "ADMIN"
+                  ? "Quản lý"
+                  : user.role === "PARTNER"
+                  ? "Quản lý"
+                  : "Tài khoản"}
               </Link>
 
               <Link to="/profile" className="navbar__user">
@@ -211,7 +240,10 @@ const Navbar = () => {
                   padding: "0.5rem 1rem",
                 }}
               >
-                <span style={{ fontSize: "1.1rem" }}>👤</span> Đăng nhập
+                <span className="btn-icon" aria-hidden="true">
+                  <RiUserLine />
+                </span>
+                Đăng nhập
               </Link>
             </>
           )}

@@ -7,6 +7,16 @@ const formatMoney = (value) =>
     Number(value || 0)
   );
 
+const orderStatusLabel = (status) => {
+  const map = {
+    PENDING: "Chờ thanh toán",
+    PAID: "Đã thanh toán",
+    CANCELLED: "Đã hủy",
+    REFUNDED: "Hoàn tiền",
+  };
+  return map[status] || status;
+};
+
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +48,12 @@ const OrdersPage = () => {
           {orders.map((order) => (
             <div key={order.id} className="card order-card">
               <div className="order-meta">
-                <p className="text-muted">Trạng thái: {order.status}</p>
+                <p className="text-muted">Trạng thái: {orderStatusLabel(order.status)}</p>
                 <p className="text-muted">Tổng: {formatMoney(order.total_amount)}</p>
               </div>
               <div className="order-meta">
-                <p className="text-muted">Nguoi nhan: {order.recipient_name}</p>
-                <p className="text-muted">So dien thoai: {order.recipient_phone}</p>
+                <p className="text-muted">Người nhận: {order.recipient_name}</p>
+                <p className="text-muted">Số điện thoại: {order.recipient_phone}</p>
               </div>
               <ul className="order-items">
                 {order.items.map((item) => (

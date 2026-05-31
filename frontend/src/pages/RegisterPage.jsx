@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { RiTicket2Line, RiEyeLine, RiEyeOffLine, RiErrorWarningLine } from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import { getApiErrorMessage } from "../services/auth.service";
 import "./GlassAuth.css";
@@ -29,7 +30,7 @@ const RegisterPage = () => {
     setError("");
 
     if (!formData.email && !formData.phone) {
-      setError("Vui long nhap email hoac so dien thoai.");
+      setError("Vui lòng nhập email hoặc số điện thoại.");
       setIsLoading(false);
       return;
     }
@@ -62,7 +63,7 @@ const RegisterPage = () => {
         <div className="auth-banner-overlay"></div>
         <div className="auth-banner-content">
           <Link to="/" className="auth-logo">
-            🎟️ VoucherHub
+            <RiTicket2Line className="auth-logo-icon" /> VoucherHub
           </Link>
           <h1>Bắt đầu hành trình tiết kiệm!</h1>
           <p>
@@ -158,7 +159,7 @@ const RegisterPage = () => {
                     className="auth-pwd-toggle"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
                   </button>
                 </div>
               </div>
@@ -181,7 +182,7 @@ const RegisterPage = () => {
 
             {error && (
               <div className="auth-error-msg" style={{ marginBottom: "1rem" }}>
-                ⚠️ {error}
+                <RiErrorWarningLine className="auth-msg-icon" /> {error}
               </div>
             )}
 

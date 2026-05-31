@@ -1,3 +1,13 @@
+import {
+  RiTicket2Line,
+  RiShoppingCartLine,
+  RiFileList3Line,
+  RiShieldUserLine,
+  RiStore2Line,
+  RiForbid2Line,
+  RiSearchLine,
+} from "react-icons/ri";
+
 // Placeholder pages – will be replaced in Phase 4-7
 
 export const VouchersPage = () => (
@@ -5,9 +15,11 @@ export const VouchersPage = () => (
     className="container"
     style={{ padding: "3rem 1rem", textAlign: "center" }}
   >
-    <h2>🎟️ Danh sách Voucher</h2>
+    <h2>
+      <RiTicket2Line aria-hidden="true" /> Danh sách voucher
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
-      Phase 5 – Đang phát triển
+      Giai đoạn 5 – Đang phát triển
     </p>
   </div>
 );
@@ -17,9 +29,11 @@ export const CartPage = () => (
     className="container"
     style={{ padding: "3rem 1rem", textAlign: "center" }}
   >
-    <h2>🛒 Giỏ hàng</h2>
+    <h2>
+      <RiShoppingCartLine aria-hidden="true" /> Giỏ hàng
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
-      Phase 5 – Đang phát triển
+      Giai đoạn 5 – Đang phát triển
     </p>
   </div>
 );
@@ -29,9 +43,11 @@ export const MyVouchersPage = () => (
     className="container"
     style={{ padding: "3rem 1rem", textAlign: "center" }}
   >
-    <h2>📋 Voucher của tôi</h2>
+    <h2>
+      <RiFileList3Line aria-hidden="true" /> Voucher của tôi
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
-      Phase 6 – Đang phát triển
+      Giai đoạn 6 – Đang phát triển
     </p>
   </div>
 );
@@ -41,9 +57,11 @@ export const AdminDashboardPage = () => (
     className="container"
     style={{ padding: "3rem 1rem", textAlign: "center" }}
   >
-    <h2>🛡️ Admin Dashboard</h2>
+    <h2>
+      <RiShieldUserLine aria-hidden="true" /> Bảng điều khiển quản trị
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
-      Phase 4/7 – Đang phát triển
+      Giai đoạn 4/7 – Đang phát triển
     </p>
   </div>
 );
@@ -53,9 +71,11 @@ export const PartnerDashboardPage = () => (
     className="container"
     style={{ padding: "3rem 1rem", textAlign: "center" }}
   >
-    <h2>🏪 Partner Dashboard</h2>
+    <h2>
+      <RiStore2Line aria-hidden="true" /> Bảng điều khiển đối tác
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
-      Phase 4/7 – Đang phát triển
+      Giai đoạn 4/7 – Đang phát triển
     </p>
   </div>
 );
@@ -65,7 +85,9 @@ export const UnauthorizedPage = () => (
     className="container"
     style={{ padding: "4rem 1rem", textAlign: "center" }}
   >
-    <h2>🚫 403 – Không có quyền truy cập</h2>
+    <h2>
+      <RiForbid2Line aria-hidden="true" /> 403 – Không có quyền truy cập
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
       Bạn không có quyền xem trang này.
     </p>
@@ -77,7 +99,9 @@ export const NotFoundPage = () => (
     className="container"
     style={{ padding: "4rem 1rem", textAlign: "center" }}
   >
-    <h2>🔍 404 – Không tìm thấy trang</h2>
+    <h2>
+      <RiSearchLine aria-hidden="true" /> 404 – Không tìm thấy trang
+    </h2>
     <p className="text-muted" style={{ marginTop: "0.5rem" }}>
       Trang bạn tìm không tồn tại.
     </p>

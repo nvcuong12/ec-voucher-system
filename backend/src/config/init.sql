@@ -215,7 +215,7 @@ WITH partner_user AS (
 ),
 partner_insert AS (
   INSERT INTO partners (user_id, business_name, business_license, representative, address, status)
-  SELECT id, 'Sunrise Coffee', 'BL-001', 'Nguyen An', 'Quan 1, TP.HCM', 'APPROVED'::partner_status
+  SELECT id, 'Sunrise Coffee', 'BL-001', 'Nguyễn An', 'Quận 1, TP.HCM', 'APPROVED'::partner_status
   FROM partner_user
   WHERE NOT EXISTS (
     SELECT 1 FROM partners WHERE user_id = (SELECT id FROM partner_user)
@@ -229,13 +229,13 @@ partner_ref AS (
 ),
 branch_a AS (
   INSERT INTO partner_branches (partner_id, name, address, phone)
-  SELECT id, 'Sunrise Coffee - Nguyen Hue', '12 Nguyen Hue, Q1, TP.HCM', '0900000001'
+  SELECT id, 'Sunrise Coffee - Nguyễn Huệ', '12 Nguyễn Huệ, Q1, TP.HCM', '0900000001'
   FROM partner_ref
   RETURNING id
 ),
 branch_b AS (
   INSERT INTO partner_branches (partner_id, name, address, phone)
-  SELECT id, 'Sunrise Coffee - Cach Mang', '120 Cach Mang Thang 8, Q3, TP.HCM', '0900000002'
+  SELECT id, 'Sunrise Coffee - Cách Mạng', '120 Cách Mạng Tháng 8, Q3, TP.HCM', '0900000002'
   FROM partner_ref
   RETURNING id
 ),
@@ -256,91 +256,91 @@ voucher_rows AS (
     status
   )
   SELECT id,
-    'Brunch Set - 2 Nguoi',
-    'Combo brunch dac biet tai Sunrise Coffee',
-    'Am thuc',
+    'Brunch Set - 2 Người',
+    'Combo brunch đặc biệt tại Sunrise Coffee',
+    'Ẩm thực',
     320000,
     179000,
     80,
     NOW() - INTERVAL '2 days',
     NOW() + INTERVAL '30 days',
     NOW() + INTERVAL '60 days',
-    'Ap dung tai chi nhanh Sunrise Coffee. Dat truoc 2 gio.',
+    'Áp dụng tại chi nhánh Sunrise Coffee. Đặt trước 2 giờ.',
     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
-    'Set Tra Sua 4 Ly',
-    'Mua 3 tang 1 cho nhom ban',
-    'Am thuc',
+    'Set Trà Sữa 4 Ly',
+    'Mua 3 tặng 1 cho nhóm bạn',
+    'Ẩm thực',
     220000,
     139000,
     120,
     NOW() - INTERVAL '1 days',
     NOW() + INTERVAL '20 days',
     NOW() + INTERVAL '45 days',
-    'Khong ap dung vao le/tet.',
+    'Không áp dụng vào lễ/tết.',
     'https://images.unsplash.com/photo-1542444459-db37a1f5d3b4?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
-    'Spa Thu Gian 90 Phut',
-    'Goi cham soc co the tai Spa Nha Nho',
-    'Lam dep',
+    'Spa Thư Giãn 90 Phút',
+    'Gói chăm sóc cơ thể tại Spa Nhà Nhỏ',
+    'Làm đẹp',
     900000,
     490000,
     60,
     NOW() - INTERVAL '3 days',
     NOW() + INTERVAL '45 days',
     NOW() + INTERVAL '90 days',
-    'Can dat lich truoc 1 ngay.',
+    'Cần đặt lịch trước 1 ngày.',
     'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
-    'Goi Tap Yoga 10 Buoi',
-    'Lop yoga co ban cho nguoi moi',
-    'Suc khoe',
+    'Gói Tập Yoga 10 Buổi',
+    'Lớp yoga cơ bản cho người mới',
+    'Sức khỏe',
     1500000,
     790000,
     40,
     NOW() - INTERVAL '5 days',
     NOW() + INTERVAL '25 days',
     NOW() + INTERVAL '60 days',
-    'Vui long den som 10 phut truoc gio hoc.',
+    'Vui lòng đến sớm 10 phút trước giờ học.',
     'https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
-    'Tour Cu Chi 1 Ngay',
-    'Trai nghiem lich su tai dia dao Cu Chi',
-    'Du lich',
+    'Tour Củ Chi 1 Ngày',
+    'Trải nghiệm lịch sử tại địa đạo Củ Chi',
+    'Du lịch',
     850000,
     590000,
     50,
     NOW() - INTERVAL '2 days',
     NOW() + INTERVAL '40 days',
     NOW() + INTERVAL '90 days',
-    'Bao gom xe dua don va huong dan vien.',
+    'Bao gồm xe đưa đón và hướng dẫn viên.',
     'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
   UNION ALL
   SELECT id,
-    'Ve Phim Cuoi Tuan',
-    'Ve xem phim 2D tai cum rap doi tac',
-    'Giai tri',
+    'Vé Phim Cuối Tuần',
+    'Vé xem phim 2D tại cụm rạp đối tác',
+    'Giải trí',
     220000,
     99000,
     0,
     NOW() - INTERVAL '10 days',
     NOW() - INTERVAL '1 days',
     NOW() + INTERVAL '10 days',
-    'Voucher het han khong hoan lai.',
+    'Voucher hết hạn không hoàn lại.',
     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
     'APPROVED'::voucher_status
   FROM partner_ref
