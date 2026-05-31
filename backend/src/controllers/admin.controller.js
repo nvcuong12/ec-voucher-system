@@ -1,4 +1,5 @@
 import { query } from "../config/database.js";
+import { BusinessException } from "../utils/BusinessException.js";
 import {
   ADMIN_PARTNER_STATUS,
   ADMIN_LOG_ACTION,
@@ -70,12 +71,12 @@ export const updateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid user id", 400));
     }
 
     const nextIsActive = normalizeUserStatus(req.body);
     if (nextIsActive === null) {
-      return res.status(400).json({ error: `status must be ${ADMIN_USER_STATUS_LABEL.ACTIVE} or ${ADMIN_USER_STATUS_LABEL.SUSPENDED}, or is_active must be a boolean` });
+      return next(new BusinessException("VALIDATION_FAILED", `status must be ${ADMIN_USER_STATUS_LABEL.ACTIVE} or ${ADMIN_USER_STATUS_LABEL.SUSPENDED}, or is_active must be a boolean`, 400));
     }
 
     const result = await query(
@@ -89,7 +90,7 @@ export const updateUserStatus = async (req, res, next) => {
 
     const user = result.rows[0];
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return next(new BusinessException("NOT_FOUND", "User not found", 404));
     }
 
     return sendSuccess(res, { user });
@@ -112,7 +113,7 @@ export const approveVoucher = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid voucher id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
     }
 
     const result = await query(approveVoucherQuery, [
@@ -125,9 +126,9 @@ export const approveVoucher = async (req, res, next) => {
     if (!voucher) {
       const exists = await query("SELECT id FROM vouchers WHERE id = $1", [id]);
       if (!exists.rows[0]) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
       }
-      return res.status(409).json({ error: "Voucher is not pending approval" });
+      return next(new BusinessException("CONFLICT", "Voucher is not pending approval", 409));
     }
 
     await logAdminAction(
@@ -147,7 +148,7 @@ export const rejectVoucher = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid voucher id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
     }
 
     const rejectionReason = typeof req.body?.rejection_reason === "string"
@@ -155,7 +156,7 @@ export const rejectVoucher = async (req, res, next) => {
       : "";
 
     if (!rejectionReason) {
-      return res.status(400).json({ error: "rejection_reason is required" });
+      return next(new BusinessException("VALIDATION_FAILED", "rejection_reason is required", 400));
     }
 
     const result = await query(rejectVoucherQuery, [
@@ -169,9 +170,9 @@ export const rejectVoucher = async (req, res, next) => {
     if (!voucher) {
       const exists = await query("SELECT id FROM vouchers WHERE id = $1", [id]);
       if (!exists.rows[0]) {
-        return res.status(404).json({ error: "Voucher not found" });
+        return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
       }
-      return res.status(409).json({ error: "Voucher is not pending approval" });
+      return next(new BusinessException("CONFLICT", "Voucher is not pending approval", 409));
     }
 
     await logAdminAction(
@@ -200,12 +201,12 @@ export const updatePartnerApprovalStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUuid(id)) {
-      return res.status(400).json({ error: "Invalid partner id" });
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid partner id", 400));
     }
 
     const nextStatus = typeof req.body?.status === "string" ? req.body.status.trim().toUpperCase() : "";
     if (!Object.values(ADMIN_PARTNER_STATUS).includes(nextStatus) || nextStatus === ADMIN_PARTNER_STATUS.PENDING) {
-      return res.status(400).json({ error: `status must be ${ADMIN_PARTNER_STATUS.APPROVED} or ${ADMIN_PARTNER_STATUS.REJECTED}` });
+      return next(new BusinessException("VALIDATION_FAILED", `status must be ${ADMIN_PARTNER_STATUS.APPROVED} or ${ADMIN_PARTNER_STATUS.REJECTED}`, 400));
     }
 
     const rejectionReason = typeof req.body?.rejection_reason === "string"
@@ -213,7 +214,7 @@ export const updatePartnerApprovalStatus = async (req, res, next) => {
       : null;
 
     if (nextStatus === ADMIN_PARTNER_STATUS.REJECTED && !rejectionReason) {
-      return res.status(400).json({ error: "rejection_reason is required when rejecting a partner" });
+      return next(new BusinessException("VALIDATION_FAILED", "rejection_reason is required when rejecting a partner", 400));
     }
 
     const result = await query(updatePartnerStatusQuery, [
@@ -227,9 +228,9 @@ export const updatePartnerApprovalStatus = async (req, res, next) => {
     if (!partner) {
       const exists = await query("SELECT id FROM partners WHERE id = $1", [id]);
       if (!exists.rows[0]) {
-        return res.status(404).json({ error: "Partner not found" });
+        return next(new BusinessException("NOT_FOUND", "Partner not found", 404));
       }
-      return res.status(409).json({ error: "Partner is not pending approval" });
+      return next(new BusinessException("CONFLICT", "Partner is not pending approval", 409));
     }
 
     await logAdminAction(

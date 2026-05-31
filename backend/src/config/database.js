@@ -12,6 +12,7 @@ const pool = new Pool({
 
 // Wrapper for query execution
 export const query = (text, params) => pool.query(text, params);
+export const getClient = () => pool.connect();
 
 // Transaction helper — pass an async callback that receives a client
 export const withTransaction = async (callback) => {

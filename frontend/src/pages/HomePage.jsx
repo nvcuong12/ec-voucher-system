@@ -1,42 +1,197 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import "./HomePage.css";
 
-const HomePage = () => (
-  <div className="home">
-    <section className="hero">
-      <div className="container hero__inner">
-        <h1 className="hero__title">
-          🎟️ Mua Voucher Giảm Giá<br />
-          <span>Tiết kiệm mỗi ngày</span>
-        </h1>
-        <p className="hero__sub">
-          Hàng ngàn voucher ưu đãi từ các đối tác uy tín — nhà hàng, spa,
-          mua sắm và nhiều hơn nữa.
-        </p>
-        <div className="hero__cta">
-          <Link to="/vouchers" className="btn btn-primary btn-lg">Khám phá ngay</Link>
-          <Link to="/register" className="btn btn-outline btn-lg">Đăng ký miễn phí</Link>
+const formatPrice = (price) =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+
+const calculateDiscount = (oldPrice, newPrice) => {
+  if (!oldPrice || !newPrice) return 0;
+  return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+};
+
+const CATEGORIES = [
+  { id: "food", label: "Ẩm thực", icon: "🍔", to: "/vouchers?category=Ẩm thực" },
+  { id: "travel", label: "Du lịch", icon: "✈️", to: "/vouchers?category=Du lịch" },
+  { id: "beauty", label: "Spa & Làm đẹp", icon: "💆", to: "/vouchers?category=Làm đẹp" },
+  { id: "ent", label: "Giải trí", icon: "🎡", to: "/vouchers?category=Giải trí" },
+  { id: "shop", label: "Mua sắm", icon: "🛍️", to: "/vouchers?category=Mua sắm" },
+  { id: "health", label: "Sức khỏe", icon: "🏥", to: "/vouchers?category=Sức khỏe" },
+];
+
+const VoucherCard = ({ voucher }) => {
+  const discount = calculateDiscount(voucher.original_price, voucher.sale_price);
+  return (
+    <Link to={`/vouchers/${voucher.id}`} className="v-card">
+      <div className="v-card__img-wrap">
+        <img
+          src={voucher.image_url || "https://via.placeholder.com/400x250?text=Voucher"}
+          alt={voucher.name}
+          className="v-card__img"
+        />
+        <span className="v-card__tag">-{discount}%</span>
+      </div>
+      <div className="v-card__body">
+        <h3 className="v-card__title">{voucher.name}</h3>
+        <div className="v-card__price-row">
+          <span className="v-card__price-new">{formatPrice(voucher.sale_price)}</span>
+          <span className="v-card__price-old">{formatPrice(voucher.original_price)}</span>
         </div>
       </div>
-    </section>
+    </Link>
+  );
+};
 
-    <section className="container features">
-      <h2 className="section-title">Tại sao chọn VoucherHub?</h2>
-      <div className="grid-3">
-        {[
-          { icon: "💰", title: "Giảm giá thật", desc: "Voucher luôn thấp hơn giá gốc, được kiểm duyệt chặt chẽ." },
-          { icon: "🔒", title: "An toàn & Bảo mật", desc: "Mã voucher duy nhất, mã hóa mạnh, không thể làm giả." },
-          { icon: "⚡", title: "Nhanh chóng", desc: "Nhận mã ngay sau khi thanh toán, dùng tức thì tại cửa hàng." },
-        ].map((f) => (
-          <div key={f.title} className="card feature-card">
-            <span className="feature-icon">{f.icon}</span>
-            <h3>{f.title}</h3>
-            <p>{f.desc}</p>
+const HomePage = () => {
+  const { user } = useAuth();
+  const [vouchers, setVouchers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.get("/vouchers")
+      .then(({ data }) => {
+        if (isMounted) setVouchers(data.data.vouchers || []);
+      })
+      .catch(() => {})
+      .finally(() => isMounted && setLoading(false));
+    return () => (isMounted = false);
+  }, []);
+
+  useEffect(() => {
+    if (vouchers.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % vouchers.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [vouchers.length]);
+
+  const heroVoucher = vouchers[currentSlide];
+  const flashSaleVouchers = vouchers.slice(0, 5);
+  const featuredVouchers = vouchers.slice(0, 4);
+
+  return (
+    <div className="home-wrapper">
+      {/* Hero Banner */}
+      {heroVoucher && !loading && (
+        <section className="home-hero-full">
+          <div className="hero-slider-full">
+            <div className="hero-img-wrap-full">
+              {vouchers.map((v, idx) => (
+                <div
+                  key={v.id}
+                  className={`hero-img-bg ${idx === currentSlide ? "active" : ""}`}
+                  style={{
+                    backgroundImage: `url(${v.image_url || "https://via.placeholder.com/1200x600"})`,
+                  }}
+                >
+                  <div className="hero-overlay"></div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="hero-arrow prev"
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + vouchers.length) % vouchers.length)}
+            >
+              ❮
+            </button>
+            <button
+              className="hero-arrow next"
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % vouchers.length)}
+            >
+              ❯
+            </button>
+
+            <div className="hero-slide-content-full container">
+              <h1 className="hero-title-full">{heroVoucher.name}</h1>
+              <p className="hero-desc-full">{heroVoucher.description || "Ưu đãi hấp dẫn chờ bạn khám phá"}</p>
+              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                <Link to={`/vouchers/${heroVoucher.id}`} className="btn btn-primary btn-lg">
+                  Xem chi tiết
+                </Link>
+                {user?.role === "PARTNER" && (
+                  <Link to="/partner/vouchers" className="btn btn-outline btn-lg">
+                    Quan ly voucher
+                  </Link>
+                )}
+                {user?.role === "ADMIN" && (
+                  <Link to="/admin/vouchers" className="btn btn-outline btn-lg">
+                    Duyet voucher
+                  </Link>
+                )}
+              </div>
+              <div className="hero-dots-full">
+                {vouchers.map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`hero-dot-full ${idx === currentSlide ? "active" : ""}`}
+                    onClick={() => setCurrentSlide(idx)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-    </section>
-  </div>
-);
+        </section>
+      )}
+
+      {/* Categories */}
+      <section className="home-categories container">
+        <div className="qc-grid">
+          {CATEGORIES.map((cat) => (
+            <Link key={cat.id} to={cat.to} className="qc-item">
+              <div className="qc-icon">{cat.icon}</div>
+              <span className="qc-label">{cat.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Flash Sale */}
+      {flashSaleVouchers.length > 0 && (
+        <section className="home-flash-sale container">
+          <div className="section-header fs-header">
+            <h2 className="section-title">⚡ Flash Sale</h2>
+            <Link to="/vouchers" className="fs-view-all">
+              Xem tất cả ➔
+            </Link>
+          </div>
+          <div className="fs-grid grid-5">
+            {flashSaleVouchers.map((v) => (
+              <VoucherCard key={v.id} voucher={v} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Featured */}
+      {featuredVouchers.length > 0 && (
+        <section className="home-section container">
+          <div className="section-header">
+            <h2 className="section-title">🎯 Voucher nổi bật</h2>
+            <Link to="/vouchers" className="btn btn-outline btn-sm">
+              Xem thêm
+            </Link>
+          </div>
+          <div className="grid-4">
+            {featuredVouchers.map((v) => (
+              <VoucherCard key={v.id} voucher={v} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CTA */}
+      {loading && (
+        <section className="container" style={{ padding: "4rem 1rem", textAlign: "center" }}>
+          <p>Đang tải dữ liệu...</p>
+        </section>
+      )}
+    </div>
+  );
+};
 
 export default HomePage;

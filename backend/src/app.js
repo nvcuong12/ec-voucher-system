@@ -1,11 +1,10 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import { v4 as uuidv4 } from "uuid";
 
-// Error handling middleware
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
 
-// Route imports (will be expanded in Phase 3+)
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import voucherRoutes from "./routes/voucher.routes.js";
@@ -29,27 +28,30 @@ const faviconSvg = `<?xml version="1.0" encoding="UTF-8"?>
   <circle cx="44" cy="38" r="3" fill="#fff" opacity="0.85"/>
 </svg>`;
 
-// ─── Middleware ────────────────────────────────────────────────────
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve browser favicon requests directly so they do not fall through to the API 404 handler.
 app.get(["/favicon.ico", "/favicon.svg"], (_req, res) => {
   res.type("image/svg+xml").send(faviconSvg);
 });
 
-// ─── Health Check ──────────────────────────────────────────────────
+app.use((req, _res, next) => {
+  req.traceId = req.headers["x-trace-id"] || uuidv4();
+  next();
+});
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// ─── Public Entry Points ───────────────────────────────────────────
 app.get("/", (_req, res) => {
   res.json({
     service: "Voucher System API",
@@ -59,7 +61,8 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/api", (_req, res) => {
+const API = "/api";
+app.get(API, (_req, res) => {
   res.json({
     message: "Voucher System API",
     endpoints: [
@@ -74,8 +77,6 @@ app.get("/api", (_req, res) => {
   });
 });
 
-// ─── API Routes ────────────────────────────────────────────────────
-const API = "/api";
 app.use(`${API}/auth`, authRoutes);
 app.use(`${API}/users`, userRoutes);
 app.use(`${API}/vouchers`, voucherRoutes);
@@ -84,11 +85,7 @@ app.use(`${API}/partners`, partnerRoutes);
 app.use(`${API}/admin`, adminRoutes);
 app.use(`${API}/reviews`, reviewRoutes);
 
-// ─── 404 Handler ──────────────────────────────────────────────────
 app.use(notFoundHandler);
-
-// ─── Global Error Handler ──────────────────────────────────────────
-// PHẢI ở cuối cùng, sau tất cả các route và middleware
 app.use(errorHandler);
 
 export default app;

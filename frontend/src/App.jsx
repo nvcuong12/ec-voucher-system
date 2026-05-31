@@ -8,15 +8,22 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import VouchersPage from "./pages/VouchersPage";
+import VoucherDetailPage from "./pages/VoucherDetailPage";
 import {
-  VouchersPage,
   CartPage,
   MyVouchersPage,
   AdminDashboardPage,
-  PartnerDashboardPage,
   UnauthorizedPage,
   NotFoundPage,
 } from "./pages/PlaceholderPages";
+import ProfilePage from "./pages/ProfilePage";
+
+import VouchersList from "./pages/VouchersList";
+import VoucherDetail from "./pages/VoucherDetail";
+import PartnerVouchers from "./pages/PartnerVouchers";
+import PartnerVoucherForm from "./pages/PartnerVoucherForm";
+import AdminVoucherReview from "./pages/AdminVoucherReview";
 
 const App = () => (
   <BrowserRouter>
@@ -30,6 +37,14 @@ const App = () => (
             <Route path="/login"     element={<LoginPage />} />
             <Route path="/register"  element={<RegisterPage />} />
             <Route path="/vouchers"  element={<VouchersPage />} />
+            <Route path="/vouchers/:id" element={<VoucherDetailPage />} />
+
+            {/* ─── Authenticated (All Roles) ───────────── */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
 
             {/* ─── Customer ────────────────────────────── */}
             <Route path="/cart" element={
@@ -44,13 +59,28 @@ const App = () => (
             } />
 
             {/* ─── Partner ─────────────────────────────── */}
-            <Route path="/partner/*" element={
+            <Route path="/partner/vouchers" element={
               <ProtectedRoute roles={["PARTNER"]}>
-                <PartnerDashboardPage />
+                <PartnerVouchers />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/vouchers/new" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerVoucherForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/vouchers/:id/edit" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerVoucherForm />
               </ProtectedRoute>
             } />
 
             {/* ─── Admin ───────────────────────────────── */}
+            <Route path="/admin/vouchers" element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <AdminVoucherReview />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/*" element={
               <ProtectedRoute roles={["ADMIN"]}>
                 <AdminDashboardPage />
