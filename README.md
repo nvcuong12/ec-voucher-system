@@ -38,15 +38,19 @@ Sau khi khởi động:
 | Service  | URL                        |
 |----------|----------------------------|
 | Frontend | http://localhost:3000      |
-| Backend  | http://localhost:5000      |
-| API Docs | http://localhost:5000/api  |
-| Health   | http://localhost:5000/health |
+| Backend  | http://localhost:5001      |
+| API Docs | http://localhost:5001/api  |
+| Health   | http://localhost:5001/health |
 
 ### Tài khoản mặc định (seed)
 
 | Role  | Email                      | Password   |
 |-------|----------------------------|------------|
 | Admin | admin@vouchersystem.com    | Admin@123  |
+
+### Ghi chú khách hàng
+- Dang nhap bang email hoac so dien thoai
+- Tim kiem voucher theo tu khoa, khoang gia, muc giam, khu vuc, trang thai
 
 ---
 
@@ -102,10 +106,10 @@ voucher-system/
 | **1** | DevContainer + Project scaffold (React + Node) | ✅ Hoàn thành |
 | **2** | DB Schema (PostgreSQL, tất cả entities) | ✅ Hoàn thành (`init.sql`) |
 | **3** | Auth API + JWT middleware | 🔄 Cơ bản xong, cần test |
-| **4** | CRUD Partner & Admin (tạo/duyệt voucher) | ⏳ Chờ |
-| **5** | Customer flow (tìm kiếm, giỏ hàng, checkout mock) | ⏳ Chờ |
-| **6** | Voucher Code + QR + quét mã + trừ tồn kho an toàn | ⏳ Chờ |
-| **7** | Dashboard báo cáo + hoàn thiện UI | ⏳ Chờ |
+| **4** | CRUD Partner & Admin (tạo/duyệt voucher) | ✅ Cơ bản xong |
+| **5** | Customer flow (tìm kiếm, giỏ hàng, checkout mock) | 🔄 Cơ bản xong |
+| **6** | Voucher Code + QR + quét mã + trừ tồn kho an toàn | 🔄 Cơ bản xong |
+| **7** | Dashboard báo cáo + hoàn thiện UI | 🔄 Cơ bản xong |
 
 ---
 

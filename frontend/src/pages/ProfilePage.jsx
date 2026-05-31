@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { changePasswordRequest } from "../services/auth.service";
 import "./ProfilePage.css";
 
 const ProfilePage = () => {
@@ -12,6 +13,11 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: "",
+    new_password: "",
+  });
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,6 +39,18 @@ const ProfilePage = () => {
     }
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordMessage("");
+    try {
+      await changePasswordRequest(passwordForm);
+      setPasswordMessage("Doi mat khau thanh cong");
+      setPasswordForm({ current_password: "", new_password: "" });
+    } catch (err) {
+      setPasswordMessage(err.response?.data?.error?.message || "Khong the doi mat khau");
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -48,11 +66,13 @@ const ProfilePage = () => {
           {/* User Info Sidebar */}
           <div className="profile-card user-info-sidebar">
             <div className="user-avatar-large">
-              {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+              {user.full_name
+                ? user.full_name.charAt(0).toUpperCase()
+                : (user.email || user.phone || "?").charAt(0).toUpperCase()}
             </div>
             <div>
               <h2 style={{ fontSize: "1.2rem", fontWeight: "600" }}>{user.full_name || "Chưa cập nhật"}</h2>
-              <p className="text-muted" style={{ marginBottom: "0.75rem" }}>{user.email}</p>
+              <p className="text-muted" style={{ marginBottom: "0.75rem" }}>{user.email || user.phone || "Chua cap nhat"}</p>
               <span className="user-role-badge">{user.role}</span>
             </div>
           </div>
@@ -71,7 +91,7 @@ const ProfilePage = () => {
                   id="email"
                   type="email"
                   className="input"
-                  value={user.email}
+                  value={user.email || ""}
                   disabled
                   style={{ background: "#f1f5f9", cursor: "not-allowed" }}
                 />
@@ -108,6 +128,36 @@ const ProfilePage = () => {
                   {loading ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : "Lưu thay đổi"}
                 </button>
               </div>
+            </form>
+          </div>
+
+          <div className="profile-card">
+            <h2 className="profile-card__title">Doi mat khau</h2>
+            {passwordMessage && <div className="auth-error">{passwordMessage}</div>}
+            <form onSubmit={handlePasswordChange} className="auth-form">
+              <div className="form-group">
+                <label htmlFor="current_password">Mat khau hien tai</label>
+                <input
+                  id="current_password"
+                  type="password"
+                  className="input"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="new_password">Mat khau moi</label>
+                <input
+                  id="new_password"
+                  type="password"
+                  className="input"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                />
+              </div>
+              <button type="submit" className="btn btn-outline">
+                Cap nhat mat khau
+              </button>
             </form>
           </div>
         </div>

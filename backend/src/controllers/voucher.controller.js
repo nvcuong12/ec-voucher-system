@@ -405,7 +405,17 @@ export const listVouchers = async (req, res, next) => {
   try {
     const user = req.user; // optional
 
-    const { category, status, partner: partner_id } = req.query;
+    const {
+      category,
+      status,
+      partner: partner_id,
+      q,
+      min_price,
+      max_price,
+      min_discount,
+      area,
+      active_status,
+    } = req.query;
     const page  = parsePositiveInt(req.query.page, 1);
     const limit = parsePositiveInt(req.query.limit, 20);
     const offset = (page - 1) * limit;
@@ -454,16 +464,33 @@ export const listVouchers = async (req, res, next) => {
     }
 
     // ── Public / Customer / Admin: chỉ xem APPROVED (RB-01) ────
+    const publicStatus = active_status
+      ? String(active_status).toUpperCase()
+      : "ACTIVE";
+    const normalizedStatus = publicStatus === "ALL" ? null : publicStatus;
+
     const [rows, count] = await Promise.all([
       query(listPublicVouchersQuery, [
+        q || null,
         category || null,
         partner_id || null,
+        min_price ? parseFloat(min_price) : null,
+        max_price ? parseFloat(max_price) : null,
+        min_discount ? parseFloat(min_discount) : null,
+        area || null,
+        normalizedStatus,
         limit,
         offset,
       ]),
       query(countPublicVouchersQuery, [
+        q || null,
         category || null,
         partner_id || null,
+        min_price ? parseFloat(min_price) : null,
+        max_price ? parseFloat(max_price) : null,
+        min_discount ? parseFloat(min_discount) : null,
+        area || null,
+        normalizedStatus,
       ]),
     ]);
 

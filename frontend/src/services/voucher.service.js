@@ -11,10 +11,12 @@ const normalizeVoucher = (voucher) => ({
 
 export const getVouchersRequest = async (params = {}) => {
   const { data } = await api.get("/vouchers", { params });
-  return (data.vouchers || []).map(normalizeVoucher);
+  const vouchers = data.data?.vouchers || data.vouchers || [];
+  return vouchers.map(normalizeVoucher);
 };
 
 export const getVoucherByIdRequest = async (id) => {
   const { data } = await api.get(`/vouchers/${id}`);
-  return normalizeVoucher(data.voucher);
+  const voucher = data.data?.voucher || data.voucher;
+  return normalizeVoucher(voucher);
 };

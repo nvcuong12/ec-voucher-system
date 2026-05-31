@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getApiErrorMessage } from "../services/auth.service";
 import { getVoucherByIdRequest } from "../services/voucher.service";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { createReviewRequest, getReviewsByVoucherRequest } from "../services/review.service";
+import { getMyIssuedVouchersRequest } from "../services/order.service";
 import "./VoucherDetailPage.css";
 
 const formatPrice = (price) =>
@@ -14,6 +18,12 @@ const VoucherDetailPage = () => {
   const [voucher, setVoucher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reviews, setReviews] = useState([]);
+  const [issuedOptions, setIssuedOptions] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ rating: "5", comment: "", issued_voucher_id: "" });
+  const [reviewError, setReviewError] = useState("");
+  const { addItem } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
@@ -39,6 +49,27 @@ const VoucherDetailPage = () => {
       isMounted = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    getReviewsByVoucherRequest(id)
+      .then((data) => mounted && setReviews(data))
+      .catch(() => {})
+      .finally(() => {});
+    if (user?.role === "CUSTOMER") {
+      getMyIssuedVouchersRequest()
+        .then((data) => {
+          if (!mounted) return;
+          const options = data.filter((v) => v.voucher_id === id);
+          setIssuedOptions(options);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [id, user?.role]);
 
   if (loading) {
     return (
@@ -106,7 +137,16 @@ const VoucherDetailPage = () => {
                 : "Không giới hạn"}
             </p>
             <p>
+              <strong>Thoi han ban:</strong>{" "}
+              {voucher.sale_end
+                ? new Date(voucher.sale_end).toLocaleDateString("vi-VN")
+                : "Khong gioi han"}
+            </p>
+            <p>
               <strong>Đối tác:</strong> {voucher.business_name || "Đang cập nhật"}
+            </p>
+            <p>
+              <strong>So luong con lai:</strong> {voucher.stock}
             </p>
           </div>
 
@@ -119,6 +159,17 @@ const VoucherDetailPage = () => {
             <h3>Điều khoản áp dụng</h3>
             <p>{voucher.terms || "Chưa có điều khoản."}</p>
           </div>
+
+          <div className="vd-section">
+            <h3>Chinh sach hoan huy</h3>
+            <p>{voucher.terms || "Theo quy dinh cua doi tac."}</p>
+          </div>
+
+          {user?.role === "CUSTOMER" && (
+            <button className="btn btn-primary" onClick={() => addItem(voucher, 1)}>
+              Thêm vào giỏ hàng
+            </button>
+          )}
         </div>
       </div>
 
@@ -135,6 +186,86 @@ const VoucherDetailPage = () => {
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      <div className="vd-box" style={{ marginTop: "1.5rem" }}>
+        <h3>Danh gia</h3>
+        {reviews.length === 0 ? (
+          <p>Chua co danh gia.</p>
+        ) : (
+          <ul className="vd-branches">
+            {reviews.map((review) => (
+              <li key={review.id}>
+                <strong>{review.full_name}</strong>
+                <span>Danh gia: {review.rating}/5</span>
+                <span>{review.comment || "(Khong co binh luan)"}</span>
+                {review.partner_reply && <span>Phan hoi: {review.partner_reply}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {user?.role === "CUSTOMER" && issuedOptions.length > 0 && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setReviewError("");
+              try {
+                const review = await createReviewRequest({
+                  voucher_id: id,
+                  issued_voucher_id: reviewForm.issued_voucher_id || issuedOptions[0]?.id,
+                  rating: reviewForm.rating,
+                  comment: reviewForm.comment,
+                });
+                setReviews((prev) => [review, ...prev]);
+                setReviewForm({ rating: "5", comment: "", issued_voucher_id: "" });
+              } catch (err) {
+                setReviewError(err.response?.data?.error?.message || "Khong the gui danh gia");
+              }
+            }}
+            style={{ marginTop: "1rem" }}
+          >
+            {reviewError && <p className="text-danger">{reviewError}</p>}
+            <div className="form-group">
+              <label>Voucher da mua</label>
+              <select
+                className="input"
+                value={reviewForm.issued_voucher_id}
+                onChange={(e) => setReviewForm({ ...reviewForm, issued_voucher_id: e.target.value })}
+              >
+                <option value="">Chon ma voucher</option>
+                {issuedOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group" style={{ marginTop: "0.75rem" }}>
+              <label>So sao</label>
+              <select
+                className="input"
+                value={reviewForm.rating}
+                onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
+              >
+                {[5,4,3,2,1].map((score) => (
+                  <option key={score} value={score}>{score}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group" style={{ marginTop: "0.75rem" }}>
+              <label>Binh luan</label>
+              <textarea
+                className="input"
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+              />
+            </div>
+            <button className="btn btn-primary" style={{ marginTop: "0.75rem" }}>
+              Gui danh gia
+            </button>
+          </form>
         )}
       </div>
     </div>

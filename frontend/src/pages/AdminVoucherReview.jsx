@@ -8,7 +8,7 @@ const AdminVoucherReview = () => {
   useEffect(() => {
     let mounted = true;
     api.get("/admin/vouchers/pending")
-      .then(({ data }) => mounted && setVouchers(data.vouchers || data.data || []))
+      .then(({ data }) => mounted && setVouchers(data.data?.vouchers || data.vouchers || []))
       .catch(() => {})
       .finally(() => mounted && setLoading(false));
     return () => (mounted = false);
@@ -17,7 +17,7 @@ const AdminVoucherReview = () => {
   const act = async (id, action) => {
     try {
       if (action === 'approve') await api.patch(`/admin/vouchers/${id}/approve`);
-      else await api.patch(`/admin/vouchers/${id}/reject`, { reason: 'Rejected by admin' });
+      else await api.patch(`/admin/vouchers/${id}/reject`, { rejection_reason: "Rejected by admin" });
       setVouchers(v => v.filter(x => x.id !== id));
     } catch (err) {
       alert(err.response?.data?.error || err.message);

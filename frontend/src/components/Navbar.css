@@ -28,7 +28,7 @@
 }
 .navbar__brand:hover {
   transform: scale(1.03);
-  text-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+  text-shadow: 0 6px 16px rgba(15, 118, 110, 0.25);
 }
 .navbar__brand .brand-icon {
   font-size: 2rem; /* Tăng cỡ icon logo */
@@ -64,7 +64,7 @@
 .navbar__mega-trigger:hover,
 .navbar__mega-trigger.active {
   color: var(--color-primary);
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(15, 118, 110, 0.1);
 }
 .menu-icon {
   font-size: 1.2rem;
@@ -151,7 +151,7 @@
 .navbar__search:focus-within {
   background: var(--color-surface);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 .navbar__search input {
   flex-grow: 1;

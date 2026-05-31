@@ -1,0 +1,47 @@
+.partner-page {
+  padding: 2.5rem 0 3rem;
+}
+
+.partner-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.partner-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.partner-stats {
+  margin: 1.5rem 0;
+}
+
+.partner-stat-card {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--color-border);
+}
+
+.partner-section {
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.partner-branches {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.partner-branch-card {
+  padding: 0.75rem;
+  background: rgba(15, 118, 110, 0.06);
+  border: 1px solid var(--color-border);
+}

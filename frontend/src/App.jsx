@@ -8,19 +8,18 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VouchersPage from "./pages/VouchersPage";
 import VoucherDetailPage from "./pages/VoucherDetailPage";
-import {
-  CartPage,
-  MyVouchersPage,
-  AdminDashboardPage,
-  UnauthorizedPage,
-  NotFoundPage,
-} from "./pages/PlaceholderPages";
+import { UnauthorizedPage, NotFoundPage } from "./pages/PlaceholderPages";
 import ProfilePage from "./pages/ProfilePage";
 
-import VouchersList from "./pages/VouchersList";
-import VoucherDetail from "./pages/VoucherDetail";
+import CartPage from "./pages/CartPage";
+import MyVouchersPage from "./pages/MyVouchersPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import PartnerDashboardPage from "./pages/PartnerDashboardPage";
+import PartnerVoucherScan from "./pages/PartnerVoucherScan";
+import OrdersPage from "./pages/OrdersPage";
 import PartnerVouchers from "./pages/PartnerVouchers";
 import PartnerVoucherForm from "./pages/PartnerVoucherForm";
 import AdminVoucherReview from "./pages/AdminVoucherReview";
@@ -36,6 +35,7 @@ const App = () => (
             <Route path="/"          element={<HomePage />} />
             <Route path="/login"     element={<LoginPage />} />
             <Route path="/register"  element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/vouchers"  element={<VouchersPage />} />
             <Route path="/vouchers/:id" element={<VoucherDetailPage />} />
 
@@ -52,6 +52,11 @@ const App = () => (
                 <CartPage />
               </ProtectedRoute>
             } />
+            <Route path="/orders" element={
+              <ProtectedRoute roles={["CUSTOMER"]}>
+                <OrdersPage />
+              </ProtectedRoute>
+            } />
             <Route path="/my-vouchers" element={
               <ProtectedRoute roles={["CUSTOMER"]}>
                 <MyVouchersPage />
@@ -64,6 +69,11 @@ const App = () => (
                 <PartnerVouchers />
               </ProtectedRoute>
             } />
+            <Route path="/partner" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerDashboardPage />
+              </ProtectedRoute>
+            } />
             <Route path="/partner/vouchers/new" element={
               <ProtectedRoute roles={["PARTNER"]}>
                 <PartnerVoucherForm />
@@ -72,6 +82,11 @@ const App = () => (
             <Route path="/partner/vouchers/:id/edit" element={
               <ProtectedRoute roles={["PARTNER"]}>
                 <PartnerVoucherForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/scan" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerVoucherScan />
               </ProtectedRoute>
             } />
 

@@ -4,7 +4,12 @@ import {
   approveVoucher,
   getPendingVouchers,
   getUsers,
+  getOrders,
+  getLogs,
+  getDashboard,
+  getPendingPartners,
   rejectVoucher,
+  updatePartnerApprovalStatus,
   updateUserStatus,
 } from "../controllers/admin.controller.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
@@ -21,8 +26,18 @@ router.get("/vouchers/pending", asyncHandler(getPendingVouchers));
 router.patch("/vouchers/:id/approve", asyncHandler(approveVoucher));
 router.patch("/vouchers/:id/reject", asyncHandler(rejectVoucher));
 
-router.get("/orders", (_req, res) => res.json({ message: "GET /admin/orders - Phase 5" }));
-router.get("/dashboard", (_req, res) => res.json({ message: "GET /admin/dashboard - Phase 7" }));
-router.get("/logs", (_req, res) => res.json({ message: "GET /admin/logs - Phase 7" }));
+router.get("/partners/pending", asyncHandler(getPendingPartners));
+router.patch("/partners/:id/approve", asyncHandler((req, res, next) => {
+  req.body = { status: "APPROVED" };
+  return updatePartnerApprovalStatus(req, res, next);
+}));
+router.patch("/partners/:id/reject", asyncHandler((req, res, next) => {
+  req.body = { status: "REJECTED", rejection_reason: req.body?.rejection_reason };
+  return updatePartnerApprovalStatus(req, res, next);
+}));
+
+router.get("/orders", asyncHandler(getOrders));
+router.get("/dashboard", asyncHandler(getDashboard));
+router.get("/logs", asyncHandler(getLogs));
 
 export default router;

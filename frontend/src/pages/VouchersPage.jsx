@@ -52,6 +52,11 @@ const VouchersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minDiscount, setMinDiscount] = useState("");
+  const [area, setArea] = useState("");
+  const [activeStatus, setActiveStatus] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("newest"); // newest, priceAsc, priceDesc
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +65,11 @@ const VouchersPage = () => {
   useEffect(() => {
     setActiveCategory(searchParams.get("category") || "Tất cả");
     setSearchTerm(searchParams.get("search") || "");
+    setMinPrice(searchParams.get("min_price") || "");
+    setMaxPrice(searchParams.get("max_price") || "");
+    setMinDiscount(searchParams.get("min_discount") || "");
+    setArea(searchParams.get("area") || "");
+    setActiveStatus(searchParams.get("active_status") || "ACTIVE");
   }, [searchParams]);
 
   useEffect(() => {
@@ -69,7 +79,15 @@ const VouchersPage = () => {
       setLoading(true);
       setError("");
       try {
-        const data = await getVouchersRequest();
+        const data = await getVouchersRequest({
+          q: searchTerm || undefined,
+          category: activeCategory !== "Tất cả" ? activeCategory : undefined,
+          min_price: minPrice || undefined,
+          max_price: maxPrice || undefined,
+          min_discount: minDiscount || undefined,
+          area: area || undefined,
+          active_status: activeStatus || undefined,
+        });
         if (isMounted) setVouchers(data);
       } catch (err) {
         if (isMounted) setError(getApiErrorMessage(err, "Không thể tải danh sách voucher."));
@@ -82,7 +100,7 @@ const VouchersPage = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCategory, searchTerm, minPrice, maxPrice, minDiscount, area, activeStatus]);
 
   const categories = useMemo(() => {
     const normalized = vouchers
@@ -109,22 +127,16 @@ const VouchersPage = () => {
     setSearchParams(nextParams);
   };
 
+  const handleFilterChange = (key, value) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (value) nextParams.set(key, value);
+    else nextParams.delete(key);
+    setSearchParams(nextParams);
+  };
+
   const filteredVouchers = useMemo(() => {
     let result = vouchers;
 
-    // Filter Category
-    if (activeCategory !== "Tất cả") {
-      result = result.filter((v) => v.category === activeCategory);
-    }
-
-    // Filter Search
-    if (searchTerm) {
-      result = result.filter((v) =>
-        v.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    // Sort
     if (sortBy === "priceAsc") {
       result = [...result].sort((a, b) => a.sale_price - b.sale_price);
     } else if (sortBy === "priceDesc") {
@@ -132,7 +144,7 @@ const VouchersPage = () => {
     }
 
     return result;
-  }, [activeCategory, searchTerm, sortBy, vouchers]);
+  }, [sortBy, vouchers]);
 
   return (
     <div className="vp-container container">
@@ -172,6 +184,75 @@ const VouchersPage = () => {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="vp-filter-box">
+            <h3 className="vp-filter-title">Khoang gia</h3>
+            <input
+              type="number"
+              className="vp-search-input"
+              placeholder="Gia toi thieu"
+              value={minPrice}
+              onChange={(e) => {
+                setMinPrice(e.target.value);
+                handleFilterChange("min_price", e.target.value);
+              }}
+            />
+            <input
+              type="number"
+              className="vp-search-input"
+              placeholder="Gia toi da"
+              value={maxPrice}
+              onChange={(e) => {
+                setMaxPrice(e.target.value);
+                handleFilterChange("max_price", e.target.value);
+              }}
+              style={{ marginTop: "0.5rem" }}
+            />
+          </div>
+
+          <div className="vp-filter-box">
+            <h3 className="vp-filter-title">Muc giam (%)</h3>
+            <input
+              type="number"
+              className="vp-search-input"
+              placeholder="Giam tu"
+              value={minDiscount}
+              onChange={(e) => {
+                setMinDiscount(e.target.value);
+                handleFilterChange("min_discount", e.target.value);
+              }}
+            />
+          </div>
+
+          <div className="vp-filter-box">
+            <h3 className="vp-filter-title">Khu vuc</h3>
+            <input
+              type="text"
+              className="vp-search-input"
+              placeholder="Nhap khu vuc"
+              value={area}
+              onChange={(e) => {
+                setArea(e.target.value);
+                handleFilterChange("area", e.target.value);
+              }}
+            />
+          </div>
+
+          <div className="vp-filter-box">
+            <h3 className="vp-filter-title">Trang thai</h3>
+            <select
+              className="vp-sort-select"
+              value={activeStatus}
+              onChange={(e) => {
+                setActiveStatus(e.target.value);
+                handleFilterChange("active_status", e.target.value);
+              }}
+            >
+              <option value="ALL">Tat ca</option>
+              <option value="ACTIVE">Con hieu luc</option>
+              <option value="EXPIRED">Het hieu luc</option>
+            </select>
           </div>
         </aside>
 
@@ -230,8 +311,18 @@ const VouchersPage = () => {
                 onClick={() => {
                   handleCategoryClick("Tất cả");
                   setSearchTerm("");
+                  setMinPrice("");
+                  setMaxPrice("");
+                  setMinDiscount("");
+                  setArea("");
+                  setActiveStatus("ACTIVE");
                   const nextParams = new URLSearchParams(searchParams);
                   nextParams.delete("search");
+                  nextParams.delete("min_price");
+                  nextParams.delete("max_price");
+                  nextParams.delete("min_discount");
+                  nextParams.delete("area");
+                  nextParams.set("active_status", "ACTIVE");
                   setSearchParams(nextParams);
                 }}
               >

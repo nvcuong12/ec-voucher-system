@@ -26,16 +26,16 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = useCallback(async (email, password) => {
-    const data = await loginRequest({ email, password });
+  const login = useCallback(async (identifier, password) => {
+    const data = await loginRequest({ identifier, password });
     localStorage.setItem("token", data.token);
     api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setUser(data.user);
     return data.user;
   }, []);
 
-  const register = useCallback(async ({ full_name, email, password, role }) => {
-    const data = await registerRequest({ full_name, email, password, role });
+  const register = useCallback(async ({ full_name, email, phone, password, role }) => {
+    const data = await registerRequest({ full_name, email, phone, password, role });
     localStorage.setItem("token", data.token);
     api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setUser(data.user);

@@ -4,6 +4,12 @@ import { query } from "../config/database.js";
 import { getPartnerByUserIdQuery } from "../models/voucher.queries.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { BusinessException } from "../utils/BusinessException.js";
+import {
+  createBranch,
+  getPartnerDashboard,
+  registerPartner,
+  scanVoucher,
+} from "../controllers/partner.controller.js";
 
 const router = Router();
 
@@ -34,14 +40,32 @@ router.get(
   })
 );
 
-router.post("/register", authenticate, authorize("PARTNER"), (_req, res) =>
-  res.json({ message: "POST /partners/register - Phase 4" })
+router.post(
+  "/branches",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(createBranch)
 );
-router.get("/dashboard", authenticate, authorize("PARTNER"), (_req, res) =>
-  res.json({ message: "GET /partners/dashboard - Phase 7" })
+
+router.post(
+  "/register",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(registerPartner)
 );
-router.post("/vouchers/scan", authenticate, authorize("PARTNER"), (_req, res) =>
-  res.json({ message: "POST /partners/vouchers/scan - Phase 6" })
+
+router.get(
+  "/dashboard",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(getPartnerDashboard)
+);
+
+router.post(
+  "/vouchers/scan",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(scanVoucher)
 );
 
 export default router;

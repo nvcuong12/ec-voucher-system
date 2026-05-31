@@ -1,5 +1,6 @@
 import { query } from "../config/database.js";
 import { BusinessException } from "../utils/BusinessException.js";
+import { selectIssuedVouchersByCustomerQuery } from "../models/order.queries.js";
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -35,6 +36,15 @@ export const updateProfile = async (req, res, next) => {
     );
 
     res.json({ user: result.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getMyVouchers = async (req, res, next) => {
+  try {
+    const result = await query(selectIssuedVouchersByCustomerQuery, [req.user.id]);
+    return res.json({ data: { vouchers: result.rows } });
   } catch (err) {
     next(err);
   }

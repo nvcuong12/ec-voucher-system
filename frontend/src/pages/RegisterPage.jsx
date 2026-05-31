@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     role: "CUSTOMER",
@@ -27,6 +28,12 @@ const RegisterPage = () => {
     setIsLoading(true);
     setError("");
 
+    if (!formData.email && !formData.phone) {
+      setError("Vui long nhap email hoac so dien thoai.");
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Mật khẩu xác nhận không khớp.");
       setIsLoading(false);
@@ -37,6 +44,7 @@ const RegisterPage = () => {
       const user = await register({
         full_name: formData.full_name,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
         role: formData.role,
       });
@@ -104,7 +112,7 @@ const RegisterPage = () => {
               </div>
 
               <div className="auth-form-group" style={{ flex: 1 }}>
-                <label>Địa chỉ Email</label>
+                <label>Địa chỉ Email (hoặc bỏ trống)</label>
                 <div className="auth-input-wrap">
                   <input
                     type="email"
@@ -113,9 +121,22 @@ const RegisterPage = () => {
                     placeholder="Nhập email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
                   />
                 </div>
+              </div>
+            </div>
+
+            <div className="auth-form-group">
+              <label>Số điện thoại (hoặc bỏ trống)</label>
+              <div className="auth-input-wrap">
+                <input
+                  type="tel"
+                  name="phone"
+                  className="auth-input"
+                  placeholder="Nhập số điện thoại"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 

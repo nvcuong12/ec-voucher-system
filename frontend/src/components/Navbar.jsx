@@ -133,7 +133,7 @@ const Navbar = () => {
   const dashboardPath = () => {
     if (!user) return "/login";
     if (user.role === "ADMIN") return "/admin/vouchers";
-    if (user.role === "PARTNER") return "/partner/vouchers";
+    if (user.role === "PARTNER") return "/partner";
     return "/my-vouchers";
   };
 
@@ -174,6 +174,11 @@ const Navbar = () => {
                     <span className="navbar__cart-badge">{count}</span>
                   )}
                   <span className="cart-text">Giỏ hàng</span>
+                </Link>
+              )}
+              {user.role === "CUSTOMER" && (
+                <Link to="/orders" className="btn btn-ghost btn-sm">
+                  Don hang
                 </Link>
               )}
 

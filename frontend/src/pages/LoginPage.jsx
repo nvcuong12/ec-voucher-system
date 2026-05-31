@@ -5,7 +5,7 @@ import { getApiErrorMessage } from "../services/auth.service";
 import "./GlassAuth.css";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ const LoginPage = () => {
     setIsLoading(true);
     setError("");
     try {
-      const user = await login(formData.email, formData.password);
+      const user = await login(formData.identifier, formData.password);
       const target = from === "/" ? getDefaultRedirectPath(user.role) : from;
       navigate(target, { replace: true });
     } catch (err) {
@@ -67,14 +67,14 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="auth-form-group">
-              <label>Email</label>
+              <label>Email hoặc số điện thoại</label>
               <div className="auth-input-wrap">
                 <input
-                  type="email"
-                  name="email"
+                  type="text"
+                  name="identifier"
                   className="auth-input"
-                  placeholder="Nhập email của bạn"
-                  value={formData.email}
+                  placeholder="Email hoặc số điện thoại"
+                  value={formData.identifier}
                   onChange={handleChange}
                   required
                 />

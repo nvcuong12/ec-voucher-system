@@ -168,12 +168,32 @@ export const listPublicVouchersQuery = `
   FROM vouchers v
   JOIN partners p ON p.id = v.partner_id
   WHERE v.status = 'APPROVED'
-    AND (v.sale_end IS NULL OR v.sale_end > NOW())
-    AND v.stock > 0
-    AND ($1::text IS NULL OR v.category = $1)
-    AND ($2::uuid IS NULL OR v.partner_id = $2)
+    AND ($1::text IS NULL OR (v.name ILIKE '%' || $1 || '%' OR v.description ILIKE '%' || $1 || '%'))
+    AND ($2::text IS NULL OR v.category = $2)
+    AND ($3::uuid IS NULL OR v.partner_id = $3)
+    AND ($4::numeric IS NULL OR v.sale_price >= $4)
+    AND ($5::numeric IS NULL OR v.sale_price <= $5)
+    AND (
+      $6::numeric IS NULL
+      OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 >= $6
+    )
+    AND (
+      $7::text IS NULL
+      OR EXISTS (
+        SELECT 1
+        FROM voucher_applicable_branches vab
+        JOIN partner_branches pb ON pb.id = vab.branch_id
+        WHERE vab.voucher_id = v.id
+          AND pb.address ILIKE '%' || $7 || '%'
+      )
+    )
+    AND (
+      $8::text IS NULL
+      OR ($8 = 'ACTIVE' AND (v.sale_end IS NULL OR v.sale_end > NOW()) AND v.stock > 0)
+      OR ($8 = 'EXPIRED' AND (v.sale_end IS NOT NULL AND v.sale_end <= NOW()))
+    )
   ORDER BY v.created_at DESC
-  LIMIT $3 OFFSET $4
+  LIMIT $9 OFFSET $10
 `;
 
 /** Danh sách voucher — partner (chỉ thấy của mình) */
@@ -197,10 +217,30 @@ export const countPublicVouchersQuery = `
   SELECT COUNT(*) AS total
   FROM vouchers v
   WHERE v.status = 'APPROVED'
-    AND (v.sale_end IS NULL OR v.sale_end > NOW())
-    AND v.stock > 0
-    AND ($1::text IS NULL OR v.category = $1)
-    AND ($2::uuid IS NULL OR v.partner_id = $2)
+    AND ($1::text IS NULL OR (v.name ILIKE '%' || $1 || '%' OR v.description ILIKE '%' || $1 || '%'))
+    AND ($2::text IS NULL OR v.category = $2)
+    AND ($3::uuid IS NULL OR v.partner_id = $3)
+    AND ($4::numeric IS NULL OR v.sale_price >= $4)
+    AND ($5::numeric IS NULL OR v.sale_price <= $5)
+    AND (
+      $6::numeric IS NULL
+      OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 >= $6
+    )
+    AND (
+      $7::text IS NULL
+      OR EXISTS (
+        SELECT 1
+        FROM voucher_applicable_branches vab
+        JOIN partner_branches pb ON pb.id = vab.branch_id
+        WHERE vab.voucher_id = v.id
+          AND pb.address ILIKE '%' || $7 || '%'
+      )
+    )
+    AND (
+      $8::text IS NULL
+      OR ($8 = 'ACTIVE' AND (v.sale_end IS NULL OR v.sale_end > NOW()) AND v.stock > 0)
+      OR ($8 = 'EXPIRED' AND (v.sale_end IS NOT NULL AND v.sale_end <= NOW()))
+    )
 `;
 
 /** Đếm total cho partner list */
