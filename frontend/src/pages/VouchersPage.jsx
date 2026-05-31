@@ -59,6 +59,9 @@ const VouchersPage = () => {
   const [area, setArea] = useState("");
   const [activeStatus, setActiveStatus] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("newest"); // newest, priceAsc, priceDesc
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+  const limit = 12;
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,6 +74,8 @@ const VouchersPage = () => {
     setMinDiscount(searchParams.get("min_discount") || "");
     setArea(searchParams.get("area") || "");
     setActiveStatus(searchParams.get("active_status") || "ACTIVE");
+    const nextPage = Number(searchParams.get("page") || 1);
+    setPage(Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1);
   }, [searchParams]);
 
   useEffect(() => {
@@ -88,8 +93,13 @@ const VouchersPage = () => {
           min_discount: minDiscount || undefined,
           area: area || undefined,
           active_status: activeStatus || undefined,
+          page,
+          limit,
         });
-        if (isMounted) setVouchers(data);
+        if (isMounted) {
+          setVouchers(data.vouchers);
+          setPagination(data.pagination);
+        }
       } catch (err) {
         if (isMounted) setError(getApiErrorMessage(err, "Không thể tải danh sách voucher."));
       } finally {
@@ -101,7 +111,12 @@ const VouchersPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [activeCategory, searchTerm, minPrice, maxPrice, minDiscount, area, activeStatus]);
+  }, [activeCategory, searchTerm, minPrice, maxPrice, minDiscount, area, activeStatus, page]);
+
+  const totalPages = useMemo(() => {
+    if (!pagination?.total) return 1;
+    return Math.max(1, Math.ceil(pagination.total / limit));
+  }, [pagination, limit]);
 
   const categories = useMemo(() => {
     const normalized = vouchers
@@ -116,6 +131,7 @@ const VouchersPage = () => {
     const nextParams = new URLSearchParams(searchParams);
     if (cat === "Tất cả") nextParams.delete("category");
     else nextParams.set("category", cat);
+    nextParams.delete("page");
     setSearchParams(nextParams);
   };
 
@@ -125,6 +141,7 @@ const VouchersPage = () => {
     const nextParams = new URLSearchParams(searchParams);
     if (value) nextParams.set("search", value);
     else nextParams.delete("search");
+    nextParams.delete("page");
     setSearchParams(nextParams);
   };
 
@@ -132,6 +149,16 @@ const VouchersPage = () => {
     const nextParams = new URLSearchParams(searchParams);
     if (value) nextParams.set(key, value);
     else nextParams.delete(key);
+    nextParams.delete("page");
+    setSearchParams(nextParams);
+  };
+
+  const handlePageChange = (nextPage) => {
+    const normalized = Math.min(Math.max(nextPage, 1), totalPages);
+    setPage(normalized);
+    const nextParams = new URLSearchParams(searchParams);
+    if (normalized === 1) nextParams.delete("page");
+    else nextParams.set("page", String(normalized));
     setSearchParams(nextParams);
   };
 
@@ -262,7 +289,7 @@ const VouchersPage = () => {
           {/* Top Bar (Results count & Sort) */}
           <div className="vp-topbar">
             <span className="vp-results-count">
-              Hiển thị <strong>{filteredVouchers.length}</strong> kết quả
+              Hiển thị <strong>{filteredVouchers.length}</strong> / {pagination?.total || filteredVouchers.length} kết quả
             </span>
             <div className="vp-sort">
               <label>Sắp xếp theo:</label>
@@ -330,10 +357,33 @@ const VouchersPage = () => {
                   nextParams.delete("min_discount");
                   nextParams.delete("area");
                   nextParams.set("active_status", "ACTIVE");
+                  nextParams.delete("page");
                   setSearchParams(nextParams);
                 }}
               >
                 Xóa bộ lọc
+              </button>
+            </div>
+          )}
+
+          {totalPages > 1 && !loading && !error && (
+            <div className="vp-pagination">
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page <= 1}
+              >
+                Trước
+              </button>
+              <span className="vp-page-info">
+                Trang {page} / {totalPages}
+              </span>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= totalPages}
+              >
+                Sau
               </button>
             </div>
           )}

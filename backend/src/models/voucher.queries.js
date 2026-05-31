@@ -121,6 +121,7 @@ export const getPublicVoucherByIdQuery = `
   LEFT JOIN partner_branches pb ON pb.id = vab.branch_id
   WHERE v.id = $1
     AND v.status = 'APPROVED'
+    AND (v.sale_start IS NULL OR v.sale_start <= NOW())
     AND (v.sale_end IS NULL OR v.sale_end > NOW())
     AND v.stock > 0
   GROUP BY v.id, p.business_name
@@ -168,6 +169,7 @@ export const listPublicVouchersQuery = `
   FROM vouchers v
   JOIN partners p ON p.id = v.partner_id
   WHERE v.status = 'APPROVED'
+    AND (v.sale_start IS NULL OR v.sale_start <= NOW())
     AND ($1::text IS NULL OR (v.name ILIKE '%' || $1 || '%' OR v.description ILIKE '%' || $1 || '%'))
     AND ($2::text IS NULL OR v.category = $2)
     AND ($3::uuid IS NULL OR v.partner_id = $3)
@@ -217,6 +219,7 @@ export const countPublicVouchersQuery = `
   SELECT COUNT(*) AS total
   FROM vouchers v
   WHERE v.status = 'APPROVED'
+    AND (v.sale_start IS NULL OR v.sale_start <= NOW())
     AND ($1::text IS NULL OR (v.name ILIKE '%' || $1 || '%' OR v.description ILIKE '%' || $1 || '%'))
     AND ($2::text IS NULL OR v.category = $2)
     AND ($3::uuid IS NULL OR v.partner_id = $3)

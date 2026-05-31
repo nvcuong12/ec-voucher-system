@@ -114,6 +114,9 @@ export const createOrder = async (req, res, next) => {
         if (!voucher || voucher.status !== "APPROVED") {
           throw new BusinessException("CONFLICT", "Voucher is not available for purchase", 409);
         }
+        if (voucher.sale_start && new Date(voucher.sale_start) > now) {
+          throw new BusinessException("CONFLICT", "Voucher sale has not started", 409);
+        }
         if (voucher.sale_end && new Date(voucher.sale_end) <= now) {
           throw new BusinessException("CONFLICT", "Voucher sale has ended", 409);
         }
@@ -206,10 +209,22 @@ export const payOrder = async (req, res, next) => {
 
       for (const item of items) {
         const voucher = voucherMap.get(item.voucher_id);
-        if (!voucher || voucher.stock < item.quantity) {
+        if (!voucher || voucher.status !== "APPROVED") {
+          throw new BusinessException("CONFLICT", "Voucher is not available for purchase", 409);
+        }
+        if (voucher.sale_start && new Date(voucher.sale_start) > new Date()) {
+          throw new BusinessException("CONFLICT", "Voucher sale has not started", 409);
+        }
+        if (voucher.sale_end && new Date(voucher.sale_end) <= new Date()) {
+          throw new BusinessException("CONFLICT", "Voucher sale has ended", 409);
+        }
+        if (voucher.stock < item.quantity) {
           throw new BusinessException("CONFLICT", "Voucher out of stock", 409);
         }
-        await client.query(updateVoucherStockQuery, [item.quantity, item.voucher_id]);
+        const stockRes = await client.query(updateVoucherStockQuery, [item.quantity, item.voucher_id]);
+        if (!stockRes.rows[0]) {
+          throw new BusinessException("CONFLICT", "Voucher out of stock", 409);
+        }
       }
 
       const paymentRef = `MOCK-${Date.now()}`;

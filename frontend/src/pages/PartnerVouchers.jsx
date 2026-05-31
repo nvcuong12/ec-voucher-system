@@ -45,7 +45,7 @@ const PartnerVouchers = () => {
       const { data } = await api.get("/vouchers", { params });
       setVouchers(data?.data?.vouchers || []);
     } catch (err) {
-      setError(err.response?.data?.error || "Không tải được danh sách voucher đối tác");
+      setError(err.response?.data?.error?.message || "Không tải được danh sách voucher đối tác");
       setVouchers([]);
     } finally {
       setLoading(false);

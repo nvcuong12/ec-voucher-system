@@ -2,7 +2,10 @@ import api from "./api";
 
 export const getApiErrorMessage = (error, fallbackMessage) => {
   if (!error.response) return "Không thể kết nối máy chủ. Vui lòng thử lại.";
-  return error.response.data?.error || fallbackMessage;
+  const payload = error.response.data?.error;
+  if (typeof payload === "string") return payload;
+  if (payload?.message) return payload.message;
+  return fallbackMessage;
 };
 
 export const loginRequest = async ({ identifier, password }) => {

@@ -15,7 +15,7 @@ export const authenticate = async (req, res, next) => {
 
     // Fetch fresh user from DB to catch revoked/locked accounts
     const result = await query(
-      "SELECT id, email, full_name, role, is_active FROM users WHERE id = $1",
+      "SELECT id, email, full_name, phone, role, is_active FROM users WHERE id = $1",
       [decoded.userId]
     );
 

@@ -110,7 +110,7 @@ const PartnerVoucherForm = () => {
       })
       .catch((err) => {
         if (!mounted) return;
-        setError(err.response?.data?.error || "Không tải được dữ liệu voucher để sửa");
+        setError(err.response?.data?.error?.message || "Không tải được dữ liệu voucher để sửa");
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -198,7 +198,7 @@ const PartnerVoucherForm = () => {
       }
       navigate("/partner/vouchers");
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "Lưu voucher thất bại");
+      setError(err.response?.data?.error?.message || err.message || "Lưu voucher thất bại");
     } finally {
       setSubmitting(false);
     }

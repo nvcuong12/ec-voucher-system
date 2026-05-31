@@ -4,7 +4,7 @@
 // ================================================================
 
 export const selectVouchersForOrderQuery = `
-  SELECT id, sale_price, stock, status, sale_end, partner_id, valid_until
+  SELECT id, sale_price, stock, status, sale_start, sale_end, partner_id, valid_until
   FROM vouchers
   WHERE id = ANY($1::uuid[])
   FOR UPDATE
