@@ -45,3 +45,24 @@
   background: rgba(15, 118, 110, 0.06);
   border: 1px solid var(--color-border);
 }
+
+.partner-branch-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.partner-branch-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.partner-branch-status.active {
+  color: #0f766e;
+}
+
+.partner-branch-status.inactive {
+  color: #b45309;
+}

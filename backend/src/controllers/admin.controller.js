@@ -7,12 +7,28 @@ import {
   ADMIN_USER_STATUS,
   ADMIN_USER_STATUS_LABEL,
   ADMIN_VOUCHER_STATUS,
+  createBannerQuery,
+  createCategoryQuery,
+  createContentPageQuery,
+  listAllVouchersQuery,
+  listAllPartnersQuery,
+  listBannersQuery,
+  listCategoriesQuery,
+  listContentPagesQuery,
+  listPartnerBranchesQuery,
   listPendingPartnersQuery,
   listPendingVouchersQuery,
+  updateBannerQuery,
+  updateBranchStatusQuery,
+  updateCategoryQuery,
+  updateContentPageQuery,
+  updatePartnerStatusAnyQuery,
   approveVoucherQuery,
   insertSystemLogQuery,
   rejectVoucherQuery,
   updatePartnerStatusQuery,
+  updateUserRoleQuery,
+  updateVoucherStatusQuery,
 } from "../models/admin.queries.js";
 import { selectOrderItemsByOrderIdsQuery } from "../models/order.queries.js";
 
@@ -94,6 +110,44 @@ export const updateUserStatus = async (req, res, next) => {
       return next(new BusinessException("NOT_FOUND", "User not found", 404));
     }
 
+    await logAdminAction(
+      req.user?.id,
+      ADMIN_LOG_ACTION.UPDATE_USER_STATUS,
+      ADMIN_LOG_ENTITY.USER,
+      user.id
+    );
+
+    return sendSuccess(res, { user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateUserRole = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid user id", 400));
+    }
+
+    const nextRole = typeof req.body?.role === "string" ? req.body.role.trim().toUpperCase() : "";
+    if (!nextRole || !["ADMIN", "PARTNER", "CUSTOMER"].includes(nextRole)) {
+      return next(new BusinessException("VALIDATION_FAILED", "role must be ADMIN, PARTNER, or CUSTOMER", 400));
+    }
+
+    const result = await query(updateUserRoleQuery, [nextRole, id]);
+    const user = result.rows[0];
+    if (!user) {
+      return next(new BusinessException("NOT_FOUND", "User not found", 404));
+    }
+
+    await logAdminAction(
+      req.user?.id,
+      ADMIN_LOG_ACTION.UPDATE_USER_ROLE,
+      ADMIN_LOG_ENTITY.USER,
+      user.id
+    );
+
     return sendSuccess(res, { user });
   } catch (err) {
     next(err);
@@ -104,6 +158,15 @@ export const getPendingVouchers = async (_req, res, next) => {
   try {
     const result = await query(listPendingVouchersQuery, [ADMIN_VOUCHER_STATUS.PENDING_APPROVAL]);
 
+    return sendSuccess(res, { vouchers: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllVouchers = async (_req, res, next) => {
+  try {
+    const result = await query(listAllVouchersQuery);
     return sendSuccess(res, { vouchers: result.rows });
   } catch (err) {
     next(err);
@@ -189,9 +252,53 @@ export const rejectVoucher = async (req, res, next) => {
   }
 };
 
+export const updateVoucherStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
+    }
+
+    const nextStatus = typeof req.body?.status === "string" ? req.body.status.trim().toUpperCase() : "";
+    if (!nextStatus || !Object.values(ADMIN_VOUCHER_STATUS).includes(nextStatus)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher status", 400));
+    }
+
+    const allowedCurrent = [ADMIN_VOUCHER_STATUS.APPROVED, ADMIN_VOUCHER_STATUS.SUSPENDED];
+    const result = await query(updateVoucherStatusQuery, [nextStatus, id, allowedCurrent]);
+    const voucher = result.rows[0];
+    if (!voucher) {
+      const exists = await query("SELECT id, status FROM vouchers WHERE id = $1", [id]);
+      if (!exists.rows[0]) {
+        return next(new BusinessException("NOT_FOUND", "Voucher not found", 404));
+      }
+      return next(new BusinessException("CONFLICT", "Voucher status cannot be updated", 409));
+    }
+
+    const action = nextStatus === ADMIN_VOUCHER_STATUS.SUSPENDED
+      ? ADMIN_LOG_ACTION.SUSPEND_VOUCHER
+      : ADMIN_LOG_ACTION.RESUME_VOUCHER;
+
+    await logAdminAction(req.user?.id, action, ADMIN_LOG_ENTITY.VOUCHER, voucher.id);
+
+    return sendSuccess(res, { voucher });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getPendingPartners = async (_req, res, next) => {
   try {
     const result = await query(listPendingPartnersQuery, [ADMIN_PARTNER_STATUS.PENDING]);
+    return sendSuccess(res, { partners: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllPartners = async (_req, res, next) => {
+  try {
+    const result = await query(listAllPartnersQuery);
     return sendSuccess(res, { partners: result.rows });
   } catch (err) {
     next(err);
@@ -249,6 +356,87 @@ export const updatePartnerApprovalStatus = async (req, res, next) => {
   }
 };
 
+export const updatePartnerStatusAny = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid partner id", 400));
+    }
+
+    const nextStatus = typeof req.body?.status === "string" ? req.body.status.trim().toUpperCase() : "";
+    if (!nextStatus || !Object.values(ADMIN_PARTNER_STATUS).includes(nextStatus)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid partner status", 400));
+    }
+
+    const rejectionReason = typeof req.body?.rejection_reason === "string"
+      ? req.body.rejection_reason.trim()
+      : null;
+
+    if (nextStatus === ADMIN_PARTNER_STATUS.REJECTED && !rejectionReason) {
+      return next(new BusinessException("VALIDATION_FAILED", "rejection_reason is required when rejecting a partner", 400));
+    }
+
+    const result = await query(updatePartnerStatusAnyQuery, [
+      nextStatus,
+      nextStatus === ADMIN_PARTNER_STATUS.REJECTED ? rejectionReason : null,
+      id,
+    ]);
+
+    const partner = result.rows[0];
+    if (!partner) {
+      return next(new BusinessException("NOT_FOUND", "Partner not found", 404));
+    }
+
+    const action = nextStatus === ADMIN_PARTNER_STATUS.SUSPENDED
+      ? ADMIN_LOG_ACTION.SUSPEND_PARTNER
+      : ADMIN_LOG_ACTION.RESUME_PARTNER;
+
+    await logAdminAction(req.user?.id, action, ADMIN_LOG_ENTITY.PARTNER, partner.id);
+
+    return sendSuccess(res, { partner });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPartnerBranches = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid partner id", 400));
+    }
+
+    const result = await query(listPartnerBranchesQuery, [id]);
+    return sendSuccess(res, { branches: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePartnerBranchStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid branch id", 400));
+    }
+
+    if (typeof req.body?.is_active !== "boolean") {
+      return next(new BusinessException("VALIDATION_FAILED", "is_active must be boolean", 400));
+    }
+
+    const result = await query(updateBranchStatusQuery, [req.body.is_active, id]);
+    const branch = result.rows[0];
+    if (!branch) {
+      return next(new BusinessException("NOT_FOUND", "Branch not found", 404));
+    }
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.PARTNER, branch.id);
+    return sendSuccess(res, { branch });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getOrders = async (_req, res, next) => {
   try {
     const ordersResult = await query(
@@ -283,6 +471,65 @@ export const getOrders = async (_req, res, next) => {
   }
 };
 
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid order id", 400));
+    }
+
+    const nextStatus = typeof req.body?.status === "string" ? req.body.status.trim().toUpperCase() : "";
+    if (!nextStatus || !["CANCELLED", "REFUNDED"].includes(nextStatus)) {
+      return next(new BusinessException("VALIDATION_FAILED", "status must be CANCELLED or REFUNDED", 400));
+    }
+
+    const currentRes = await query(
+      "SELECT id, status FROM orders WHERE id = $1",
+      [id]
+    );
+    const current = currentRes.rows[0];
+    if (!current) {
+      return next(new BusinessException("NOT_FOUND", "Order not found", 404));
+    }
+    if (nextStatus === "CANCELLED" && current.status !== "PENDING") {
+      return next(new BusinessException("CONFLICT", "Only pending orders can be cancelled", 409));
+    }
+    if (nextStatus === "REFUNDED" && current.status !== "PAID") {
+      return next(new BusinessException("CONFLICT", "Only paid orders can be refunded", 409));
+    }
+
+    const result = await query(
+      `UPDATE orders
+       SET status = $1,
+           updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, customer_id, total_amount, status, payment_ref, payment_method,
+                 recipient_name, recipient_phone, recipient_email, note,
+                 paid_at, created_at, updated_at`,
+      [nextStatus, id]
+    );
+
+    const order = result.rows[0];
+
+    if (nextStatus === "REFUNDED") {
+      await query(
+        `UPDATE issued_vouchers
+         SET status = 'CANCELLED'
+         WHERE order_item_id IN (
+           SELECT id FROM order_items WHERE order_id = $1
+         )`,
+        [order.id]
+      );
+    }
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_ORDER_STATUS, ADMIN_LOG_ENTITY.ORDER, order.id);
+
+    return sendSuccess(res, { order });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getLogs = async (_req, res, next) => {
   try {
     const result = await query(
@@ -295,6 +542,166 @@ export const getLogs = async (_req, res, next) => {
     );
 
     return res.json({ data: { logs: result.rows } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCategories = async (_req, res, next) => {
+  try {
+    const result = await query(listCategoriesQuery);
+    return sendSuccess(res, { categories: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createCategory = async (req, res, next) => {
+  try {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    if (!name) {
+      return next(new BusinessException("VALIDATION_FAILED", "name is required", 400));
+    }
+
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : true;
+    const result = await query(createCategoryQuery, [name, isActive]);
+    const category = result.rows[0];
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id);
+    return sendSuccess(res, { category }, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid category id", 400));
+    }
+
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : null;
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : null;
+    const result = await query(updateCategoryQuery, [id, name, isActive]);
+    const category = result.rows[0];
+    if (!category) {
+      return next(new BusinessException("NOT_FOUND", "Category not found", 404));
+    }
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id);
+    return sendSuccess(res, { category });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getBanners = async (_req, res, next) => {
+  try {
+    const result = await query(listBannersQuery);
+    return sendSuccess(res, { banners: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createBanner = async (req, res, next) => {
+  try {
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+    const imageUrl = typeof req.body?.image_url === "string" ? req.body.image_url.trim() : "";
+    if (!title || !imageUrl) {
+      return next(new BusinessException("VALIDATION_FAILED", "title and image_url are required", 400));
+    }
+
+    const linkUrl = typeof req.body?.link_url === "string" ? req.body.link_url.trim() : null;
+    const sortOrder = Number.isFinite(req.body?.sort_order) ? req.body.sort_order : 0;
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : true;
+
+    const result = await query(createBannerQuery, [title, imageUrl, linkUrl, sortOrder, isActive]);
+    const banner = result.rows[0];
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id);
+    return sendSuccess(res, { banner }, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateBanner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid banner id", 400));
+    }
+
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : null;
+    const imageUrl = typeof req.body?.image_url === "string" ? req.body.image_url.trim() : null;
+    const linkUrl = typeof req.body?.link_url === "string" ? req.body.link_url.trim() : null;
+    const sortOrder = Number.isFinite(req.body?.sort_order) ? req.body.sort_order : null;
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : null;
+
+    const result = await query(updateBannerQuery, [id, title, imageUrl, linkUrl, sortOrder, isActive]);
+    const banner = result.rows[0];
+    if (!banner) {
+      return next(new BusinessException("NOT_FOUND", "Banner not found", 404));
+    }
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id);
+    return sendSuccess(res, { banner });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getContentPages = async (_req, res, next) => {
+  try {
+    const result = await query(listContentPagesQuery);
+    return sendSuccess(res, { pages: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createContentPage = async (req, res, next) => {
+  try {
+    const slug = typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
+    if (!slug || !title || !content) {
+      return next(new BusinessException("VALIDATION_FAILED", "slug, title, content are required", 400));
+    }
+
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : true;
+    const result = await query(createContentPageQuery, [slug, title, content, isActive]);
+    const page = result.rows[0];
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id);
+    return sendSuccess(res, { page }, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateContentPage = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid page id", 400));
+    }
+
+    const slug = typeof req.body?.slug === "string" ? req.body.slug.trim() : null;
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : null;
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : null;
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : null;
+
+    const result = await query(updateContentPageQuery, [id, slug, title, content, isActive]);
+    const page = result.rows[0];
+    if (!page) {
+      return next(new BusinessException("NOT_FOUND", "Page not found", 404));
+    }
+
+    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id);
+    return sendSuccess(res, { page });
   } catch (err) {
     next(err);
   }

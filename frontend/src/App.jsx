@@ -22,6 +22,7 @@ import PartnerVoucherScan from "./pages/PartnerVoucherScan";
 import OrdersPage from "./pages/OrdersPage";
 import PartnerVouchers from "./pages/PartnerVouchers";
 import PartnerVoucherForm from "./pages/PartnerVoucherForm";
+import PartnerReports from "./pages/PartnerReports";
 import AdminVoucherReview from "./pages/AdminVoucherReview";
 
 const App = () => (
@@ -87,6 +88,11 @@ const App = () => (
             <Route path="/partner/scan" element={
               <ProtectedRoute roles={["PARTNER"]}>
                 <PartnerVoucherScan />
+              </ProtectedRoute>
+            } />
+            <Route path="/partner/reports" element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerReports />
               </ProtectedRoute>
             } />
 

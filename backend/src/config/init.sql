@@ -13,6 +13,9 @@ CREATE TYPE voucher_status AS ENUM ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'RE
 CREATE TYPE order_status AS ENUM ('PENDING', 'PAID', 'CANCELLED', 'REFUNDED');
 CREATE TYPE issued_voucher_status AS ENUM ('UNUSED', 'USED', 'EXPIRED', 'CANCELLED');
 
+-- Allow evolving enum values safely in existing databases
+ALTER TYPE voucher_status ADD VALUE IF NOT EXISTS 'SUSPENDED';
+
 -- ─── Users ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -152,6 +155,36 @@ CREATE TABLE IF NOT EXISTS reviews (
   UNIQUE (issued_voucher_id)
 );
 
+-- ─── Content Management ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS categories (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        VARCHAR(120) NOT NULL UNIQUE,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS banners (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title       VARCHAR(255) NOT NULL,
+  image_url   VARCHAR(500) NOT NULL,
+  link_url    VARCHAR(500),
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS content_pages (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug        VARCHAR(120) NOT NULL UNIQUE,
+  title       VARCHAR(255) NOT NULL,
+  content     TEXT NOT NULL,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── System Logs ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS system_logs (
   id          BIGSERIAL PRIMARY KEY,
@@ -178,6 +211,9 @@ CREATE INDEX idx_logs_user          ON system_logs(user_id);
 CREATE INDEX idx_logs_created       ON system_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_vab_voucher ON voucher_applicable_branches(voucher_id);
 CREATE INDEX IF NOT EXISTS idx_vab_branch  ON voucher_applicable_branches(branch_id);
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active);
+CREATE INDEX IF NOT EXISTS idx_banners_active ON banners(is_active);
+CREATE INDEX IF NOT EXISTS idx_pages_active ON content_pages(is_active);
 
 -- ─── Seed: Default Admin ─────────────────────────────────────────
 -- Password: Admin@123 (bcrypt hash, change in production!)

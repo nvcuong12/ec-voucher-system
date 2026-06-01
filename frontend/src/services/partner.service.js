@@ -20,6 +20,33 @@ export const getPartnerBranchesRequest = async () => {
   return data.data.branches || [];
 };
 
+export const getPartnerBranchesWithInactiveRequest = async () => {
+  const { data } = await api.get("/partners/branches", {
+    params: { include_inactive: true },
+  });
+  return data.data.branches || [];
+};
+
+export const updatePartnerProfileRequest = async (payload) => {
+  const { data } = await api.put("/partners/profile", payload);
+  return data.data.partner;
+};
+
+export const updatePartnerBranchRequest = async (branchId, payload) => {
+  const { data } = await api.patch(`/partners/branches/${branchId}`, payload);
+  return data.data.branch;
+};
+
+export const getPartnerReportsRequest = async () => {
+  const { data } = await api.get("/partners/reports");
+  return data.data;
+};
+
+export const checkVoucherRequest = async (payload) => {
+  const { data } = await api.post("/partners/vouchers/check", payload);
+  return data.data;
+};
+
 export const scanVoucherRequest = async (payload) => {
   const { data } = await api.post("/partners/vouchers/scan", payload);
   return data.data;

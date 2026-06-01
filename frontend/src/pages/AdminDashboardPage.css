@@ -60,6 +60,51 @@
   flex-wrap: wrap;
 }
 
+.admin-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.admin-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.admin-select {
+  min-width: 140px;
+}
+
+.admin-input {
+  min-width: 200px;
+}
+
+.admin-branch-list {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-branch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: rgba(15, 118, 110, 0.04);
+}
+
+.admin-banner-item,
+.admin-page-item {
+  display: grid;
+  gap: 0.5rem;
+}
+
 .admin-log-item {
   padding: 0.85rem 1rem;
 }

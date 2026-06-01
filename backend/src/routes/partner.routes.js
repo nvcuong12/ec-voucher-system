@@ -6,9 +6,13 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { BusinessException } from "../utils/BusinessException.js";
 import {
   createBranch,
+  checkVoucher,
   getPartnerDashboard,
+  getPartnerReport,
   registerPartner,
   scanVoucher,
+  updatePartnerBranch,
+  updatePartnerProfile,
 } from "../controllers/partner.controller.js";
 
 const router = Router();
@@ -18,6 +22,7 @@ router.get(
   authenticate,
   authorize("PARTNER"),
   asyncHandler(async (req, res, next) => {
+    const includeInactive = String(req.query.include_inactive || "false").toLowerCase() === "true";
     const partnerResult = await query(getPartnerByUserIdQuery, [req.user.id]);
     const partner = partnerResult.rows[0];
 
@@ -30,10 +35,10 @@ router.get(
         SELECT id, name, address, phone, is_active
         FROM partner_branches
         WHERE partner_id = $1
-          AND is_active = TRUE
+          AND ($2::boolean = TRUE OR is_active = TRUE)
         ORDER BY name ASC
       `,
-      [partner.id]
+      [partner.id, includeInactive]
     );
 
     return res.json({ data: { branches: branchesResult.rows } });
@@ -54,11 +59,39 @@ router.post(
   asyncHandler(registerPartner)
 );
 
+router.put(
+  "/profile",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(updatePartnerProfile)
+);
+
 router.get(
   "/dashboard",
   authenticate,
   authorize("PARTNER"),
   asyncHandler(getPartnerDashboard)
+);
+
+router.get(
+  "/reports",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(getPartnerReport)
+);
+
+router.patch(
+  "/branches/:id",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(updatePartnerBranch)
+);
+
+router.post(
+  "/vouchers/check",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(checkVoucher)
 );
 
 router.post(
