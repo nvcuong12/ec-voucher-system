@@ -86,6 +86,8 @@ const ProfilePage = () => {
             </div>
           </div>
 
+          {/* Right column */}
+          <div className="profile-right-col">
           {/* Edit Form Card */}
           <div className="profile-card">
             <h2 className="profile-card__title">Chỉnh sửa thông tin</h2>
@@ -173,7 +175,8 @@ const ProfilePage = () => {
 
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default ProfilePage;

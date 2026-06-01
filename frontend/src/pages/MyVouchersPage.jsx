@@ -1,25 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { RiQrCodeLine } from "react-icons/ri";
 import { getMyIssuedVouchersRequest } from "../services/order.service";
 import "./MyVouchersPage.css";
 
-const formatDate = (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-");
+const formatDate = (value) => (value ? new Date(value).toLocaleString("vi-VN") : "—");
 
-const statusBadge = (status) => {
-  if (status === "USED") return "badge badge-green";
-  if (status === "EXPIRED") return "badge badge-red";
-  if (status === "CANCELLED") return "badge badge-gray";
-  return "badge badge-blue";
-};
-
-const issuedStatusLabel = (status) => {
-  const map = {
-    UNUSED: "Chưa dùng",
-    USED: "Đã dùng",
-    EXPIRED: "Hết hạn",
-    CANCELLED: "Đã hủy",
-  };
-  return map[status] || status;
+const STATUS_MAP = {
+  UNUSED:    { label: "Chưa dùng",  cls: "badge badge-blue" },
+  USED:      { label: "Đã dùng",    cls: "badge badge-green" },
+  EXPIRED:   { label: "Hết hạn",    cls: "badge badge-red" },
+  CANCELLED: { label: "Đã hủy",     cls: "badge badge-gray" },
 };
 
 const MyVouchersPage = () => {
@@ -33,9 +24,7 @@ const MyVouchersPage = () => {
       .then((data) => mounted && setVouchers(data))
       .catch((err) => mounted && setError(err.response?.data?.error?.message || "Không tải được voucher"))
       .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   return (
@@ -48,37 +37,69 @@ const MyVouchersPage = () => {
       </p>
 
       {loading ? (
-        <div className="card my-vouchers-empty">Đang tải...</div>
+        <div className="my-vouchers-empty card">
+          <div className="spinner" style={{ margin: "0 auto 1rem" }} />
+          <p>Đang tải voucher...</p>
+        </div>
       ) : error ? (
         <div className="card my-vouchers-empty">
           <p className="text-danger">{error}</p>
         </div>
       ) : vouchers.length === 0 ? (
         <div className="card my-vouchers-empty">
-          Bạn chưa có voucher nào.
+          <RiQrCodeLine style={{ fontSize: "3rem", color: "var(--color-text-muted)", marginBottom: "1rem" }} />
+          <p>Bạn chưa có voucher nào.</p>
+          <Link to="/vouchers" className="btn btn-primary" style={{ marginTop: "1rem" }}>
+            Mua voucher ngay
+          </Link>
         </div>
       ) : (
         <div className="my-vouchers-list">
-          {vouchers.map((voucher) => (
-            <div key={voucher.id} className="card my-voucher-card">
-              <div className="my-voucher-top">
-                <div>
-                  <h3 className="my-voucher-title">{voucher.name}</h3>
-                  <p className="text-muted">Đối tác: {voucher.business_name}</p>
-                  <p className="text-muted">Mã: <strong>{voucher.code}</strong></p>
+          {vouchers.map((voucher) => {
+            const statusInfo = STATUS_MAP[voucher.status] || { label: voucher.status, cls: "badge badge-gray" };
+            return (
+              <div key={voucher.id} className={`my-voucher-card status-${voucher.status}`}>
+                {/* Top: Name + Badge */}
+                <div className="my-voucher-top">
+                  <div style={{ flex: 1 }}>
+                    <div className="my-voucher-title">{voucher.name}</div>
+                    <p className="text-muted" style={{ fontSize: "0.82rem", marginTop: "0.2rem" }}>
+                      {voucher.business_name}
+                    </p>
+                  </div>
+                  <span className={statusInfo.cls}>{statusInfo.label}</span>
                 </div>
-                <span className={statusBadge(voucher.status)}>{issuedStatusLabel(voucher.status)}</span>
+
+                {/* Divider with notch */}
+                <div className="my-voucher-divider">
+                  <hr className="my-voucher-dashes" />
+                </div>
+
+                {/* Code */}
+                <div className="my-voucher-code-section">
+                  <div className="my-voucher-qr-icon">
+                    <RiQrCodeLine />
+                  </div>
+                  <div>
+                    <span className="my-voucher-code-label">Mã voucher</span>
+                    <span className="my-voucher-code">{voucher.code}</span>
+                  </div>
+                </div>
+
+                {/* Meta */}
+                <div className="my-voucher-meta">
+                  <div className="my-voucher-meta-item">
+                    <span className="my-voucher-meta-label">Hết hạn</span>
+                    <span className="my-voucher-meta-value">{formatDate(voucher.expires_at)}</span>
+                  </div>
+                  <div className="my-voucher-meta-item">
+                    <span className="my-voucher-meta-label">Đã dùng lúc</span>
+                    <span className="my-voucher-meta-value">{formatDate(voucher.used_at)}</span>
+                  </div>
+                </div>
               </div>
-              <div className="my-voucher-grid">
-                <div className="text-muted">Hết hạn: {formatDate(voucher.expires_at)}</div>
-                <div className="text-muted">Đã dùng: {formatDate(voucher.used_at)}</div>
-              </div>
-              <div className="card my-voucher-qr">
-                <p className="text-muted">QR mô phỏng:</p>
-                <code>{`QR:${voucher.code}`}</code>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
