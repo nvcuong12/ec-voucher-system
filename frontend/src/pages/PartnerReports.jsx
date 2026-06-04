@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getPartnerReportsRequest } from "../services/partner.service";
 import "./PartnerReports.css";
 
@@ -35,16 +35,12 @@ const PartnerReports = () => {
   }, []);
 
   const summary = report?.summary;
-  const rows = report?.vouchers || [];
-
-  const enrichedRows = useMemo(() => {
-    return rows.map((row) => {
-      const issued = Number(row.issued_count || 0);
-      const used = Number(row.used_count || 0);
-      const usageRate = issued ? Math.round((used / issued) * 100) : 0;
-      return { ...row, usageRate };
-    });
-  }, [rows]);
+  const enrichedRows = (report?.vouchers ?? []).map((row) => {
+    const issued = Number(row.issued_count || 0);
+    const used = Number(row.used_count || 0);
+    const usageRate = issued ? Math.round((used / issued) * 100) : 0;
+    return { ...row, usageRate };
+  });
 
   if (loading) return <div className="container partner-reports">Đang tải...</div>;
 

@@ -19,6 +19,11 @@ export const getVouchersRequest = async (params = {}) => {
   };
 };
 
+export const getVoucherCategoriesRequest = async () => {
+  const { data } = await api.get("/vouchers/categories");
+  return data.data?.categories || data.categories || [];
+};
+
 export const getVoucherByIdRequest = async (id) => {
   const { data } = await api.get(`/vouchers/${id}`);
   const voucher = data.data?.voucher || data.voucher;

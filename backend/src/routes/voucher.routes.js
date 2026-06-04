@@ -5,12 +5,16 @@ import {
   updateVoucher,
   getVoucherById,
   listVouchers,
+  listVoucherCategories,
 } from "../controllers/voucher.controller.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 
 const router = Router();
 
 // ── Public / optional-auth routes ──────────────────────────────
+// GET /api/vouchers/categories — public filter categories
+router.get("/categories", asyncHandler(listVoucherCategories));
+
 // GET /api/vouchers  — public list, partner list (same URL, logic branches by role)
 router.get(
   "/",

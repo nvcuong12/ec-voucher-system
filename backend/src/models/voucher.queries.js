@@ -78,6 +78,14 @@ export const deleteVoucherBranchesQuery = `
   WHERE voucher_id = $1
 `;
 
+/** Danh sách category công khai cho bộ lọc voucher */
+export const listPublicCategoriesQuery = `
+  SELECT id, name
+  FROM categories
+  WHERE is_active = TRUE
+  ORDER BY name ASC
+`;
+
 /** Lấy voucher theo id (dùng nội bộ, trả full) */
 export const getVoucherByIdFullQuery = `
   SELECT

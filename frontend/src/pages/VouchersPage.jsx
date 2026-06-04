@@ -2,8 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { RiLoader4Line, RiErrorWarningLine, RiEmotionSadLine } from "react-icons/ri";
 import { getApiErrorMessage } from "../services/auth.service";
-import { getVouchersRequest } from "../services/voucher.service";
+import { getVoucherCategoriesRequest, getVouchersRequest } from "../services/voucher.service";
 import "./VouchersPage.css";
+
+const PRICE_MAX = 2000000;
+const DISCOUNT_MAX = 80;
+const AREA_OPTIONS = [
+  { value: "", label: "Tất cả khu vực" },
+  { value: "Quận 1", label: "Quận 1" },
+  { value: "Quận 3", label: "Quận 3" },
+  { value: "Quận 7", label: "Quận 7" },
+  { value: "Quận 10", label: "Quận 10" },
+  { value: "Tân Bình", label: "Tân Bình" },
+  { value: "Gò Vấp", label: "Gò Vấp" },
+  { value: "Bình Thạnh", label: "Bình Thạnh" },
+  { value: "Phú Nhuận", label: "Phú Nhuận" },
+  { value: "TP. Thủ Đức", label: "TP. Thủ Đức" },
+];
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
@@ -52,10 +67,11 @@ const VoucherCard = ({ voucher }) => {
 const VouchersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("Tất cả");
+  const [categories, setCategories] = useState(["Tất cả"]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [minDiscount, setMinDiscount] = useState("");
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
+  const [minDiscount, setMinDiscount] = useState(0);
   const [area, setArea] = useState("");
   const [activeStatus, setActiveStatus] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("newest"); // newest, priceAsc, priceDesc
@@ -69,14 +85,32 @@ const VouchersPage = () => {
   useEffect(() => {
     setActiveCategory(searchParams.get("category") || "Tất cả");
     setSearchTerm(searchParams.get("search") || "");
-    setMinPrice(searchParams.get("min_price") || "");
-    setMaxPrice(searchParams.get("max_price") || "");
-    setMinDiscount(searchParams.get("min_discount") || "");
+    setMinPrice(Number(searchParams.get("min_price") || 0));
+    setMaxPrice(Number(searchParams.get("max_price") || PRICE_MAX));
+    setMinDiscount(Number(searchParams.get("min_discount") || 0));
     setArea(searchParams.get("area") || "");
     setActiveStatus(searchParams.get("active_status") || "ACTIVE");
     const nextPage = Number(searchParams.get("page") || 1);
     setPage(Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1);
   }, [searchParams]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getVoucherCategoriesRequest()
+      .then((items) => {
+        if (!isMounted) return;
+        const names = items.map((item) => item.name).filter(Boolean).sort((a, b) => a.localeCompare(b));
+        setCategories(["Tất cả", ...new Set(names)]);
+      })
+      .catch(() => {
+        if (isMounted) setCategories(["Tất cả"]);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -118,14 +152,6 @@ const VouchersPage = () => {
     return Math.max(1, Math.ceil(pagination.total / limit));
   }, [pagination, limit]);
 
-  const categories = useMemo(() => {
-    const normalized = vouchers
-      .map((voucher) => voucher.category)
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
-    return ["Tất cả", ...new Set(normalized)];
-  }, [vouchers]);
-
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat);
     const nextParams = new URLSearchParams(searchParams);
@@ -147,10 +173,28 @@ const VouchersPage = () => {
 
   const handleFilterChange = (key, value) => {
     const nextParams = new URLSearchParams(searchParams);
-    if (value) nextParams.set(key, value);
+    if (value !== "" && value !== null && value !== undefined) nextParams.set(key, value);
     else nextParams.delete(key);
     nextParams.delete("page");
     setSearchParams(nextParams);
+  };
+
+  const handleMinPriceChange = (value) => {
+    const nextValue = Math.min(Number(value), maxPrice);
+    setMinPrice(nextValue);
+    handleFilterChange("min_price", String(nextValue));
+  };
+
+  const handleMaxPriceChange = (value) => {
+    const nextValue = Math.max(Number(value), minPrice);
+    setMaxPrice(nextValue);
+    handleFilterChange("max_price", String(nextValue));
+  };
+
+  const handleDiscountChange = (value) => {
+    const nextValue = Math.max(0, Math.min(Number(value), DISCOUNT_MAX));
+    setMinDiscount(nextValue);
+    handleFilterChange("min_discount", String(nextValue));
   };
 
   const handlePageChange = (nextPage) => {
@@ -216,55 +260,63 @@ const VouchersPage = () => {
 
           <div className="vp-filter-box">
             <h3 className="vp-filter-title">Khoảng giá</h3>
+            <div className="vp-range-summary">
+              <span>{formatPrice(minPrice)}</span>
+              <span>{formatPrice(maxPrice)}</span>
+            </div>
             <input
-              type="number"
-              className="vp-search-input"
-              placeholder="Giá tối thiểu"
+              type="range"
+              className="vp-range"
+              min="0"
+              max={PRICE_MAX}
+              step="10000"
               value={minPrice}
-              onChange={(e) => {
-                setMinPrice(e.target.value);
-                handleFilterChange("min_price", e.target.value);
-              }}
+              onChange={(e) => handleMinPriceChange(e.target.value)}
             />
             <input
-              type="number"
-              className="vp-search-input"
-              placeholder="Giá tối đa"
+              type="range"
+              className="vp-range"
+              min="0"
+              max={PRICE_MAX}
+              step="10000"
               value={maxPrice}
-              onChange={(e) => {
-                setMaxPrice(e.target.value);
-                handleFilterChange("max_price", e.target.value);
-              }}
-              style={{ marginTop: "0.5rem" }}
+              onChange={(e) => handleMaxPriceChange(e.target.value)}
             />
           </div>
 
           <div className="vp-filter-box">
             <h3 className="vp-filter-title">Mức giảm (%)</h3>
+            <div className="vp-range-summary">
+              <span>Từ {minDiscount}%</span>
+              <span>Tối đa {DISCOUNT_MAX}%</span>
+            </div>
             <input
-              type="number"
-              className="vp-search-input"
-              placeholder="Giảm từ"
+              type="range"
+              className="vp-range"
+              min="0"
+              max={DISCOUNT_MAX}
+              step="1"
               value={minDiscount}
-              onChange={(e) => {
-                setMinDiscount(e.target.value);
-                handleFilterChange("min_discount", e.target.value);
-              }}
+              onChange={(e) => handleDiscountChange(e.target.value)}
             />
           </div>
 
           <div className="vp-filter-box">
             <h3 className="vp-filter-title">Khu vực</h3>
-            <input
-              type="text"
-              className="vp-search-input"
-              placeholder="Nhập khu vực"
+            <select
+              className="vp-sort-select vp-area-select"
               value={area}
               onChange={(e) => {
                 setArea(e.target.value);
                 handleFilterChange("area", e.target.value);
               }}
-            />
+            >
+              {AREA_OPTIONS.map((option) => (
+                <option key={option.value || "all"} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="vp-filter-box">
@@ -345,9 +397,9 @@ const VouchersPage = () => {
                 onClick={() => {
                   handleCategoryClick("Tất cả");
                   setSearchTerm("");
-                  setMinPrice("");
-                  setMaxPrice("");
-                  setMinDiscount("");
+                  setMinPrice(0);
+                  setMaxPrice(PRICE_MAX);
+                  setMinDiscount(0);
                   setArea("");
                   setActiveStatus("ACTIVE");
                   const nextParams = new URLSearchParams(searchParams);

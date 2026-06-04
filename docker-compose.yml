@@ -12,7 +12,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voucherpass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/src/config/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
     ports:
       - "5432:5432"
     healthcheck:

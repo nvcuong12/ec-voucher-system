@@ -13,6 +13,7 @@ import {
   insertVoucherQuery,
   insertVoucherBranchesQuery,
   deleteVoucherBranchesQuery,
+  listPublicCategoriesQuery,
   getVoucherByIdFullQuery,
   getPublicVoucherByIdQuery,
   updateVoucherQuery,
@@ -117,6 +118,17 @@ const validateVoucherBody = (body, isUpdate = false) => {
 const getPartnerForUser = async (userId) => {
   const result = await query(getPartnerByUserIdQuery, [userId]);
   return result.rows[0] ?? null;
+};
+
+// ─── GET /api/vouchers/categories ────────────────────────────────
+
+export const listVoucherCategories = async (_req, res, next) => {
+  try {
+    const result = await query(listPublicCategoriesQuery);
+    return sendSuccess(res, { categories: result.rows });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ─── POST /api/vouchers ───────────────────────────────────────────
