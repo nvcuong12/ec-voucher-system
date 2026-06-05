@@ -425,6 +425,7 @@ export const listVouchers = async (req, res, next) => {
       min_price,
       max_price,
       min_discount,
+      max_discount,
       area,
       active_status,
     } = req.query;
@@ -493,6 +494,7 @@ export const listVouchers = async (req, res, next) => {
         normalizedStatus,
         limit,
         offset,
+        max_discount ? parseFloat(max_discount) : null,
       ]),
       query(countPublicVouchersQuery, [
         q || null,
@@ -503,6 +505,7 @@ export const listVouchers = async (req, res, next) => {
         min_discount ? parseFloat(min_discount) : null,
         area || null,
         normalizedStatus,
+        max_discount ? parseFloat(max_discount) : null,
       ]),
     ]);
 

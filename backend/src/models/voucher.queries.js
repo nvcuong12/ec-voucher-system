@@ -189,6 +189,10 @@ export const listPublicVouchersQuery = `
       OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 >= $6
     )
     AND (
+      $11::numeric IS NULL
+      OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 <= $11
+    )
+    AND (
       $7::text IS NULL
       OR EXISTS (
         SELECT 1
@@ -237,6 +241,10 @@ export const countPublicVouchersQuery = `
     AND (
       $6::numeric IS NULL
       OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 >= $6
+    )
+    AND (
+      $9::numeric IS NULL
+      OR (1 - (v.sale_price / NULLIF(v.original_price, 0))) * 100 <= $9
     )
     AND (
       $7::text IS NULL

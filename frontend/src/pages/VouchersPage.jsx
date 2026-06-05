@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { RiLoader4Line, RiErrorWarningLine, RiEmotionSadLine } from "react-icons/ri";
 import { getApiErrorMessage } from "../services/auth.service";
 import { getVoucherCategoriesRequest, getVouchersRequest } from "../services/voucher.service";
+import ReactSlider from "react-slider";
 import "./VouchersPage.css";
 
 const PRICE_MAX = 2000000;
@@ -72,6 +73,7 @@ const VouchersPage = () => {
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [minDiscount, setMinDiscount] = useState(0);
+  const [maxDiscount, setMaxDiscount] = useState(DISCOUNT_MAX);
   const [area, setArea] = useState("");
   const [activeStatus, setActiveStatus] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("newest"); // newest, priceAsc, priceDesc
@@ -88,6 +90,7 @@ const VouchersPage = () => {
     setMinPrice(Number(searchParams.get("min_price") || 0));
     setMaxPrice(Number(searchParams.get("max_price") || PRICE_MAX));
     setMinDiscount(Number(searchParams.get("min_discount") || 0));
+    setMaxDiscount(Number(searchParams.get("max_discount") || DISCOUNT_MAX));
     setArea(searchParams.get("area") || "");
     setActiveStatus(searchParams.get("active_status") || "ACTIVE");
     const nextPage = Number(searchParams.get("page") || 1);
@@ -125,6 +128,7 @@ const VouchersPage = () => {
           min_price: minPrice || undefined,
           max_price: maxPrice || undefined,
           min_discount: minDiscount || undefined,
+          max_discount: maxDiscount !== DISCOUNT_MAX ? maxDiscount : undefined,
           area: area || undefined,
           active_status: activeStatus || undefined,
           page,
@@ -145,7 +149,7 @@ const VouchersPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [activeCategory, searchTerm, minPrice, maxPrice, minDiscount, area, activeStatus, page]);
+  }, [activeCategory, searchTerm, minPrice, maxPrice, minDiscount, maxDiscount, area, activeStatus, page]);
 
   const totalPages = useMemo(() => {
     if (!pagination?.total) return 1;
@@ -179,22 +183,36 @@ const VouchersPage = () => {
     setSearchParams(nextParams);
   };
 
-  const handleMinPriceChange = (value) => {
-    const nextValue = Math.min(Number(value), maxPrice);
-    setMinPrice(nextValue);
-    handleFilterChange("min_price", String(nextValue));
+  const handlePriceRangeChange = (values) => {
+    const [min, max] = values;
+    setMinPrice(min);
+    setMaxPrice(max);
+    
+    const nextParams = new URLSearchParams(searchParams);
+    if (min > 0) nextParams.set("min_price", min);
+    else nextParams.delete("min_price");
+    
+    if (max < PRICE_MAX) nextParams.set("max_price", max);
+    else nextParams.delete("max_price");
+    
+    nextParams.delete("page");
+    setSearchParams(nextParams);
   };
 
-  const handleMaxPriceChange = (value) => {
-    const nextValue = Math.max(Number(value), minPrice);
-    setMaxPrice(nextValue);
-    handleFilterChange("max_price", String(nextValue));
-  };
+  const handleDiscountRangeChange = (values) => {
+    const [min, max] = values;
+    setMinDiscount(min);
+    setMaxDiscount(max);
 
-  const handleDiscountChange = (value) => {
-    const nextValue = Math.max(0, Math.min(Number(value), DISCOUNT_MAX));
-    setMinDiscount(nextValue);
-    handleFilterChange("min_discount", String(nextValue));
+    const nextParams = new URLSearchParams(searchParams);
+    if (min > 0) nextParams.set("min_discount", min);
+    else nextParams.delete("min_discount");
+
+    if (max < DISCOUNT_MAX) nextParams.set("max_discount", max);
+    else nextParams.delete("max_discount");
+
+    nextParams.delete("page");
+    setSearchParams(nextParams);
   };
 
   const handlePageChange = (nextPage) => {
@@ -264,23 +282,17 @@ const VouchersPage = () => {
               <span>{formatPrice(minPrice)}</span>
               <span>{formatPrice(maxPrice)}</span>
             </div>
-            <input
-              type="range"
-              className="vp-range"
-              min="0"
+            <ReactSlider
+              className="vp-horizontal-slider"
+              thumbClassName="vp-slider-thumb"
+              trackClassName="vp-slider-track"
+              min={0}
               max={PRICE_MAX}
-              step="10000"
-              value={minPrice}
-              onChange={(e) => handleMinPriceChange(e.target.value)}
-            />
-            <input
-              type="range"
-              className="vp-range"
-              min="0"
-              max={PRICE_MAX}
-              step="10000"
-              value={maxPrice}
-              onChange={(e) => handleMaxPriceChange(e.target.value)}
+              step={10000}
+              value={[minPrice, maxPrice]}
+              onChange={handlePriceRangeChange}
+              pearling
+              minDistance={10000}
             />
           </div>
 
@@ -288,16 +300,19 @@ const VouchersPage = () => {
             <h3 className="vp-filter-title">Mức giảm (%)</h3>
             <div className="vp-range-summary">
               <span>Từ {minDiscount}%</span>
-              <span>Tối đa {DISCOUNT_MAX}%</span>
+              <span>Đến {maxDiscount}%</span>
             </div>
-            <input
-              type="range"
-              className="vp-range"
-              min="0"
+            <ReactSlider
+              className="vp-horizontal-slider"
+              thumbClassName="vp-slider-thumb"
+              trackClassName="vp-slider-track"
+              min={0}
               max={DISCOUNT_MAX}
-              step="1"
-              value={minDiscount}
-              onChange={(e) => handleDiscountChange(e.target.value)}
+              step={1}
+              value={[minDiscount, maxDiscount]}
+              onChange={handleDiscountRangeChange}
+              pearling
+              minDistance={1}
             />
           </div>
 
@@ -400,6 +415,7 @@ const VouchersPage = () => {
                   setMinPrice(0);
                   setMaxPrice(PRICE_MAX);
                   setMinDiscount(0);
+                  setMaxDiscount(DISCOUNT_MAX);
                   setArea("");
                   setActiveStatus("ACTIVE");
                   const nextParams = new URLSearchParams(searchParams);
@@ -407,6 +423,7 @@ const VouchersPage = () => {
                   nextParams.delete("min_price");
                   nextParams.delete("max_price");
                   nextParams.delete("min_discount");
+                  nextParams.delete("max_discount");
                   nextParams.delete("area");
                   nextParams.set("active_status", "ACTIVE");
                   nextParams.delete("page");
