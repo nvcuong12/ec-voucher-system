@@ -13,7 +13,7 @@ services:
       - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./backend/src/config/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
     ports:
-      - "5432:5432"
+      - "5499:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voucheruser} -d ${POSTGRES_DB:-voucherdb}"]
       interval: 10s
@@ -67,7 +67,7 @@ services:
       REACT_APP_PAYPAL_CLIENT_ID: ${REACT_APP_PAYPAL_CLIENT_ID:-sb}
     depends_on:
       - backend
-    command: sh -c "npm ci && npm start"
+    command: sh -c "npm config set registry https://registry.npmmirror.com && npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm ci && npm start"
 
 volumes:
   postgres_data:

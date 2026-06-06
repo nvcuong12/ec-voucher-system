@@ -8,7 +8,10 @@ WORKDIR /workspace/backend
 # Copy package files first for layer caching
 COPY backend/package*.json ./
 
-RUN npm install
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm install
 
 # Copy source
 COPY backend/ .
