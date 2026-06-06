@@ -9,8 +9,12 @@ import {
   getAllPartners,
   getBanners,
   getCategories,
+  getComplaints,
   getContentPages,
+  getActivePopup,
+  getPublicContentPage,
   getPendingVouchers,
+  getPopups,
   getUsers,
   getOrders,
   getLogs,
@@ -21,17 +25,23 @@ import {
   updateBanner,
   updateCategory,
   updateContentPage,
+  updateComplaintStatus,
   updateOrderStatus,
+  updatePopup,
   updatePartnerBranchStatus,
   updatePartnerApprovalStatus,
   updatePartnerStatusAny,
   updateUserRole,
   updateUserStatus,
   updateVoucherStatus,
+  createPopup,
 } from "../controllers/admin.controller.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 
 const router = Router();
+
+router.get("/content/popups/active", asyncHandler(getActivePopup));
+router.get("/content/pages/public/:slug", asyncHandler(getPublicContentPage));
 
 // All admin routes require ADMIN role
 router.use(authenticate, authorize("ADMIN"));
@@ -64,6 +74,8 @@ router.get("/orders", asyncHandler(getOrders));
 router.patch("/orders/:id/status", asyncHandler(updateOrderStatus));
 router.get("/dashboard", asyncHandler(getDashboard));
 router.get("/logs", asyncHandler(getLogs));
+router.get("/complaints", asyncHandler(getComplaints));
+router.patch("/complaints/:id", asyncHandler(updateComplaintStatus));
 
 router.get("/content/categories", asyncHandler(getCategories));
 router.post("/content/categories", asyncHandler(createCategory));
@@ -76,5 +88,9 @@ router.patch("/content/banners/:id", asyncHandler(updateBanner));
 router.get("/content/pages", asyncHandler(getContentPages));
 router.post("/content/pages", asyncHandler(createContentPage));
 router.patch("/content/pages/:id", asyncHandler(updateContentPage));
+
+router.get("/content/popups", asyncHandler(getPopups));
+router.post("/content/popups", asyncHandler(createPopup));
+router.patch("/content/popups/:id", asyncHandler(updatePopup));
 
 export default router;

@@ -53,7 +53,12 @@ const PartnerVoucherScan = () => {
       <form className="card scan-card" onSubmit={handleScan}>
         <div className="form-group">
           <label>Mã voucher</label>
-          <input className="input" value={code} onChange={(e) => setCode(e.target.value)} />
+          <input
+            className="input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Nhap ma hoac quet QR mo phong"
+          />
         </div>
         <div className="form-group scan-field">
           <label>Chế độ</label>

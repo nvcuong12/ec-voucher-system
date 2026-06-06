@@ -10,30 +10,38 @@ import {
 } from "react-icons/ri";
 import {
   approvePartnerRequest,
+  approveAdminVoucherRequest,
   createAdminBannerRequest,
   createAdminCategoryRequest,
   createAdminPageRequest,
+  createAdminPopupRequest,
   getAdminBannersRequest,
   getAdminCategoriesRequest,
+  getAdminComplaintsRequest,
   getAdminDashboardRequest,
   getAdminLogsRequest,
   getAdminOrdersRequest,
   getAdminPagesRequest,
   getAdminPartnersRequest,
+  getAdminPopupsRequest,
   getAdminUsersRequest,
   getAdminVouchersRequest,
+  getPendingAdminVouchersRequest,
   getPendingPartnersRequest,
   updateAdminBannerRequest,
   updateAdminCategoryRequest,
+  updateAdminComplaintRequest,
   updateAdminOrderStatusRequest,
   updateAdminPageRequest,
   updateAdminPartnerBranchRequest,
   updateAdminPartnerStatusRequest,
+  updateAdminPopupRequest,
   updateAdminUserRoleRequest,
   updateAdminUserStatusRequest,
   updateAdminVoucherStatusRequest,
   getAdminPartnerBranchesRequest,
   rejectPartnerRequest,
+  rejectAdminVoucherRequest,
 } from "../services/admin.service";
 import "./AdminDashboardPage.css";
 
@@ -52,17 +60,41 @@ const orderStatusLabel = (status) => {
   return map[status] || status;
 };
 
+const voucherStatusInfo = (status) => {
+  const map = {
+    PENDING_APPROVAL: { label: "Chờ duyệt", badge: "badge-yellow" },
+    APPROVED: { label: "Đã duyệt", badge: "badge-green" },
+    REJECTED: { label: "Bị từ chối", badge: "badge-red" },
+    SUSPENDED: { label: "Tạm ngưng", badge: "badge-gray" },
+    EXPIRED: { label: "Hết hạn", badge: "badge-red" },
+    DRAFT: { label: "Bản nháp", badge: "badge-gray" },
+  };
+  return map[status] || { label: status || "Không xác định", badge: "badge-gray" };
+};
+
+const formatDateTime = (value) => (value ? new Date(value).toLocaleString("vi-VN") : "-");
+
+const getVoucherDiscount = (voucher) => {
+  const original = Number(voucher.original_price || 0);
+  const sale = Number(voucher.sale_price || 0);
+  if (!original || sale >= original) return 0;
+  return Math.round(((original - sale) / original) * 100);
+};
+
 const AdminDashboardPage = () => {
   const [dashboard, setDashboard] = useState(null);
   const [partners, setPartners] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [complaints, setComplaints] = useState([]);
   const [logs, setLogs] = useState([]);
   const [users, setUsers] = useState([]);
+  const [pendingVouchers, setPendingVouchers] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [partnerBranches, setPartnerBranches] = useState({});
   const [categories, setCategories] = useState([]);
   const [banners, setBanners] = useState([]);
   const [pages, setPages] = useState([]);
+  const [popups, setPopups] = useState([]);
   const [categoryForm, setCategoryForm] = useState({ name: "", is_active: true });
   const [bannerForm, setBannerForm] = useState({
     title: "",
@@ -77,10 +109,23 @@ const AdminDashboardPage = () => {
     content: "",
     is_active: true,
   });
+  const [popupForm, setPopupForm] = useState({
+    title: "",
+    content: "",
+    start_date: "",
+    end_date: "",
+    is_active: true,
+  });
+  const [complaintResponses, setComplaintResponses] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [contentSubTab, setContentSubTab] = useState("categories");
+  const [voucherStatusFilter, setVoucherStatusFilter] = useState("ALL");
+  const [voucherSearch, setVoucherSearch] = useState("");
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [rejectingVoucher, setRejectingVoucher] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const loadAll = async () => {
     setLoading(true);
@@ -91,32 +136,41 @@ const AdminDashboardPage = () => {
         pending,
         allPartners,
         orderList,
+        complaintList,
         logList,
         userList,
         categoryList,
         bannerList,
         pageList,
+        popupList,
+        pendingVoucherList,
         voucherList,
       ] = await Promise.all([
         getAdminDashboardRequest(),
         getPendingPartnersRequest(),
         getAdminPartnersRequest(),
         getAdminOrdersRequest(),
+        getAdminComplaintsRequest(),
         getAdminLogsRequest(),
         getAdminUsersRequest(),
         getAdminCategoriesRequest(),
         getAdminBannersRequest(),
         getAdminPagesRequest(),
+        getAdminPopupsRequest(),
+        getPendingAdminVouchersRequest(),
         getAdminVouchersRequest(),
       ]);
       setDashboard(dash);
       setPartners(allPartners.length ? allPartners : pending);
       setOrders(orderList);
+      setComplaints(complaintList);
       setLogs(logList);
       setUsers(userList);
+      setPendingVouchers(pendingVoucherList);
       setCategories(categoryList);
       setBanners(bannerList);
       setPages(pageList);
+      setPopups(popupList);
       setVouchers(voucherList);
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không tải được dữ liệu quản trị");
@@ -128,6 +182,17 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     loadAll();
   }, []);
+
+  const filteredSystemVouchers = vouchers.filter((voucher) => {
+    const matchesStatus = voucherStatusFilter === "ALL" || voucher.status === voucherStatusFilter;
+    const keyword = voucherSearch.trim().toLowerCase();
+    const matchesSearch =
+      !keyword ||
+      voucher.name?.toLowerCase().includes(keyword) ||
+      voucher.business_name?.toLowerCase().includes(keyword) ||
+      voucher.partner_email?.toLowerCase().includes(keyword);
+    return matchesStatus && matchesSearch;
+  });
 
   const handlePartner = async (id, action) => {
     try {
@@ -165,6 +230,19 @@ const AdminDashboardPage = () => {
       await loadAll();
     } catch (err) {
       alert(err.response?.data?.error?.message || "Không thể cập nhật đơn hàng");
+    }
+  };
+
+  const handleComplaintStatus = async (complaint, status) => {
+    try {
+      await updateAdminComplaintRequest(complaint.id, {
+        status,
+        admin_response: complaintResponses[complaint.id] || complaint.admin_response || "",
+      });
+      setComplaintResponses((prev) => ({ ...prev, [complaint.id]: "" }));
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể cập nhật khiếu nại");
     }
   };
 
@@ -269,6 +347,62 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const normalizePopupPayload = (popup) => ({
+    title: popup.title,
+    content: popup.content,
+    is_active: popup.is_active,
+    start_date: popup.start_date || null,
+    end_date: popup.end_date || null,
+  });
+
+  const handleCreatePopup = async (e) => {
+    e.preventDefault();
+    try {
+      await createAdminPopupRequest(normalizePopupPayload(popupForm));
+      setPopupForm({ title: "", content: "", start_date: "", end_date: "", is_active: true });
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể tạo popup");
+    }
+  };
+
+  const handleApproveVoucher = async (voucher) => {
+    try {
+      await approveAdminVoucherRequest(voucher.id);
+      setSelectedVoucher(null);
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể duyệt voucher");
+    }
+  };
+
+  const handleRejectVoucher = async () => {
+    const reason = rejectionReason.trim();
+    if (!reason) {
+      alert("Vui lòng nhập lý do từ chối.");
+      return;
+    }
+
+    try {
+      await rejectAdminVoucherRequest(rejectingVoucher.id, reason);
+      setRejectingVoucher(null);
+      setSelectedVoucher(null);
+      setRejectionReason("");
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể từ chối voucher");
+    }
+  };
+
+  const handleUpdatePopup = async (popup) => {
+    try {
+      await updateAdminPopupRequest(popup.id, normalizePopupPayload(popup));
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể cập nhật popup");
+    }
+  };
+
   if (loading) {
     return <div className="container admin-page">Đang tải...</div>;
   }
@@ -301,16 +435,28 @@ const AdminDashboardPage = () => {
             <RiUserLine /> Người dùng
           </button>
           <button
-            className={`admin-tab-btn ${activeTab === "vouchers" ? "active" : ""}`}
-            onClick={() => setActiveTab("vouchers")}
+            className={`admin-tab-btn ${activeTab === "voucherReview" ? "active" : ""}`}
+            onClick={() => setActiveTab("voucherReview")}
           >
-            <RiTicket2Line /> Voucher
+            <RiTicket2Line /> Duyệt voucher
+          </button>
+          <button
+            className={`admin-tab-btn ${activeTab === "systemVouchers" ? "active" : ""}`}
+            onClick={() => setActiveTab("systemVouchers")}
+          >
+            <RiTicket2Line /> Voucher hệ thống
           </button>
           <button
             className={`admin-tab-btn ${activeTab === "orders" ? "active" : ""}`}
             onClick={() => setActiveTab("orders")}
           >
             <RiFileList3Line /> Đơn hàng
+          </button>
+          <button
+            className={`admin-tab-btn ${activeTab === "complaints" ? "active" : ""}`}
+            onClick={() => setActiveTab("complaints")}
+          >
+            <RiFileList3Line /> Khiếu nại
           </button>
           <button
             className={`admin-tab-btn ${activeTab === "content" ? "active" : ""}`}
@@ -328,6 +474,86 @@ const AdminDashboardPage = () => {
       </div>
 
       {error && <div className="card admin-alert-error">{error}</div>}
+
+      {selectedVoucher && (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="admin-voucher-modal card">
+            <div className="section-header-row">
+              <div>
+                <h2>{selectedVoucher.name}</h2>
+                <p className="text-muted">Đối tác: {selectedVoucher.business_name || selectedVoucher.partner_name} ({selectedVoucher.partner_email || "-"})</p>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={() => setSelectedVoucher(null)}>Đóng</button>
+            </div>
+
+            {selectedVoucher.image_url && (
+              <img className="admin-voucher-modal-image" src={selectedVoucher.image_url} alt={selectedVoucher.name} />
+            )}
+
+            <div className="admin-voucher-detail-grid">
+              <span>Danh mục: <strong>{selectedVoucher.category || "-"}</strong></span>
+              <span>Trạng thái: <strong>{voucherStatusInfo(selectedVoucher.status).label}</strong></span>
+              <span>Giá gốc: <strong>{formatMoney(selectedVoucher.original_price)}</strong></span>
+              <span>Giá bán: <strong>{formatMoney(selectedVoucher.sale_price)}</strong></span>
+              <span>Giảm giá: <strong>{getVoucherDiscount(selectedVoucher)}%</strong></span>
+              <span>Số lượng phát hành: <strong>{selectedVoucher.stock}</strong></span>
+              <span>Thời gian bán: <strong>{formatDateTime(selectedVoucher.sale_start)} - {formatDateTime(selectedVoucher.sale_end)}</strong></span>
+              <span>Hạn sử dụng: <strong>{formatDateTime(selectedVoucher.valid_until)}</strong></span>
+              <span>Ngày gửi/tạo: <strong>{formatDateTime(selectedVoucher.created_at)}</strong></span>
+              <span>Cập nhật: <strong>{formatDateTime(selectedVoucher.updated_at)}</strong></span>
+            </div>
+
+            <div className="admin-voucher-detail-block">
+              <strong>Mô tả</strong>
+              <p>{selectedVoucher.description || "Chưa có mô tả."}</p>
+            </div>
+            <div className="admin-voucher-detail-block">
+              <strong>Điều kiện sử dụng / chính sách</strong>
+              <p>{selectedVoucher.terms || "Chưa có điều kiện sử dụng."}</p>
+            </div>
+            {selectedVoucher.rejection_reason && (
+              <div className="admin-voucher-detail-block">
+                <strong>Lý do từ chối</strong>
+                <p>{selectedVoucher.rejection_reason}</p>
+              </div>
+            )}
+
+            {selectedVoucher.status === "PENDING_APPROVAL" && (
+              <div className="admin-modal-actions">
+                <button className="btn btn-success" onClick={() => handleApproveVoucher(selectedVoucher)}>Duyệt voucher</button>
+                <button className="btn btn-danger" onClick={() => setRejectingVoucher(selectedVoucher)}>Từ chối voucher</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {rejectingVoucher && (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="admin-reject-modal card">
+            <h2>Từ chối voucher</h2>
+            <p className="text-muted">Voucher: <strong>{rejectingVoucher.name}</strong></p>
+            <textarea
+              className="input"
+              placeholder="Nhập lý do từ chối bắt buộc"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+            <div className="admin-modal-actions">
+              <button className="btn btn-danger" onClick={handleRejectVoucher}>Xác nhận từ chối</button>
+              <button
+                className="btn btn-outline"
+                onClick={() => {
+                  setRejectingVoucher(null);
+                  setRejectionReason("");
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="admin-tab-content">
         {/* TAB 1: OVERVIEW */}
@@ -374,6 +600,86 @@ const AdminDashboardPage = () => {
                       <span>Đơn đã trả: <strong>{dashboard.orders.paid}</strong></span>
                     </div>
                   </div>
+                </div>
+              </section>
+            )}
+
+            {dashboard && (
+              <section className="grid-3 admin-stats">
+                <div className="card admin-stat-card">
+                  <div className="admin-stat-icon-wrapper vouchers-icon">
+                    <RiTicket2Line />
+                  </div>
+                  <div className="admin-stat-info">
+                    <h3>Mã đã phát hành</h3>
+                    <p className="stat-number">{dashboard.issued_vouchers?.total || 0}</p>
+                    <div className="stat-sub-grid">
+                      <span>Đã dùng: <strong>{dashboard.issued_vouchers?.used || 0}</strong></span>
+                      <span>Chưa dùng: <strong>{dashboard.issued_vouchers?.unused || 0}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card admin-stat-card">
+                  <div className="admin-stat-icon-wrapper users-icon">
+                    <RiStore2Line />
+                  </div>
+                  <div className="admin-stat-info">
+                    <h3>Đối tác hoạt động</h3>
+                    <p className="stat-number">{dashboard.partners.approved}</p>
+                    <div className="stat-sub-grid">
+                      <span>Chờ duyệt: <strong>{dashboard.partners.pending}</strong></span>
+                      <span>Từ chối: <strong>{dashboard.partners.rejected}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card admin-stat-card">
+                  <div className="admin-stat-icon-wrapper revenue-icon">
+                    <RiFileList3Line />
+                  </div>
+                  <div className="admin-stat-info">
+                    <h3>Đơn hàng</h3>
+                    <p className="stat-number">{dashboard.orders.total}</p>
+                    <div className="stat-sub-grid">
+                      <span>Đã thanh toán: <strong>{dashboard.orders.paid}</strong></span>
+                      <span>Chờ thanh toán: <strong>{dashboard.orders.pending}</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {dashboard?.top_vouchers?.length > 0 && (
+              <section className="card admin-section">
+                <h2>Top voucher bán chạy</h2>
+                <div className="admin-list">
+                  {dashboard.top_vouchers.map((item) => (
+                    <div key={item.id} className="card admin-item admin-item-row">
+                      <div>
+                        <strong>{item.name}</strong>
+                        <p className="text-muted">{item.business_name}</p>
+                      </div>
+                      <div className="text-muted">
+                        Đã bán: <strong>{item.sold_count}</strong> • Doanh thu: <strong>{formatMoney(item.revenue)}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {dashboard?.revenue_by_day?.length > 0 && (
+              <section className="card admin-section">
+                <h2>Doanh thu 7 ngày gần nhất</h2>
+                <div className="admin-list">
+                  {dashboard.revenue_by_day.map((item) => (
+                    <div key={item.day} className="card admin-item admin-item-row">
+                      <strong>{new Date(item.day).toLocaleDateString("vi-VN")}</strong>
+                      <span className="text-muted">Đơn paid: {item.paid_orders}</span>
+                      <strong>{formatMoney(item.revenue)}</strong>
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
@@ -546,16 +852,94 @@ const AdminDashboardPage = () => {
           </div>
         )}
 
-        {/* TAB 4: VOUCHERS */}
-        {activeTab === "vouchers" && (
+        {/* TAB 4: VOUCHER REVIEW */}
+        {activeTab === "voucherReview" && (
           <div className="tab-pane fade-in">
             <section className="card admin-section">
-              <h2>Quản lý voucher hệ thống</h2>
-              {vouchers.length === 0 ? (
-                <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Chưa có voucher.</p>
+              <div className="section-header-row">
+                <div>
+                  <h2><RiTicket2Line /> Duyệt voucher</h2>
+                  <p className="text-muted">Chỉ hiển thị voucher do đối tác gửi và đang chờ admin duyệt.</p>
+                </div>
+                <span className="badge badge-yellow">{pendingVouchers.length} chờ duyệt</span>
+              </div>
+              {pendingVouchers.length === 0 ? (
+                <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không có voucher chờ duyệt.</p>
               ) : (
                 <div className="admin-list">
-                  {vouchers.map((voucher) => (
+                  {pendingVouchers.map((voucher) => {
+                    const statusInfo = voucherStatusInfo(voucher.status);
+                    return (
+                      <div key={voucher.id} className="card admin-item admin-voucher-review-card">
+                        <div className="admin-item-row">
+                          <div className="admin-voucher-summary">
+                            <strong className="admin-item-title">{voucher.name}</strong>
+                            <p className="text-muted">Đối tác: {voucher.business_name} ({voucher.partner_email})</p>
+                            <div className="admin-voucher-meta-grid">
+                              <span>Danh mục: <strong>{voucher.category || "-"}</strong></span>
+                              <span>Giá gốc: <strong>{formatMoney(voucher.original_price)}</strong></span>
+                              <span>Giá bán: <strong>{formatMoney(voucher.sale_price)}</strong></span>
+                              <span>Giảm: <strong>{getVoucherDiscount(voucher)}%</strong></span>
+                              <span>Số lượng: <strong>{voucher.stock}</strong></span>
+                              <span>Gửi duyệt: <strong>{formatDateTime(voucher.created_at)}</strong></span>
+                            </div>
+                            <span className={`badge ${statusInfo.badge}`}>{statusInfo.label}</span>
+                          </div>
+                          <div className="admin-item-actions">
+                            <button className="btn btn-outline btn-sm" onClick={() => setSelectedVoucher(voucher)}>
+                              Xem chi tiết
+                            </button>
+                            <button className="btn btn-success btn-sm" onClick={() => handleApproveVoucher(voucher)}>
+                              Duyệt
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => setRejectingVoucher(voucher)}>
+                              Từ chối
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* TAB 5: SYSTEM VOUCHERS */}
+        {activeTab === "systemVouchers" && (
+          <div className="tab-pane fade-in">
+            <section className="card admin-section">
+              <div className="section-header-row">
+                <div>
+                  <h2><RiTicket2Line /> Voucher hệ thống</h2>
+                  <p className="text-muted">Quản lý toàn bộ voucher đã duyệt, bị từ chối, tạm ngưng hoặc đang chờ duyệt.</p>
+                </div>
+              </div>
+              <div className="admin-voucher-toolbar">
+                <input
+                  className="input"
+                  placeholder="Tìm theo tên voucher, đối tác hoặc email"
+                  value={voucherSearch}
+                  onChange={(e) => setVoucherSearch(e.target.value)}
+                />
+                <select
+                  className="input admin-select"
+                  value={voucherStatusFilter}
+                  onChange={(e) => setVoucherStatusFilter(e.target.value)}
+                >
+                  <option value="ALL">Tất cả trạng thái</option>
+                  <option value="APPROVED">Đã duyệt</option>
+                  <option value="REJECTED">Bị từ chối</option>
+                  <option value="SUSPENDED">Tạm ngưng</option>
+                  <option value="PENDING_APPROVAL">Chờ duyệt</option>
+                </select>
+              </div>
+              {filteredSystemVouchers.length === 0 ? (
+                <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không tìm thấy voucher phù hợp.</p>
+              ) : (
+                <div className="admin-list">
+                  {filteredSystemVouchers.map((voucher) => (
                     <div key={voucher.id} className="card admin-item">
                       <div className="admin-item-row">
                         <div>
@@ -573,11 +957,22 @@ const AdminDashboardPage = () => {
                                 ? "badge-gray"
                                 : "badge-red"
                             }`}>
-                              {voucher.status}
+                              {voucherStatusInfo(voucher.status).label}
                             </span>
                           </p>
+                          {voucher.rejection_reason && (
+                            <p className="text-muted">Lý do từ chối: {voucher.rejection_reason}</p>
+                          )}
                         </div>
                         <div className="admin-item-actions">
+                          <button className="btn btn-outline btn-sm" onClick={() => setSelectedVoucher(voucher)}>
+                            Xem chi tiết
+                          </button>
+                          {voucher.status === "PENDING_APPROVAL" && (
+                            <button className="btn btn-outline btn-sm" onClick={() => setActiveTab("voucherReview")}>
+                              Sang tab duyệt
+                            </button>
+                          )}
                           {voucher.status === "APPROVED" && (
                             <button className="btn btn-warning btn-sm" onClick={() => handleVoucherStatus(voucher.id, "SUSPENDED")}>
                               Tạm ngưng bán
@@ -660,6 +1055,75 @@ const AdminDashboardPage = () => {
           </div>
         )}
 
+        {/* TAB 6: COMPLAINTS */}
+        {activeTab === "complaints" && (
+          <div className="tab-pane fade-in">
+            <section className="card admin-section">
+              <h2>Quản lý khiếu nại khách hàng</h2>
+              {complaints.length === 0 ? (
+                <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Chưa có khiếu nại.</p>
+              ) : (
+                <div className="admin-list">
+                  {complaints.map((complaint) => (
+                    <div key={complaint.id} className="card admin-item">
+                      <div className="admin-item-row">
+                        <div>
+                          <strong className="admin-item-title">{complaint.subject}</strong>
+                          <p className="text-muted">Khách hàng: {complaint.customer_name} ({complaint.customer_email})</p>
+                          <p className="text-muted">Voucher: {complaint.voucher_name || "Không xác định"} - {complaint.voucher_code || "N/A"}</p>
+                          <p className="text-muted">Nội dung: {complaint.message}</p>
+                          <p className="text-muted">
+                            Trạng thái:{" "}
+                            <span className={`badge ${
+                              complaint.status === "RESOLVED"
+                                ? "badge-green"
+                                : complaint.status === "IN_PROGRESS"
+                                ? "badge-blue"
+                                : complaint.status === "REJECTED"
+                                ? "badge-red"
+                                : "badge-yellow"
+                            }`}>
+                              {complaint.status}
+                            </span>
+                          </p>
+                          {complaint.admin_response && (
+                            <p className="text-muted">Phản hồi: {complaint.admin_response}</p>
+                          )}
+                        </div>
+                        <div className="admin-item-actions" style={{ minWidth: "260px" }}>
+                          <textarea
+                            className="input"
+                            placeholder="Phản hồi xử lý"
+                            value={complaintResponses[complaint.id] || ""}
+                            onChange={(e) =>
+                              setComplaintResponses((prev) => ({
+                                ...prev,
+                                [complaint.id]: e.target.value,
+                              }))
+                            }
+                            style={{ minHeight: "86px", resize: "vertical" }}
+                          />
+                          {complaint.status === "PENDING" && (
+                            <button className="btn btn-outline btn-sm" onClick={() => handleComplaintStatus(complaint, "IN_PROGRESS")}>
+                              Nhận xử lý
+                            </button>
+                          )}
+                          <button className="btn btn-success btn-sm" onClick={() => handleComplaintStatus(complaint, "RESOLVED")}>
+                            Đã xử lý
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleComplaintStatus(complaint, "REJECTED")}>
+                            Từ chối
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {/* TAB 6: CONTENT */}
         {activeTab === "content" && (
           <div className="tab-pane fade-in">
@@ -682,6 +1146,12 @@ const AdminDashboardPage = () => {
                 onClick={() => setContentSubTab("pages")}
               >
                 Trang chính sách
+              </button>
+              <button
+                className={`admin-sub-tab-btn ${contentSubTab === "popups" ? "active" : ""}`}
+                onClick={() => setContentSubTab("popups")}
+              >
+                Popups
               </button>
             </div>
 
@@ -937,6 +1407,110 @@ const AdminDashboardPage = () => {
                   </div>
                 </section>
               )}
+
+              {contentSubTab === "popups" && (
+                <section className="card admin-section">
+                  <h2>Quản lý popup trang chủ</h2>
+                  <form className="admin-form" onSubmit={handleCreatePopup} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                    <input
+                      className="input"
+                      placeholder="Tiêu đề popup"
+                      value={popupForm.title}
+                      onChange={(e) => setPopupForm({ ...popupForm, title: e.target.value })}
+                    />
+                    <label className="admin-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={popupForm.is_active}
+                        onChange={(e) => setPopupForm({ ...popupForm, is_active: e.target.checked })}
+                      />
+                      <span>Đang kích hoạt</span>
+                    </label>
+                    <textarea
+                      className="input"
+                      placeholder="Nội dung popup"
+                      value={popupForm.content}
+                      onChange={(e) => setPopupForm({ ...popupForm, content: e.target.value })}
+                      style={{ gridColumn: "span 2", minHeight: "100px" }}
+                    />
+                    <input
+                      className="input"
+                      type="datetime-local"
+                      value={popupForm.start_date}
+                      onChange={(e) => setPopupForm({ ...popupForm, start_date: e.target.value })}
+                    />
+                    <input
+                      className="input"
+                      type="datetime-local"
+                      value={popupForm.end_date}
+                      onChange={(e) => setPopupForm({ ...popupForm, end_date: e.target.value })}
+                    />
+                    <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "flex-end" }}>
+                      <button className="btn btn-primary" type="submit">Tạo popup</button>
+                    </div>
+                  </form>
+
+                  <div className="admin-list" style={{ marginTop: "2rem" }}>
+                    {popups.length === 0 ? (
+                      <p className="text-muted text-center" style={{ padding: "1rem 0" }}>Chưa có popup.</p>
+                    ) : (
+                      popups.map((popup) => (
+                        <div key={popup.id} className="card admin-item admin-page-item-card" style={{ padding: "1.25rem" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                            <input
+                              className="input"
+                              value={popup.title}
+                              onChange={(e) =>
+                                setPopups((prev) => prev.map((p) => (p.id === popup.id ? { ...p, title: e.target.value } : p)))
+                              }
+                            />
+                            <label className="admin-checkbox">
+                              <input
+                                type="checkbox"
+                                checked={popup.is_active}
+                                onChange={(e) =>
+                                  setPopups((prev) => prev.map((p) => (p.id === popup.id ? { ...p, is_active: e.target.checked } : p)))
+                                }
+                              />
+                              <span>Hiển thị</span>
+                            </label>
+                            <textarea
+                              className="input"
+                              value={popup.content}
+                              onChange={(e) =>
+                                setPopups((prev) => prev.map((p) => (p.id === popup.id ? { ...p, content: e.target.value } : p)))
+                              }
+                              style={{ gridColumn: "span 2", minHeight: "90px" }}
+                            />
+                            <input
+                              className="input"
+                              type="datetime-local"
+                              value={popup.start_date ? popup.start_date.slice(0, 16) : ""}
+                              onChange={(e) =>
+                                setPopups((prev) => prev.map((p) => (p.id === popup.id ? { ...p, start_date: e.target.value } : p)))
+                              }
+                            />
+                            <input
+                              className="input"
+                              type="datetime-local"
+                              value={popup.end_date ? popup.end_date.slice(0, 16) : ""}
+                              onChange={(e) =>
+                                setPopups((prev) => prev.map((p) => (p.id === popup.id ? { ...p, end_date: e.target.value } : p)))
+                              }
+                            />
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--color-border)", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
+                            <span className="text-muted">
+                              Cập nhật: {new Date(popup.updated_at || popup.created_at).toLocaleString("vi-VN")}
+                            </span>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleUpdatePopup(popup)}>Lưu popup</button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
         )}
@@ -945,7 +1519,7 @@ const AdminDashboardPage = () => {
         {activeTab === "logs" && (
           <div className="tab-pane fade-in">
             <section className="card admin-section">
-              <h2>Lịch sử hoạt động hệ thống (System Audit Logs)</h2>
+              <h2>Lịch sử hoạt động hệ thống</h2>
               {logs.length === 0 ? (
                 <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không có log hoạt động.</p>
               ) : (
@@ -958,7 +1532,7 @@ const AdminDashboardPage = () => {
                       </div>
                       <div className="log-body-row">
                         <p><strong>Thực thể tác động:</strong> {log.entity} (ID: <code>{log.entity_id || "null"}</code>)</p>
-                        <p><strong>Thực hiện bởi:</strong> {log.user_name || "Hệ thống"} ({log.user_email || "System"})</p>
+                        <p><strong>Thực hiện bởi:</strong> {log.user_name || "Hệ thống"} ({log.user_email || "Hệ thống"})</p>
                         {log.details && (
                           <div className="log-details-json">
                             <strong>Chi tiết:</strong>

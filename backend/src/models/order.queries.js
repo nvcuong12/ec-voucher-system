@@ -70,6 +70,28 @@ export const selectOrderItemsByOrderIdsQuery = `
   ORDER BY oi.created_at ASC
 `;
 
+export const selectIssuedVouchersByOrderItemIdsQuery = `
+  SELECT
+    iv.id,
+    CASE WHEN o.status = 'PAID' THEN iv.code ELSE NULL END AS code,
+    iv.order_item_id,
+    iv.voucher_id,
+    iv.customer_id,
+    iv.status,
+    iv.used_at,
+    iv.used_at_branch,
+    pb.name AS used_branch_name,
+    iv.expires_at,
+    iv.created_at AS issued_at
+  FROM issued_vouchers iv
+  JOIN order_items oi ON oi.id = iv.order_item_id
+  JOIN orders o ON o.id = oi.order_id
+  LEFT JOIN partner_branches pb ON pb.id = iv.used_at_branch
+  WHERE iv.order_item_id = ANY($1::uuid[])
+    AND o.customer_id = $2
+  ORDER BY iv.created_at ASC
+`;
+
 export const updateVoucherStockQuery = `
   UPDATE vouchers
   SET stock = stock - $1,

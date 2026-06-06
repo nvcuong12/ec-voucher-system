@@ -1,9 +1,24 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 const CartContext = createContext(null);
+const CART_STORAGE_KEY = "voucherhub_cart";
+
+const readStoredCart = () => {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([]); // [{ voucher, quantity }]
+  const [items, setItems] = useState(readStoredCart); // [{ voucher, quantity }]
+
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   const addItem = useCallback((voucher, quantity = 1) => {
     setItems((prev) => {

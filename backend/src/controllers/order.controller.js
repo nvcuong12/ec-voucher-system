@@ -13,6 +13,7 @@ import {
   selectOrderByIdQuery,
   selectOrderItemsByOrderIdsQuery,
   selectOrdersByCustomerQuery,
+  selectIssuedVouchersByOrderItemIdsQuery,
   selectVouchersForOrderQuery,
   updateOrderPaidQuery,
   updateVoucherStockQuery,
@@ -48,18 +49,41 @@ const mapOrderItems = (itemsRows) => {
     if (!byOrder.has(row.order_id)) byOrder.set(row.order_id, []);
     byOrder.get(row.order_id).push({
       id: row.id,
+      order_item_id: row.id,
+      order_id: row.order_id,
       voucher_id: row.voucher_id,
       quantity: row.quantity,
       unit_price: row.unit_price,
+      subtotal: Number(row.unit_price || 0) * Number(row.quantity || 0),
       created_at: row.created_at,
       name: row.name,
+      voucher_name: row.name,
       image_url: row.image_url,
       sale_end: row.sale_end,
       valid_until: row.valid_until,
       business_name: row.business_name,
+      issued_vouchers: [],
     });
   }
   return byOrder;
+};
+
+const mapIssuedVouchers = (issuedRows) => {
+  const byItem = new Map();
+  for (const row of issuedRows) {
+    if (!byItem.has(row.order_item_id)) byItem.set(row.order_item_id, []);
+    byItem.get(row.order_item_id).push({
+      id: row.id,
+      code: row.code,
+      status: row.status,
+      issued_at: row.issued_at,
+      expires_at: row.expires_at,
+      used_at: row.used_at,
+      used_branch_id: row.used_at_branch,
+      used_branch_name: row.used_branch_name,
+    });
+  }
+  return byItem;
 };
 
 const generateCode = () => `VCH-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
@@ -70,6 +94,14 @@ const buildOrderResponse = async (orderId) => {
   if (!order) return null;
   const itemsResult = await query(selectOrderItemsByOrderIdsQuery, [[orderId]]);
   const itemsMap = mapOrderItems(itemsResult.rows);
+  const itemIds = itemsResult.rows.map((item) => item.id);
+  if (itemIds.length > 0 && order.status === "PAID") {
+    const issuedResult = await query(selectIssuedVouchersByOrderItemIdsQuery, [itemIds, order.customer_id]);
+    const issuedMap = mapIssuedVouchers(issuedResult.rows);
+    for (const item of itemsMap.get(orderId) || []) {
+      item.issued_vouchers = issuedMap.get(item.id) || [];
+    }
+  }
   return { ...order, items: itemsMap.get(orderId) || [] };
 };
 
@@ -169,6 +201,19 @@ export const listMyOrders = async (req, res, next) => {
     const orderIds = orders.map((o) => o.id);
     const itemsResult = await query(selectOrderItemsByOrderIdsQuery, [orderIds]);
     const itemsMap = mapOrderItems(itemsResult.rows);
+    const itemIds = itemsResult.rows.map((item) => item.id);
+    const paidOrderIds = new Set(orders.filter((order) => order.status === "PAID").map((order) => order.id));
+    if (itemIds.length > 0 && paidOrderIds.size > 0) {
+      const issuedResult = await query(selectIssuedVouchersByOrderItemIdsQuery, [itemIds, req.user.id]);
+      const issuedMap = mapIssuedVouchers(issuedResult.rows);
+      for (const items of itemsMap.values()) {
+        for (const item of items) {
+          item.issued_vouchers = paidOrderIds.has(item.order_id)
+            ? issuedMap.get(item.id) || []
+            : [];
+        }
+      }
+    }
 
     const payload = orders.map((order) => ({
       ...order,

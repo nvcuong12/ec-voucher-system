@@ -38,6 +38,53 @@
 }
 
 /* ── Hero Banner Full Screen ── */
+.home-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.home-popup {
+  width: min(520px, 100%);
+  position: relative;
+  padding: 1.75rem;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-lg);
+}
+
+.home-popup h2 {
+  margin: 0 2rem 0.75rem 0;
+  font-size: 1.4rem;
+  color: var(--color-text);
+}
+
+.home-popup p {
+  margin: 0 0 1.25rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.home-popup-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .home-hero-full {
   width: 100%;
   height: calc(100vh - 84px);
@@ -258,7 +305,7 @@
 
 /* ── Flash Sale ── */
 .home-flash-sale {
-  background: linear-gradient(to bottom, #7c3aed 0%, #4c1d95 100%);
+  background: linear-gradient(to bottom, #ed8002 0%, #c76a00 100%);
   padding: 2rem;
   border-radius: var(--radius-lg);
 }

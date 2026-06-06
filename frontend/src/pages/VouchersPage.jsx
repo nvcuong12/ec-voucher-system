@@ -90,7 +90,7 @@ const VouchersPage = () => {
 
   useEffect(() => {
     setActiveCategory(searchParams.get("category") || "Tất cả");
-    setSearchTerm(searchParams.get("search") || "");
+    setSearchTerm(searchParams.get("q") || searchParams.get("search") || "");
     setMinPrice(Number(searchParams.get("min_price") || 0));
     setMaxPrice(Number(searchParams.get("max_price") || PRICE_MAX));
     setMinDiscount(Number(searchParams.get("min_discount") || 0));
@@ -173,8 +173,9 @@ const VouchersPage = () => {
     const value = e.target.value;
     setSearchTerm(value);
     const nextParams = new URLSearchParams(searchParams);
-    if (value) nextParams.set("search", value);
-    else nextParams.delete("search");
+    if (value) nextParams.set("q", value);
+    else nextParams.delete("q");
+    nextParams.delete("search");
     nextParams.delete("page");
     setSearchParams(nextParams);
   };
@@ -423,6 +424,7 @@ const VouchersPage = () => {
                   setArea("");
                   setActiveStatus("ACTIVE");
                   const nextParams = new URLSearchParams(searchParams);
+                  nextParams.delete("q");
                   nextParams.delete("search");
                   nextParams.delete("min_price");
                   nextParams.delete("max_price");

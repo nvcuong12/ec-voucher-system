@@ -35,6 +35,20 @@ export const getAdminLogsRequest = async () => {
   return data.data.logs || [];
 };
 
+export const getAdminComplaintsRequest = async () => {
+  try {
+    const { data } = await api.get("/admin/complaints");
+    return data.data.complaints || [];
+  } catch {
+    return [];
+  }
+};
+
+export const updateAdminComplaintRequest = async (id, payload) => {
+  const { data } = await api.patch(`/admin/complaints/${id}`, payload);
+  return data.data.complaint;
+};
+
 export const getAdminUsersRequest = async () => {
   const { data } = await api.get("/admin/users");
   return data.data.users || [];
@@ -82,6 +96,21 @@ export const getAdminVouchersRequest = async () => {
   return data.data.vouchers || [];
 };
 
+export const getPendingAdminVouchersRequest = async () => {
+  const { data } = await api.get("/admin/vouchers/pending");
+  return data.data.vouchers || [];
+};
+
+export const approveAdminVoucherRequest = async (id) => {
+  const { data } = await api.patch(`/admin/vouchers/${id}/approve`);
+  return data.data.voucher;
+};
+
+export const rejectAdminVoucherRequest = async (id, rejection_reason) => {
+  const { data } = await api.patch(`/admin/vouchers/${id}/reject`, { rejection_reason });
+  return data.data.voucher;
+};
+
 export const getAdminCategoriesRequest = async () => {
   const { data } = await api.get("/admin/content/categories");
   return data.data.categories || [];
@@ -125,4 +154,23 @@ export const createAdminPageRequest = async (payload) => {
 export const updateAdminPageRequest = async (id, payload) => {
   const { data } = await api.patch(`/admin/content/pages/${id}`, payload);
   return data.data.page;
+};
+
+export const getAdminPopupsRequest = async () => {
+  try {
+    const { data } = await api.get("/admin/content/popups");
+    return data.data.popups || [];
+  } catch {
+    return [];
+  }
+};
+
+export const createAdminPopupRequest = async (payload) => {
+  const { data } = await api.post("/admin/content/popups", payload);
+  return data.data.popup;
+};
+
+export const updateAdminPopupRequest = async (id, payload) => {
+  const { data } = await api.patch(`/admin/content/popups/${id}`, payload);
+  return data.data.popup;
 };

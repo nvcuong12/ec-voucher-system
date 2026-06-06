@@ -36,6 +36,266 @@ ON CONFLICT (slug) DO UPDATE SET
   content    = EXCLUDED.content,
   updated_at = NOW();
 
+INSERT INTO content_pages (slug, title, content, is_active) VALUES
+  ('chinh-sach-hoan-huy', 'Chính sách hoàn/hủy',
+   $$1. Phạm vi áp dụng
+Chính sách này áp dụng cho các voucher được mua trên hệ thống VoucherHub. Việc hoàn/hủy được xử lý ở mức mô phỏng nhằm phục vụ quy trình nghiệp vụ của đồ án thương mại điện tử.
+
+2. Điều kiện được hỗ trợ hoàn/hủy
+Khách hàng có thể được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Đơn hàng chưa được thanh toán thành công.
+- Voucher chưa được sử dụng và còn trong thời hạn hỗ trợ theo điều kiện chương trình.
+- Đối tác từ chối áp dụng voucher không đúng với điều kiện đã công bố.
+- Thông tin voucher hiển thị sai lệch nghiêm trọng so với điều kiện sử dụng thực tế.
+- Hệ thống phát sinh lỗi khiến khách hàng không thể xem hoặc sử dụng mã voucher.
+
+3. Trường hợp không hỗ trợ hoàn/hủy
+Voucher có thể không được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Voucher đã được đối tác xác nhận sử dụng.
+- Voucher đã hết hạn do khách hàng không sử dụng trong thời gian quy định.
+- Khách hàng sử dụng voucher sai chi nhánh, sai điều kiện hoặc sai thời gian áp dụng.
+- Khách hàng tự ý chia sẻ mã voucher cho người khác dẫn đến rủi ro sử dụng ngoài ý muốn.
+- Voucher thuộc chương trình có ghi rõ không áp dụng hoàn/hủy.
+
+4. Quy trình gửi yêu cầu hoàn/hủy hoặc khiếu nại
+Khách hàng có thể gửi yêu cầu hỗ trợ từ mục "Voucher của tôi" hoặc "Khiếu nại". Khi gửi yêu cầu, khách hàng cần cung cấp lý do, mô tả vấn đề và chọn voucher/đơn hàng liên quan để quản trị viên kiểm tra.
+
+5. Thời gian xử lý mô phỏng
+Quản trị viên sẽ tiếp nhận, kiểm tra trạng thái đơn hàng, trạng thái voucher, lịch sử sử dụng và phản hồi của đối tác. Kết quả xử lý có thể là chấp nhận hoàn/hủy, từ chối yêu cầu hoặc yêu cầu bổ sung thông tin.
+
+6. Lưu ý đối với voucher đã sử dụng, hết hạn hoặc sai chi nhánh
+Voucher đã sử dụng, hết hạn, bị hủy hoặc không áp dụng đúng chi nhánh có thể không còn giá trị sử dụng. Khách hàng nên kiểm tra kỹ thời hạn, điều kiện áp dụng và chi nhánh trước khi đến sử dụng dịch vụ.
+
+7. Trách nhiệm của các bên
+Khách hàng có trách nhiệm bảo mật mã voucher và sử dụng đúng điều kiện. Đối tác có trách nhiệm xác thực voucher theo thông tin đã công bố. VoucherHub hỗ trợ ghi nhận, kiểm tra và xử lý yêu cầu ở mức mô phỏng trong phạm vi đồ án.$$,
+   TRUE),
+  ('chinh-sach-hoan-tien', 'Chính sách hoàn/hủy',
+   $$1. Phạm vi áp dụng
+Chính sách này áp dụng cho các voucher được mua trên hệ thống VoucherHub. Việc hoàn/hủy được xử lý ở mức mô phỏng nhằm phục vụ quy trình nghiệp vụ của đồ án thương mại điện tử.
+
+2. Điều kiện được hỗ trợ hoàn/hủy
+Khách hàng có thể được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Đơn hàng chưa được thanh toán thành công.
+- Voucher chưa được sử dụng và còn trong thời hạn hỗ trợ theo điều kiện chương trình.
+- Đối tác từ chối áp dụng voucher không đúng với điều kiện đã công bố.
+- Thông tin voucher hiển thị sai lệch nghiêm trọng so với điều kiện sử dụng thực tế.
+- Hệ thống phát sinh lỗi khiến khách hàng không thể xem hoặc sử dụng mã voucher.
+
+3. Trường hợp không hỗ trợ hoàn/hủy
+Voucher có thể không được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Voucher đã được đối tác xác nhận sử dụng.
+- Voucher đã hết hạn do khách hàng không sử dụng trong thời gian quy định.
+- Khách hàng sử dụng voucher sai chi nhánh, sai điều kiện hoặc sai thời gian áp dụng.
+- Khách hàng tự ý chia sẻ mã voucher cho người khác dẫn đến rủi ro sử dụng ngoài ý muốn.
+- Voucher thuộc chương trình có ghi rõ không áp dụng hoàn/hủy.
+
+4. Quy trình gửi yêu cầu hoàn/hủy hoặc khiếu nại
+Khách hàng có thể gửi yêu cầu hỗ trợ từ mục "Voucher của tôi" hoặc "Khiếu nại". Khi gửi yêu cầu, khách hàng cần cung cấp lý do, mô tả vấn đề và chọn voucher/đơn hàng liên quan để quản trị viên kiểm tra.
+
+5. Thời gian xử lý mô phỏng
+Quản trị viên sẽ tiếp nhận, kiểm tra trạng thái đơn hàng, trạng thái voucher, lịch sử sử dụng và phản hồi của đối tác. Kết quả xử lý có thể là chấp nhận hoàn/hủy, từ chối yêu cầu hoặc yêu cầu bổ sung thông tin.
+
+6. Lưu ý đối với voucher đã sử dụng, hết hạn hoặc sai chi nhánh
+Voucher đã sử dụng, hết hạn, bị hủy hoặc không áp dụng đúng chi nhánh có thể không còn giá trị sử dụng. Khách hàng nên kiểm tra kỹ thời hạn, điều kiện áp dụng và chi nhánh trước khi đến sử dụng dịch vụ.
+
+7. Trách nhiệm của các bên
+Khách hàng có trách nhiệm bảo mật mã voucher và sử dụng đúng điều kiện. Đối tác có trách nhiệm xác thực voucher theo thông tin đã công bố. VoucherHub hỗ trợ ghi nhận, kiểm tra và xử lý yêu cầu ở mức mô phỏng trong phạm vi đồ án.$$,
+   TRUE),
+  ('refund-policy', 'Chính sách hoàn/hủy',
+   $$1. Phạm vi áp dụng
+Chính sách này áp dụng cho các voucher được mua trên hệ thống VoucherHub. Việc hoàn/hủy được xử lý ở mức mô phỏng nhằm phục vụ quy trình nghiệp vụ của đồ án thương mại điện tử.
+
+2. Điều kiện được hỗ trợ hoàn/hủy
+Khách hàng có thể được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Đơn hàng chưa được thanh toán thành công.
+- Voucher chưa được sử dụng và còn trong thời hạn hỗ trợ theo điều kiện chương trình.
+- Đối tác từ chối áp dụng voucher không đúng với điều kiện đã công bố.
+- Thông tin voucher hiển thị sai lệch nghiêm trọng so với điều kiện sử dụng thực tế.
+- Hệ thống phát sinh lỗi khiến khách hàng không thể xem hoặc sử dụng mã voucher.
+
+3. Trường hợp không hỗ trợ hoàn/hủy
+Voucher có thể không được hỗ trợ hoàn/hủy trong các trường hợp sau:
+- Voucher đã được đối tác xác nhận sử dụng.
+- Voucher đã hết hạn do khách hàng không sử dụng trong thời gian quy định.
+- Khách hàng sử dụng voucher sai chi nhánh, sai điều kiện hoặc sai thời gian áp dụng.
+- Khách hàng tự ý chia sẻ mã voucher cho người khác dẫn đến rủi ro sử dụng ngoài ý muốn.
+- Voucher thuộc chương trình có ghi rõ không áp dụng hoàn/hủy.
+
+4. Quy trình gửi yêu cầu hoàn/hủy hoặc khiếu nại
+Khách hàng có thể gửi yêu cầu hỗ trợ từ mục "Voucher của tôi" hoặc "Khiếu nại". Khi gửi yêu cầu, khách hàng cần cung cấp lý do, mô tả vấn đề và chọn voucher/đơn hàng liên quan để quản trị viên kiểm tra.
+
+5. Thời gian xử lý mô phỏng
+Quản trị viên sẽ tiếp nhận, kiểm tra trạng thái đơn hàng, trạng thái voucher, lịch sử sử dụng và phản hồi của đối tác. Kết quả xử lý có thể là chấp nhận hoàn/hủy, từ chối yêu cầu hoặc yêu cầu bổ sung thông tin.
+
+6. Lưu ý đối với voucher đã sử dụng, hết hạn hoặc sai chi nhánh
+Voucher đã sử dụng, hết hạn, bị hủy hoặc không áp dụng đúng chi nhánh có thể không còn giá trị sử dụng. Khách hàng nên kiểm tra kỹ thời hạn, điều kiện áp dụng và chi nhánh trước khi đến sử dụng dịch vụ.
+
+7. Trách nhiệm của các bên
+Khách hàng có trách nhiệm bảo mật mã voucher và sử dụng đúng điều kiện. Đối tác có trách nhiệm xác thực voucher theo thông tin đã công bố. VoucherHub hỗ trợ ghi nhận, kiểm tra và xử lý yêu cầu ở mức mô phỏng trong phạm vi đồ án.$$,
+   TRUE),
+  ('dieu-khoan-voucher', 'Điều khoản voucher',
+   $$1. Hiệu lực của voucher
+Voucher chỉ có hiệu lực sau khi đơn hàng được thanh toán thành công và hệ thống phát hành mã voucher tương ứng.
+
+2. Phạm vi sử dụng
+Mỗi voucher có thể áp dụng cho một hoặc nhiều chi nhánh cụ thể. Khách hàng cần kiểm tra kỹ chi nhánh áp dụng trước khi sử dụng.
+
+3. Thời hạn sử dụng
+Voucher chỉ được sử dụng trong thời gian hiệu lực được hiển thị trên chi tiết voucher. Sau thời hạn này, voucher có thể chuyển sang trạng thái hết hạn và không còn giá trị sử dụng.
+
+4. Quy định về mã voucher/QR
+Mã voucher là mã định danh duy nhất được phát hành cho từng giao dịch hợp lệ. QR trong hệ thống là QR mô phỏng, dùng để hỗ trợ quy trình xác thực trong phạm vi đồ án.
+
+5. Quy định sử dụng một lần
+Voucher đã được xác nhận sử dụng sẽ không thể sử dụng lại, trừ khi chương trình voucher có quy định nhiều lượt sử dụng. Khách hàng không nên chia sẻ mã voucher công khai để tránh phát sinh rủi ro.
+
+6. Trường hợp voucher có thể bị từ chối
+Đối tác có thể từ chối xác thực voucher nếu:
+- Voucher đã hết hạn.
+- Voucher đã được sử dụng.
+- Voucher không áp dụng tại chi nhánh hiện tại.
+- Voucher không đáp ứng điều kiện sử dụng.
+- Voucher đã bị hủy, hoàn tiền hoặc tạm ngưng bởi hệ thống.
+
+7. Trách nhiệm bảo mật mã voucher
+Khách hàng chịu trách nhiệm bảo mật mã voucher/QR sau khi được phát hành. VoucherHub không khuyến khích chụp màn hình, đăng công khai hoặc gửi mã voucher cho người không liên quan.
+
+8. Tranh chấp và khiếu nại
+Nếu khách hàng cho rằng voucher bị từ chối không đúng, khách hàng có thể gửi khiếu nại để quản trị viên kiểm tra thông tin giao dịch, trạng thái voucher và phản hồi từ đối tác.$$,
+   TRUE),
+  ('dieu-khoan-su-dung', 'Điều khoản voucher',
+   $$1. Hiệu lực của voucher
+Voucher chỉ có hiệu lực sau khi đơn hàng được thanh toán thành công và hệ thống phát hành mã voucher tương ứng.
+
+2. Phạm vi sử dụng
+Mỗi voucher có thể áp dụng cho một hoặc nhiều chi nhánh cụ thể. Khách hàng cần kiểm tra kỹ chi nhánh áp dụng trước khi sử dụng.
+
+3. Thời hạn sử dụng
+Voucher chỉ được sử dụng trong thời gian hiệu lực được hiển thị trên chi tiết voucher. Sau thời hạn này, voucher có thể chuyển sang trạng thái hết hạn và không còn giá trị sử dụng.
+
+4. Quy định về mã voucher/QR
+Mã voucher là mã định danh duy nhất được phát hành cho từng giao dịch hợp lệ. QR trong hệ thống là QR mô phỏng, dùng để hỗ trợ quy trình xác thực trong phạm vi đồ án.
+
+5. Quy định sử dụng một lần
+Voucher đã được xác nhận sử dụng sẽ không thể sử dụng lại, trừ khi chương trình voucher có quy định nhiều lượt sử dụng. Khách hàng không nên chia sẻ mã voucher công khai để tránh phát sinh rủi ro.
+
+6. Trường hợp voucher có thể bị từ chối
+Đối tác có thể từ chối xác thực voucher nếu:
+- Voucher đã hết hạn.
+- Voucher đã được sử dụng.
+- Voucher không áp dụng tại chi nhánh hiện tại.
+- Voucher không đáp ứng điều kiện sử dụng.
+- Voucher đã bị hủy, hoàn tiền hoặc tạm ngưng bởi hệ thống.
+
+7. Trách nhiệm bảo mật mã voucher
+Khách hàng chịu trách nhiệm bảo mật mã voucher/QR sau khi được phát hành. VoucherHub không khuyến khích chụp màn hình, đăng công khai hoặc gửi mã voucher cho người không liên quan.
+
+8. Tranh chấp và khiếu nại
+Nếu khách hàng cho rằng voucher bị từ chối không đúng, khách hàng có thể gửi khiếu nại để quản trị viên kiểm tra thông tin giao dịch, trạng thái voucher và phản hồi từ đối tác.$$,
+   TRUE),
+  ('voucher-terms', 'Điều khoản voucher',
+   $$1. Hiệu lực của voucher
+Voucher chỉ có hiệu lực sau khi đơn hàng được thanh toán thành công và hệ thống phát hành mã voucher tương ứng.
+
+2. Phạm vi sử dụng
+Mỗi voucher có thể áp dụng cho một hoặc nhiều chi nhánh cụ thể. Khách hàng cần kiểm tra kỹ chi nhánh áp dụng trước khi sử dụng.
+
+3. Thời hạn sử dụng
+Voucher chỉ được sử dụng trong thời gian hiệu lực được hiển thị trên chi tiết voucher. Sau thời hạn này, voucher có thể chuyển sang trạng thái hết hạn và không còn giá trị sử dụng.
+
+4. Quy định về mã voucher/QR
+Mã voucher là mã định danh duy nhất được phát hành cho từng giao dịch hợp lệ. QR trong hệ thống là QR mô phỏng, dùng để hỗ trợ quy trình xác thực trong phạm vi đồ án.
+
+5. Quy định sử dụng một lần
+Voucher đã được xác nhận sử dụng sẽ không thể sử dụng lại, trừ khi chương trình voucher có quy định nhiều lượt sử dụng. Khách hàng không nên chia sẻ mã voucher công khai để tránh phát sinh rủi ro.
+
+6. Trường hợp voucher có thể bị từ chối
+Đối tác có thể từ chối xác thực voucher nếu:
+- Voucher đã hết hạn.
+- Voucher đã được sử dụng.
+- Voucher không áp dụng tại chi nhánh hiện tại.
+- Voucher không đáp ứng điều kiện sử dụng.
+- Voucher đã bị hủy, hoàn tiền hoặc tạm ngưng bởi hệ thống.
+
+7. Trách nhiệm bảo mật mã voucher
+Khách hàng chịu trách nhiệm bảo mật mã voucher/QR sau khi được phát hành. VoucherHub không khuyến khích chụp màn hình, đăng công khai hoặc gửi mã voucher cho người không liên quan.
+
+8. Tranh chấp và khiếu nại
+Nếu khách hàng cho rằng voucher bị từ chối không đúng, khách hàng có thể gửi khiếu nại để quản trị viên kiểm tra thông tin giao dịch, trạng thái voucher và phản hồi từ đối tác.$$,
+   TRUE),
+  ('huong-dan-su-dung', 'Hướng dẫn sử dụng voucher',
+   $$1. Tìm kiếm voucher
+Khách hàng có thể tìm kiếm voucher theo từ khóa, danh mục, khu vực, giá, mức giảm hoặc đối tác.
+
+2. Xem chi tiết voucher
+Trước khi mua, khách hàng cần kiểm tra kỹ giá bán, giá gốc, thời hạn sử dụng, điều kiện áp dụng, chi nhánh áp dụng và chính sách hoàn/hủy.
+
+3. Thêm voucher vào giỏ hàng
+Sau khi chọn voucher phù hợp, khách hàng bấm "Thêm vào giỏ hàng" và kiểm tra lại số lượng, giá tiền trước khi thanh toán.
+
+4. Tạo đơn và thanh toán mô phỏng
+Khách hàng tạo đơn hàng và chọn phương thức thanh toán mô phỏng. Sau khi đơn hàng được ghi nhận là đã thanh toán, hệ thống sẽ phát hành mã voucher.
+
+5. Nhận mã voucher/QR
+Khách hàng vào mục "Voucher của tôi" để xem mã voucher và QR mô phỏng. Mã voucher chỉ hiển thị sau khi đơn hàng đã thanh toán thành công.
+
+6. Sử dụng tại chi nhánh
+Khi đến chi nhánh áp dụng, khách hàng cung cấp mã voucher hoặc QR mô phỏng cho đối tác để kiểm tra.
+
+7. Đối tác xác thực
+Đối tác kiểm tra trạng thái voucher. Nếu voucher hợp lệ, đối tác xác nhận sử dụng và hệ thống chuyển voucher sang trạng thái "Đã sử dụng".
+
+8. Theo dõi trạng thái
+Khách hàng có thể theo dõi trạng thái voucher: Chưa sử dụng, Đã sử dụng, Hết hạn, Đã hủy hoặc Đã hoàn tiền.
+
+9. Đánh giá hoặc khiếu nại
+Sau khi sử dụng voucher, khách hàng có thể đánh giá trải nghiệm hoặc gửi khiếu nại nếu phát sinh vấn đề.$$,
+   TRUE),
+  ('usage-guide', 'Hướng dẫn sử dụng voucher',
+   $$1. Tìm kiếm voucher
+Khách hàng có thể tìm kiếm voucher theo từ khóa, danh mục, khu vực, giá, mức giảm hoặc đối tác.
+
+2. Xem chi tiết voucher
+Trước khi mua, khách hàng cần kiểm tra kỹ giá bán, giá gốc, thời hạn sử dụng, điều kiện áp dụng, chi nhánh áp dụng và chính sách hoàn/hủy.
+
+3. Thêm voucher vào giỏ hàng
+Sau khi chọn voucher phù hợp, khách hàng bấm "Thêm vào giỏ hàng" và kiểm tra lại số lượng, giá tiền trước khi thanh toán.
+
+4. Tạo đơn và thanh toán mô phỏng
+Khách hàng tạo đơn hàng và chọn phương thức thanh toán mô phỏng. Sau khi đơn hàng được ghi nhận là đã thanh toán, hệ thống sẽ phát hành mã voucher.
+
+5. Nhận mã voucher/QR
+Khách hàng vào mục "Voucher của tôi" để xem mã voucher và QR mô phỏng. Mã voucher chỉ hiển thị sau khi đơn hàng đã thanh toán thành công.
+
+6. Sử dụng tại chi nhánh
+Khi đến chi nhánh áp dụng, khách hàng cung cấp mã voucher hoặc QR mô phỏng cho đối tác để kiểm tra.
+
+7. Đối tác xác thực
+Đối tác kiểm tra trạng thái voucher. Nếu voucher hợp lệ, đối tác xác nhận sử dụng và hệ thống chuyển voucher sang trạng thái "Đã sử dụng".
+
+8. Theo dõi trạng thái
+Khách hàng có thể theo dõi trạng thái voucher: Chưa sử dụng, Đã sử dụng, Hết hạn, Đã hủy hoặc Đã hoàn tiền.
+
+9. Đánh giá hoặc khiếu nại
+Sau khi sử dụng voucher, khách hàng có thể đánh giá trải nghiệm hoặc gửi khiếu nại nếu phát sinh vấn đề.$$,
+   TRUE)
+ON CONFLICT (slug) DO UPDATE SET
+  title      = EXCLUDED.title,
+  content    = EXCLUDED.content,
+  is_active  = EXCLUDED.is_active,
+  updated_at = NOW();
+
+INSERT INTO popups (title, content, is_active, start_date, end_date)
+SELECT
+  'Flash Sale Demo',
+  'VoucherHub dang co chuong trinh uu dai demo. Admin co the sua hoac tat popup nay trong tab Noi dung > Popups.',
+  TRUE,
+  NOW() - INTERVAL '1 day',
+  NOW() + INTERVAL '30 days'
+WHERE NOT EXISTS (
+  SELECT 1 FROM popups WHERE title = 'Flash Sale Demo'
+);
+
 -- ─── 4. Customers (20) ───────────────────────────────────────────
 -- Mật khẩu chung: Customer@123
 INSERT INTO users (email, password, full_name, phone, role) VALUES
@@ -1028,3 +1288,321 @@ INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address
 SELECT u.id, 'REFUND_ORDER', 'orders', o.id, '{"payment_ref":"PAY-2026-0039","amount":149000,"reason":"Khách yêu cầu hoàn tiền"}'::jsonb, '192.168.1.100'
 FROM users u JOIN orders o ON o.payment_ref='PAY-2026-0039'
 WHERE u.email='admin@vouchersystem.com' LIMIT 1;
+
+-- Complaints demo data
+INSERT INTO complaints (customer_id, voucher_id, issued_voucher_id, order_id, subject, message, status, admin_response, resolved_by, resolved_at)
+SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
+  'Nhan vien kiem tra ma hoi cham',
+  'Khach hang da xuat trinh ma voucher nhung chi nhanh can nhieu thoi gian de xac thuc.',
+  'IN_PROGRESS'::complaint_status,
+  'Bo phan ho tro da lien he doi tac de cai thien quy trinh scan voucher.',
+  (SELECT id FROM users WHERE email='admin@vouchersystem.com'),
+  NULL
+FROM issued_vouchers iv
+JOIN order_items oi ON oi.id = iv.order_item_id
+WHERE iv.code='VCH-2026-0011'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO complaints (customer_id, voucher_id, issued_voucher_id, order_id, subject, message, status, admin_response, resolved_by, resolved_at)
+SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
+  'Can ho tro hoan tien voucher',
+  'Khach hang muon hoan tien vi chua su dung voucher va lich hen bi huy.',
+  'RESOLVED'::complaint_status,
+  'Yeu cau da duoc xu ly theo chinh sach hoan tien demo.',
+  (SELECT id FROM users WHERE email='admin@vouchersystem.com'),
+  NOW() - INTERVAL '1 day'
+FROM issued_vouchers iv
+JOIN order_items oi ON oi.id = iv.order_item_id
+WHERE iv.code='VCH-2026-0026'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
+SELECT u.id, 'UPDATE_COMPLAINT_STATUS', 'complaint', c.id,
+  jsonb_build_object('status', c.status, 'subject', c.subject),
+  '192.168.1.100'
+FROM users u CROSS JOIN complaints c
+WHERE u.email='admin@vouchersystem.com'
+LIMIT 2;
+
+-- ================================================================
+-- Admin demo supplemental data
+-- Exact demo accounts and business states for final presentation.
+-- Password hashes:
+--   Admin@123, Customer@123, Partner@123
+-- ================================================================
+
+INSERT INTO categories (name, is_active) VALUES
+  ('Giao duc', TRUE)
+ON CONFLICT (name) DO UPDATE SET is_active = EXCLUDED.is_active, updated_at = NOW();
+
+INSERT INTO users (email, password, full_name, phone, role, is_active) VALUES
+  ('admin@voucherhub.vn', '$2a$12$OrLz6NO65poO9GzkFTppOehndshBOY5lEEZsbRlMlV0qt27pLNikO', 'VoucherHub Admin', '0988000000', 'ADMIN', TRUE),
+  ('customer1@example.com', '$2a$12$2ejxZiPp3PnMx99/Hd7kLumwp0JSFy70N7PU5qP8xEU3bNvjFnoFa', 'Nguyen Minh Customer 1', '0988000001', 'CUSTOMER', TRUE),
+  ('customer2@example.com', '$2a$12$2ejxZiPp3PnMx99/Hd7kLumwp0JSFy70N7PU5qP8xEU3bNvjFnoFa', 'Tran Anh Customer 2', '0988000002', 'CUSTOMER', TRUE),
+  ('customer3@example.com', '$2a$12$2ejxZiPp3PnMx99/Hd7kLumwp0JSFy70N7PU5qP8xEU3bNvjFnoFa', 'Le Bao Customer 3', '0988000003', 'CUSTOMER', TRUE),
+  ('customer4@example.com', '$2a$12$2ejxZiPp3PnMx99/Hd7kLumwp0JSFy70N7PU5qP8xEU3bNvjFnoFa', 'Pham Khoa Customer 4', '0988000004', 'CUSTOMER', FALSE),
+  ('customer5@example.com', '$2a$12$2ejxZiPp3PnMx99/Hd7kLumwp0JSFy70N7PU5qP8xEU3bNvjFnoFa', 'Vo Linh Customer 5', '0988000005', 'CUSTOMER', TRUE),
+  ('partner.food@example.com', '$2a$12$VYRZ3U3LOgYujcV1vKQ.MOWV4pd1ZPi/kkiE5wnB6YfokPQSDRPmO', 'Highlands Demo Manager', '0988010001', 'PARTNER', TRUE),
+  ('partner.beauty@example.com', '$2a$12$VYRZ3U3LOgYujcV1vKQ.MOWV4pd1ZPi/kkiE5wnB6YfokPQSDRPmO', 'Saigon Beauty Manager', '0988010002', 'PARTNER', TRUE),
+  ('partner.travel@example.com', '$2a$12$VYRZ3U3LOgYujcV1vKQ.MOWV4pd1ZPi/kkiE5wnB6YfokPQSDRPmO', 'Saigon Travel Manager', '0988010003', 'PARTNER', TRUE),
+  ('partner.suspended@example.com', '$2a$12$VYRZ3U3LOgYujcV1vKQ.MOWV4pd1ZPi/kkiE5wnB6YfokPQSDRPmO', 'Paused Retail Manager', '0988010004', 'PARTNER', TRUE)
+ON CONFLICT (email) DO UPDATE SET
+  password = EXCLUDED.password,
+  full_name = EXCLUDED.full_name,
+  phone = EXCLUDED.phone,
+  role = EXCLUDED.role,
+  is_active = EXCLUDED.is_active,
+  updated_at = NOW();
+
+INSERT INTO partners (user_id, business_name, business_license, representative, address, status, rejection_reason)
+SELECT u.id, p.business_name, p.business_license, p.representative, p.address, p.status::partner_status, p.rejection_reason
+FROM (VALUES
+  ('partner.food@example.com', 'Highlands Coffee Demo', 'TAX-HIGHLANDS-DEMO', 'Nguyen Hoang Nam', 'Quan 1, TP.HCM', 'APPROVED', NULL),
+  ('partner.beauty@example.com', 'Saigon Beauty Spa', 'TAX-BEAUTY-DEMO', 'Tran My Duyen', 'Quan 7, TP.HCM', 'APPROVED', NULL),
+  ('partner.travel@example.com', 'Saigon Local Travel', 'TAX-TRAVEL-DEMO', 'Le Quoc Khanh', 'Tan Binh, TP.HCM', 'PENDING', NULL),
+  ('partner.suspended@example.com', 'Paused Fashion Store', 'TAX-SUSP-DEMO', 'Pham Thanh Hoa', 'Quan 5, TP.HCM', 'SUSPENDED', 'Tam ngung hop tac trong thoi gian doi soat')
+) AS p(email, business_name, business_license, representative, address, status, rejection_reason)
+JOIN users u ON u.email = p.email
+WHERE NOT EXISTS (SELECT 1 FROM partners existing WHERE existing.user_id = u.id);
+
+INSERT INTO partner_branches (partner_id, name, address, phone, is_active)
+SELECT p.id, b.name, b.address, b.phone, b.is_active
+FROM (VALUES
+  ('partner.food@example.com', 'Highlands Demo - Nguyen Hue', '45 Nguyen Hue, Q1, TP.HCM', '0988110001', TRUE),
+  ('partner.food@example.com', 'Highlands Demo - Vo Van Tan', '120 Vo Van Tan, Q3, TP.HCM', '0988110002', TRUE),
+  ('partner.food@example.com', 'Highlands Demo - Thu Duc', '22 Vo Van Ngan, Thu Duc, TP.HCM', '0988110003', TRUE),
+  ('partner.beauty@example.com', 'Saigon Beauty - Phu My Hung', '18 Nguyen Duc Canh, Q7, TP.HCM', '0988120001', TRUE),
+  ('partner.beauty@example.com', 'Saigon Beauty - Binh Thanh', '90 Dien Bien Phu, Binh Thanh, TP.HCM', '0988120002', TRUE),
+  ('partner.beauty@example.com', 'Saigon Beauty - District 3', '33 Cach Mang Thang 8, Q3, TP.HCM', '0988120003', FALSE),
+  ('partner.travel@example.com', 'Saigon Travel - Ben Thanh', '2 Le Lai, Q1, TP.HCM', '0988130001', TRUE),
+  ('partner.travel@example.com', 'Saigon Travel - Tan Binh', '48 Truong Son, Tan Binh, TP.HCM', '0988130002', TRUE),
+  ('partner.suspended@example.com', 'Paused Fashion - Nguyen Trai', '220 Nguyen Trai, Q5, TP.HCM', '0988140001', FALSE)
+) AS b(email, name, address, phone, is_active)
+JOIN users u ON u.email = b.email
+JOIN partners p ON p.user_id = u.id
+WHERE NOT EXISTS (
+  SELECT 1 FROM partner_branches existing
+  WHERE existing.partner_id = p.id AND existing.name = b.name
+);
+
+WITH partner_ref AS (
+  SELECT u.email, p.id AS partner_id
+  FROM users u
+  JOIN partners p ON p.user_id = u.id
+),
+voucher_seed AS (
+  SELECT * FROM (VALUES
+    ('partner.food@example.com', 'Highlands Coffee - Combo Freeze va banh', 'Combo Freeze size L kem banh ngot tai Highlands Demo.', 'Am thuc', 180000, 99000, 80, -2, 30, 60, 'Ap dung tai cac chi nhanh Highlands Demo. Khong quy doi tien mat.', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Phuc Long - Tra sua signature size L', 'Voucher tra sua signature size L cho 2 nguoi.', 'Am thuc', 160000, 89000, 70, -1, 25, 45, 'Ap dung tu 9h den 21h moi ngay.', 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'KFC - Bucket ga ran gia dinh', 'Bucket ga ran 6 mieng kem khoai va nuoc.', 'Am thuc', 399000, 249000, 60, -3, 35, 60, 'Khong ap dung dong thoi voi khuyen mai khac.', 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Pizza 4Ps - Set pizza va pasta cao cap', 'Set pizza, pasta va salad cho 2 nguoi.', 'Am thuc', 750000, 499000, 35, -1, 40, 75, 'Can dat ban truoc 2 gio.', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.beauty@example.com', 'Spa thu gian 90 phut', 'Massage body va cham soc da thu gian 90 phut.', 'Lam dep', 900000, 499000, 45, -2, 45, 90, 'Dat lich truoc 24h. Khong ap dung ngay le.', 'https://images.unsplash.com/photo-1544161515-4ab6ce6a9f8c?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Ve xem phim CGV cuoi tuan', 'Ve 2D cuoi tuan kem bap nuoc size vua.', 'Giai tri', 220000, 129000, 90, -1, 20, 45, 'Ap dung rap demo doi tac, khong ap dung suat dac biet.', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.beauty@example.com', 'Goi cham soc da Luxury Pending', 'Goi cham soc da dang cho admin duyet.', 'Lam dep', 1200000, 699000, 30, -1, 30, 80, 'Can xac minh noi dung truoc khi ban.', 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.food@example.com', 'Buffet lau Thai Pending', 'Voucher buffet lau Thai dang cho duyet.', 'Am thuc', 450000, 299000, 50, -1, 35, 70, 'Thong tin menu can admin kiem tra.', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.beauty@example.com', 'Triet long cong nghe moi Pending', 'Voucher cong nghe moi can duyet noi dung.', 'Lam dep', 1500000, 799000, 20, -1, 30, 90, 'Can bo sung chung nhan dich vu.', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.food@example.com', 'Set hai san gia soc Rejected', 'Voucher bi tu choi do mo ta khong ro.', 'Am thuc', 980000, 399000, 20, -5, 20, 40, 'Thong tin dieu kien chua day du.', 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Mo ta uu dai va dieu kien ap dung chua ro rang'),
+    ('partner.beauty@example.com', 'Botox Flash Deal Rejected', 'Voucher bi tu choi do khong phu hop chinh sach san.', 'Lam dep', 2500000, 990000, 10, -5, 20, 50, 'Can chung tu dich vu y te.', 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Dich vu can giay phep/chung tu bo sung'),
+    ('partner.food@example.com', 'Coffee Pass Suspended', 'Voucher dang tam ngung ban de doi soat.', 'Am thuc', 500000, 299000, 10, -10, 10, 30, 'Tam ngung trong thoi gian kiem tra doi tac.', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
+    ('partner.beauty@example.com', 'Goi goi dau duong sinh Suspended', 'Voucher tam ngung do lich hen qua tai.', 'Lam dep', 350000, 199000, 12, -8, 15, 45, 'Chi mo lai khi partner cap nhat lich trong.', 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
+    ('partner.food@example.com', 'Combo banh mi he 2025 Expired', 'Voucher da het han ban.', 'Am thuc', 120000, 69000, 25, -90, -10, -1, 'Khong con hieu luc.', 'https://images.unsplash.com/photo-1600628421060-939639517883?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
+    ('partner.beauty@example.com', 'Spa detox thang truoc Expired', 'Voucher da het han su dung.', 'Lam dep', 1100000, 599000, 15, -120, -30, -5, 'Khong the su dung sau han.', 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
+    ('partner.travel@example.com', 'Tour Sai Gon nua ngay Pending Partner', 'Voucher cua partner pending, dung demo duyet partner.', 'Du lich', 650000, 399000, 40, -1, 45, 90, 'Chi ban sau khi partner duoc approve.', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL)
+  ) AS s(email, name, description, category, original_price, sale_price, stock, sale_start_offset, sale_end_offset, valid_until_offset, terms, image_url, status, rejection_reason)
+)
+INSERT INTO vouchers (partner_id, name, description, category, original_price, sale_price, stock, sale_start, sale_end, valid_until, terms, image_url, status, rejection_reason)
+SELECT pr.partner_id, vs.name, vs.description, vs.category,
+       vs.original_price::NUMERIC(15,2), vs.sale_price::NUMERIC(15,2), vs.stock::INTEGER,
+       NOW() + vs.sale_start_offset::INTEGER * INTERVAL '1 day',
+       NOW() + vs.sale_end_offset::INTEGER * INTERVAL '1 day',
+       NOW() + vs.valid_until_offset::INTEGER * INTERVAL '1 day',
+       vs.terms, vs.image_url, vs.status::voucher_status, vs.rejection_reason
+FROM voucher_seed vs
+JOIN partner_ref pr ON pr.email = vs.email
+WHERE NOT EXISTS (SELECT 1 FROM vouchers existing WHERE existing.name = vs.name);
+
+INSERT INTO voucher_applicable_branches (voucher_id, branch_id)
+SELECT v.id, b.id
+FROM vouchers v
+JOIN partners p ON p.id = v.partner_id
+JOIN partner_branches b ON b.partner_id = p.id AND b.is_active = TRUE
+WHERE v.name IN (
+  'Highlands Coffee - Combo Freeze va banh',
+  'Phuc Long - Tra sua signature size L',
+  'KFC - Bucket ga ran gia dinh',
+  'Pizza 4Ps - Set pizza va pasta cao cap',
+  'Spa thu gian 90 phut',
+  'Ve xem phim CGV cuoi tuan'
+)
+ON CONFLICT DO NOTHING;
+
+-- Orders and issued vouchers for the exact customer demo accounts.
+WITH paid_order AS (
+  INSERT INTO orders (customer_id, total_amount, status, payment_ref, payment_method, recipient_name, recipient_phone, recipient_email, paid_at, created_at, updated_at)
+  SELECT u.id, v.sale_price, 'PAID'::order_status, 'DEMO-PAY-CUS1-UNUSED', 'MOMO_MOCK', u.full_name, u.phone, u.email, NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days'
+  FROM users u CROSS JOIN vouchers v
+  WHERE u.email='customer1@example.com' AND v.name='Highlands Coffee - Combo Freeze va banh'
+    AND NOT EXISTS (SELECT 1 FROM orders WHERE payment_ref='DEMO-PAY-CUS1-UNUSED')
+  RETURNING id
+),
+order_ref AS (
+  SELECT id FROM paid_order
+  UNION ALL
+  SELECT id FROM orders WHERE payment_ref='DEMO-PAY-CUS1-UNUSED'
+),
+item_insert AS (
+  INSERT INTO order_items (order_id, voucher_id, quantity, unit_price)
+  SELECT o.id, v.id, 1, v.sale_price
+  FROM order_ref o CROSS JOIN vouchers v
+  WHERE v.name='Highlands Coffee - Combo Freeze va banh'
+    AND NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-A8F2K9')
+  RETURNING id, voucher_id, order_id
+)
+INSERT INTO issued_vouchers (code, order_item_id, voucher_id, customer_id, partner_id, status, expires_at)
+SELECT 'VCH-2026-A8F2K9', ii.id, ii.voucher_id, u.id, v.partner_id, 'UNUSED'::issued_voucher_status, NOW() + INTERVAL '60 days'
+FROM item_insert ii
+JOIN vouchers v ON v.id = ii.voucher_id
+JOIN users u ON u.email='customer1@example.com'
+WHERE NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-A8F2K9');
+
+WITH paid_order AS (
+  INSERT INTO orders (customer_id, total_amount, status, payment_ref, payment_method, recipient_name, recipient_phone, recipient_email, paid_at, created_at, updated_at)
+  SELECT u.id, v.sale_price, 'PAID'::order_status, 'DEMO-PAY-CUS2-USED', 'VNPAY_MOCK', u.full_name, u.phone, u.email, NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days'
+  FROM users u CROSS JOIN vouchers v
+  WHERE u.email='customer2@example.com' AND v.name='Spa thu gian 90 phut'
+    AND NOT EXISTS (SELECT 1 FROM orders WHERE payment_ref='DEMO-PAY-CUS2-USED')
+  RETURNING id
+),
+order_ref AS (
+  SELECT id FROM paid_order
+  UNION ALL
+  SELECT id FROM orders WHERE payment_ref='DEMO-PAY-CUS2-USED'
+),
+item_insert AS (
+  INSERT INTO order_items (order_id, voucher_id, quantity, unit_price)
+  SELECT o.id, v.id, 1, v.sale_price
+  FROM order_ref o CROSS JOIN vouchers v
+  WHERE v.name='Spa thu gian 90 phut'
+    AND NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-U7D3X2')
+  RETURNING id, voucher_id, order_id
+)
+INSERT INTO issued_vouchers (code, order_item_id, voucher_id, customer_id, partner_id, status, used_at, used_at_branch, expires_at)
+SELECT 'VCH-2026-U7D3X2', ii.id, ii.voucher_id, u.id, v.partner_id, 'USED'::issued_voucher_status, NOW() - INTERVAL '2 days',
+       (SELECT b.id FROM partner_branches b WHERE b.partner_id = v.partner_id AND b.is_active = TRUE LIMIT 1),
+       NOW() + INTERVAL '80 days'
+FROM item_insert ii
+JOIN vouchers v ON v.id = ii.voucher_id
+JOIN users u ON u.email='customer2@example.com'
+WHERE NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-U7D3X2');
+
+WITH paid_order AS (
+  INSERT INTO orders (customer_id, total_amount, status, payment_ref, payment_method, recipient_name, recipient_phone, recipient_email, paid_at, created_at, updated_at)
+  SELECT u.id, v.sale_price, 'PAID'::order_status, 'DEMO-PAY-CUS3-COMPLAINT', 'MOMO_MOCK', u.full_name, u.phone, u.email, NOW() - INTERVAL '4 days', NOW() - INTERVAL '4 days', NOW() - INTERVAL '4 days'
+  FROM users u CROSS JOIN vouchers v
+  WHERE u.email='customer3@example.com' AND v.name='KFC - Bucket ga ran gia dinh'
+    AND NOT EXISTS (SELECT 1 FROM orders WHERE payment_ref='DEMO-PAY-CUS3-COMPLAINT')
+  RETURNING id
+),
+order_ref AS (
+  SELECT id FROM paid_order
+  UNION ALL
+  SELECT id FROM orders WHERE payment_ref='DEMO-PAY-CUS3-COMPLAINT'
+),
+item_insert AS (
+  INSERT INTO order_items (order_id, voucher_id, quantity, unit_price)
+  SELECT o.id, v.id, 1, v.sale_price
+  FROM order_ref o CROSS JOIN vouchers v
+  WHERE v.name='KFC - Bucket ga ran gia dinh'
+    AND NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-C3M1N8')
+  RETURNING id, voucher_id, order_id
+)
+INSERT INTO issued_vouchers (code, order_item_id, voucher_id, customer_id, partner_id, status, expires_at)
+SELECT 'VCH-2026-C3M1N8', ii.id, ii.voucher_id, u.id, v.partner_id, 'UNUSED'::issued_voucher_status, NOW() + INTERVAL '45 days'
+FROM item_insert ii
+JOIN vouchers v ON v.id = ii.voucher_id
+JOIN users u ON u.email='customer3@example.com'
+WHERE NOT EXISTS (SELECT 1 FROM issued_vouchers WHERE code='VCH-2026-C3M1N8');
+
+INSERT INTO orders (customer_id, total_amount, status, payment_ref, payment_method, recipient_name, recipient_phone, recipient_email, created_at, updated_at)
+SELECT u.id, v.sale_price, 'PENDING'::order_status, 'DEMO-PAY-CUS5-PENDING', 'COD_MOCK', u.full_name, u.phone, u.email, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+FROM users u CROSS JOIN vouchers v
+WHERE u.email='customer5@example.com' AND v.name='Phuc Long - Tra sua signature size L'
+  AND NOT EXISTS (SELECT 1 FROM orders WHERE payment_ref='DEMO-PAY-CUS5-PENDING');
+
+INSERT INTO order_items (order_id, voucher_id, quantity, unit_price)
+SELECT o.id, v.id, 1, v.sale_price
+FROM orders o
+JOIN vouchers v ON v.name='Phuc Long - Tra sua signature size L'
+WHERE o.payment_ref='DEMO-PAY-CUS5-PENDING'
+  AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id=o.id AND oi.voucher_id=v.id);
+
+INSERT INTO orders (customer_id, total_amount, status, payment_ref, payment_method, recipient_name, recipient_phone, recipient_email, created_at, updated_at)
+SELECT u.id, v.sale_price, 'CANCELLED'::order_status, 'DEMO-PAY-CUS5-CANCELLED', 'MOMO_MOCK', u.full_name, u.phone, u.email, NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days'
+FROM users u CROSS JOIN vouchers v
+WHERE u.email='customer5@example.com' AND v.name='Ve xem phim CGV cuoi tuan'
+  AND NOT EXISTS (SELECT 1 FROM orders WHERE payment_ref='DEMO-PAY-CUS5-CANCELLED');
+
+INSERT INTO order_items (order_id, voucher_id, quantity, unit_price)
+SELECT o.id, v.id, 1, v.sale_price
+FROM orders o
+JOIN vouchers v ON v.name='Ve xem phim CGV cuoi tuan'
+WHERE o.payment_ref='DEMO-PAY-CUS5-CANCELLED'
+  AND NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id=o.id AND oi.voucher_id=v.id);
+
+-- Reviews for exact demo customers.
+INSERT INTO reviews (voucher_id, customer_id, issued_voucher_id, rating, comment, partner_reply)
+SELECT iv.voucher_id, iv.customer_id, iv.id, 5,
+  'Dich vu spa tot, nhan vien huong dan su dung voucher nhanh.',
+  'Cam on anh/chi da trai nghiem dich vu cua Saigon Beauty Spa.'
+FROM issued_vouchers iv
+WHERE iv.code='VCH-2026-U7D3X2'
+  AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.issued_voucher_id = iv.id);
+
+-- Complaints: 2 pending, 1 in progress, 2 resolved, 1 rejected.
+INSERT INTO complaints (customer_id, voucher_id, issued_voucher_id, order_id, subject, message, status, admin_response, resolved_by, resolved_at)
+SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
+  c.subject, c.message, c.status::complaint_status, c.admin_response,
+  CASE WHEN c.status IN ('RESOLVED', 'REJECTED') THEN (SELECT id FROM users WHERE email='admin@voucherhub.vn') ELSE NULL END,
+  CASE WHEN c.status IN ('RESOLVED', 'REJECTED') THEN NOW() - INTERVAL '1 day' ELSE NULL END
+FROM issued_vouchers iv
+JOIN order_items oi ON oi.id = iv.order_item_id
+CROSS JOIN (VALUES
+  ('VCH-2026-C3M1N8', 'Khong dung duoc voucher tai chi nhanh', 'Nhan vien bao chi nhanh chua cap nhat chuong trinh khuyen mai.', 'PENDING', NULL),
+  ('VCH-2026-A8F2K9', 'Ma QR khong quet duoc', 'Khach hang can ho tro vi QR mock khong duoc doi tac xac nhan ngay.', 'PENDING', NULL),
+  ('VCH-2026-U7D3X2', 'Doi tac tu choi ap dung khuyen mai', 'Doi tac yeu cau dat lich lai du khach da dung dieu kien.', 'IN_PROGRESS', 'Bo phan ho tro dang lien he quan ly chi nhanh.'),
+  ('VCH-2026-C3M1N8', 'Muon hoan tien vi lich hen bi huy', 'Khach hang muon hoan tien do partner huy lich hen.', 'RESOLVED', 'Yeu cau hoan tien mock da duoc chap nhan theo chinh sach san.'),
+  ('VCH-2026-A8F2K9', 'Thong tin dieu kien su dung chua ro', 'Khach hang can giai thich them ve dieu kien dat lich truoc.', 'RESOLVED', 'Da cap nhat huong dan va gui lai chinh sach su dung voucher.'),
+  ('VCH-2026-U7D3X2', 'Yeu cau hoan tien sau khi voucher da dung', 'Khach hang yeu cau hoan tien nhung voucher da duoc scan thanh cong.', 'REJECTED', 'Yeu cau bi tu choi do voucher da su dung thanh cong.')
+) AS c(code, subject, message, status, admin_response)
+WHERE iv.code = c.code
+  AND NOT EXISTS (SELECT 1 FROM complaints existing WHERE existing.subject = c.subject);
+
+INSERT INTO popups (title, content, is_active, start_date, end_date)
+SELECT 'Khuyen mai gio vang', 'Giam den 50% cho nhom voucher am thuc va lam dep trong tuan demo.', TRUE, NOW() - INTERVAL '1 hour', NOW() + INTERVAL '7 days'
+WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Khuyen mai gio vang');
+
+INSERT INTO popups (title, content, is_active, start_date, end_date)
+SELECT 'Chuong trinh da ket thuc', 'Popup het han dung de admin demo trang thai inactive/expired.', FALSE, NOW() - INTERVAL '20 days', NOW() - INTERVAL '5 days'
+WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Chuong trinh da ket thuc');
+
+INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
+SELECT admin.id, l.action, l.entity, l.entity_id, l.details::jsonb, '192.168.10.10'
+FROM users admin
+CROSS JOIN LATERAL (VALUES
+  ('LOGIN_ADMIN', 'users', admin.id, '{"method":"email","result":"success"}'),
+  ('APPROVE_PARTNER', 'partners', (SELECT p.id FROM partners p JOIN users u ON u.id=p.user_id WHERE u.email='partner.food@example.com'), '{"partner":"Highlands Coffee Demo"}'),
+  ('SUSPEND_PARTNER', 'partners', (SELECT p.id FROM partners p JOIN users u ON u.id=p.user_id WHERE u.email='partner.suspended@example.com'), '{"reason":"doi soat demo"}'),
+  ('APPROVE_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Highlands Coffee - Combo Freeze va banh'), '{"status":"APPROVED"}'),
+  ('REJECT_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Set hai san gia soc Rejected'), '{"reason":"mo ta chua ro"}'),
+  ('SUSPEND_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Coffee Pass Suspended'), '{"reason":"tam ngung ban"}'),
+  ('CANCEL_ORDER', 'orders', (SELECT id FROM orders WHERE payment_ref='DEMO-PAY-CUS5-CANCELLED'), '{"payment_ref":"DEMO-PAY-CUS5-CANCELLED"}'),
+  ('UPDATE_COMPLAINT_STATUS', 'complaint', (SELECT id FROM complaints WHERE subject='Muon hoan tien vi lich hen bi huy' LIMIT 1), '{"status":"RESOLVED"}'),
+  ('UPDATE_CONTENT', 'content', (SELECT id FROM popups WHERE title='Khuyen mai gio vang'), '{"type":"popup","operation":"create"}'),
+  ('UPDATE_CATEGORY', 'content', (SELECT id FROM categories WHERE name='Giao duc'), '{"type":"category","operation":"upsert"}')
+) AS l(action, entity, entity_id, details)
+WHERE admin.email='admin@voucherhub.vn'
+  AND l.entity_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM system_logs s
+    WHERE s.user_id = admin.id AND s.action = l.action AND s.entity_id = l.entity_id
+  );
