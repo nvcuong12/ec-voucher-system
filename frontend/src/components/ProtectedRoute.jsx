@@ -14,7 +14,9 @@ const ProtectedRoute = ({ children, roles }) => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "4rem" }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", marginTop: "4rem" }}
+      >
         <span className="spinner" />
       </div>
     );

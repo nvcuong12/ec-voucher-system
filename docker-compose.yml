@@ -12,7 +12,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voucherpass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/src/config/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/src/config/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -33,7 +34,7 @@ services:
       - ./backend:/workspace/backend
       - backend_node_modules:/workspace/backend/node_modules
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 5000
@@ -41,6 +42,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey_change_in_production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       FRONTEND_URL: http://localhost:3000
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
     depends_on:
       db:
         condition: service_healthy
@@ -60,9 +63,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_API_URL: http://localhost:5000/api
+      REACT_APP_API_URL: http://localhost:5001/api
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
+      REACT_APP_PAYPAL_CLIENT_ID: ${REACT_APP_PAYPAL_CLIENT_ID:-sb}
     depends_on:
       - backend
     command: npm start

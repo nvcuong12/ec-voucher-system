@@ -38,15 +38,37 @@ Sau khi khởi động:
 | Service  | URL                        |
 |----------|----------------------------|
 | Frontend | http://localhost:3000      |
-| Backend  | http://localhost:5000      |
-| API Docs | http://localhost:5000/api  |
-| Health   | http://localhost:5000/health |
+| Backend  | http://localhost:5001      |
+| API Docs | http://localhost:5001/api  |
+| Health   | http://localhost:5001/health |
 
 ### Tài khoản mặc định (seed)
 
 | Role  | Email                      | Password   |
 |-------|----------------------------|------------|
 | Admin | admin@vouchersystem.com    | Admin@123  |
+
+### Ghi chú khách hàng
+- Đăng nhập bằng email hoặc số điện thoại
+- Tìm kiếm voucher theo từ khóa, khoảng giá, mức giảm, khu vực, trạng thái
+
+### Lưu ý khi cập nhật dependencies
+Nếu có thay đổi trong `frontend/package.json` (ví dụ thêm `react-icons`), cần rebuild hoặc cài lại trong container:
+
+```bash
+# Cách 1: rebuild toàn bộ
+docker compose up --build
+
+# Cách 2: chỉ cài lại dependencies frontend
+docker compose exec frontend npm install
+```
+
+### Seed dữ liệu mẫu
+Nếu DB đã tồn tại trước đó, script seed sẽ không tự chạy lại. Bạn có thể seed thủ công:
+
+```bash
+docker exec -i voucher_db psql -U voucheruser -d voucherdb < backend/src/config/init.sql
+```
 
 ---
 
@@ -102,10 +124,10 @@ voucher-system/
 | **1** | DevContainer + Project scaffold (React + Node) | ✅ Hoàn thành |
 | **2** | DB Schema (PostgreSQL, tất cả entities) | ✅ Hoàn thành (`init.sql`) |
 | **3** | Auth API + JWT middleware | 🔄 Cơ bản xong, cần test |
-| **4** | CRUD Partner & Admin (tạo/duyệt voucher) | ⏳ Chờ |
-| **5** | Customer flow (tìm kiếm, giỏ hàng, checkout mock) | ⏳ Chờ |
-| **6** | Voucher Code + QR + quét mã + trừ tồn kho an toàn | ⏳ Chờ |
-| **7** | Dashboard báo cáo + hoàn thiện UI | ⏳ Chờ |
+| **4** | CRUD Partner & Admin (tạo/duyệt voucher) | ✅ Cơ bản xong |
+| **5** | Customer flow (tìm kiếm, giỏ hàng, checkout mock) | 🔄 Cơ bản xong |
+| **6** | Voucher Code + QR + quét mã + trừ tồn kho an toàn | 🔄 Cơ bản xong |
+| **7** | Dashboard báo cáo + hoàn thiện UI | 🔄 Cơ bản xong |
 
 ---
 

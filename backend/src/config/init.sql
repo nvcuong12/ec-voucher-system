@@ -13,10 +13,13 @@ CREATE TYPE voucher_status AS ENUM ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'RE
 CREATE TYPE order_status AS ENUM ('PENDING', 'PAID', 'CANCELLED', 'REFUNDED');
 CREATE TYPE issued_voucher_status AS ENUM ('UNUSED', 'USED', 'EXPIRED', 'CANCELLED');
 
+-- Allow evolving enum values safely in existing databases
+ALTER TYPE voucher_status ADD VALUE IF NOT EXISTS 'SUSPENDED';
+
 -- ─── Users ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email        VARCHAR(255) UNIQUE NOT NULL,
+  email        VARCHAR(255) UNIQUE,
   password     VARCHAR(255) NOT NULL,          -- bcrypt hash
   full_name    VARCHAR(255) NOT NULL,
   phone        VARCHAR(20),
@@ -76,6 +79,14 @@ CREATE TABLE IF NOT EXISTS vouchers (
   CONSTRAINT chk_stock CHECK (stock >= 0)
 );
 
+-- 1) Bảng trung gian N-N: voucher <-> chi nhánh áp dụng
+CREATE TABLE IF NOT EXISTS voucher_applicable_branches (
+  voucher_id   UUID NOT NULL REFERENCES vouchers(id) ON DELETE CASCADE,
+  branch_id    UUID NOT NULL REFERENCES partner_branches(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (voucher_id, branch_id)
+);
+
 -- ─── Orders ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -83,10 +94,24 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount    NUMERIC(15, 2) NOT NULL,
   status          order_status NOT NULL DEFAULT 'PENDING',
   payment_ref     VARCHAR(255),               -- mock payment reference
+  payment_method  VARCHAR(50),
+  recipient_name  VARCHAR(255),
+  recipient_phone VARCHAR(20),
+  recipient_email VARCHAR(255),
+  note            TEXT,
   paid_at         TIMESTAMPTZ,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure email can be nullable for phone-only accounts
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique ON users(phone) WHERE phone IS NOT NULL;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS recipient_name VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS recipient_phone VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS recipient_email VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS note TEXT;
 
 -- ─── Order Items ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
@@ -130,6 +155,36 @@ CREATE TABLE IF NOT EXISTS reviews (
   UNIQUE (issued_voucher_id)
 );
 
+-- ─── Content Management ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS categories (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        VARCHAR(120) NOT NULL UNIQUE,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS banners (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title       VARCHAR(255) NOT NULL,
+  image_url   VARCHAR(500) NOT NULL,
+  link_url    VARCHAR(500),
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS content_pages (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug        VARCHAR(120) NOT NULL UNIQUE,
+  title       VARCHAR(255) NOT NULL,
+  content     TEXT NOT NULL,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── System Logs ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS system_logs (
   id          BIGSERIAL PRIMARY KEY,
@@ -154,13 +209,186 @@ CREATE INDEX idx_issued_code        ON issued_vouchers(code);
 CREATE INDEX idx_reviews_voucher    ON reviews(voucher_id);
 CREATE INDEX idx_logs_user          ON system_logs(user_id);
 CREATE INDEX idx_logs_created       ON system_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vab_voucher ON voucher_applicable_branches(voucher_id);
+CREATE INDEX IF NOT EXISTS idx_vab_branch  ON voucher_applicable_branches(branch_id);
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active);
+CREATE INDEX IF NOT EXISTS idx_banners_active ON banners(is_active);
+CREATE INDEX IF NOT EXISTS idx_pages_active ON content_pages(is_active);
 
 -- ─── Seed: Default Admin ─────────────────────────────────────────
 -- Password: Admin@123 (bcrypt hash, change in production!)
 INSERT INTO users (email, password, full_name, role)
 VALUES (
   'admin@vouchersystem.com',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/o3oLNXj8a',
+  '$2a$12$Z1wqUjLWalUisyhunqUu8u9GmJhNK1CYyKOVoQahqYdWeTgeb1J16',
   'System Administrator',
   'ADMIN'
 ) ON CONFLICT (email) DO NOTHING;
+
+-- ─── Seed: Default Customer ──────────────────────────────────────
+-- Password: Customer@123 (bcrypt hash)
+INSERT INTO users (email, password, full_name, role)
+VALUES (
+  'customer@vouchersystem.com',
+  '$2a$12$i2bDyI/5uo22unsFUphB2eeTkXv8QyvSitbCpMmhIX0H.iF6Id6Tm',
+  'Demo Customer',
+  'CUSTOMER'
+) ON CONFLICT (email) DO NOTHING;
+
+-- ─── Seed: Demo Partner + Vouchers ───────────────────────────────
+-- Password: Customer@123 (reuse hash for demo)
+WITH partner_user AS (
+  INSERT INTO users (email, password, full_name, phone, role)
+  VALUES (
+    'partner@vouchersystem.com',
+    '$2a$12$i2bDyI/5uo22unsFUphB2eeTkXv8QyvSitbCpMmhIX0H.iF6Id6Tm',
+    'Demo Partner',
+    '0900000000',
+    'PARTNER'
+  )
+  ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+  RETURNING id
+),
+partner_insert AS (
+  INSERT INTO partners (user_id, business_name, business_license, representative, address, status)
+  SELECT id, 'Sunrise Coffee', 'BL-001', 'Nguyễn An', 'Quận 1, TP.HCM', 'APPROVED'::partner_status
+  FROM partner_user
+  WHERE NOT EXISTS (
+    SELECT 1 FROM partners WHERE user_id = (SELECT id FROM partner_user)
+  )
+  RETURNING id
+),
+partner_ref AS (
+  SELECT id FROM partners WHERE user_id = (SELECT id FROM partner_user)
+  UNION ALL
+  SELECT id FROM partner_insert
+),
+branch_a AS (
+  INSERT INTO partner_branches (partner_id, name, address, phone)
+  SELECT id, 'Sunrise Coffee - Nguyễn Huệ', '12 Nguyễn Huệ, Q1, TP.HCM', '0900000001'
+  FROM partner_ref
+  RETURNING id
+),
+branch_b AS (
+  INSERT INTO partner_branches (partner_id, name, address, phone)
+  SELECT id, 'Sunrise Coffee - Cách Mạng', '120 Cách Mạng Tháng 8, Q3, TP.HCM', '0900000002'
+  FROM partner_ref
+  RETURNING id
+),
+voucher_rows AS (
+  INSERT INTO vouchers (
+    partner_id,
+    name,
+    description,
+    category,
+    original_price,
+    sale_price,
+    stock,
+    sale_start,
+    sale_end,
+    valid_until,
+    terms,
+    image_url,
+    status
+  )
+  SELECT id,
+    'Brunch Set - 2 Người',
+    'Combo brunch đặc biệt tại Sunrise Coffee',
+    'Ẩm thực',
+    320000,
+    179000,
+    80,
+    NOW() - INTERVAL '2 days',
+    NOW() + INTERVAL '30 days',
+    NOW() + INTERVAL '60 days',
+    'Áp dụng tại chi nhánh Sunrise Coffee. Đặt trước 2 giờ.',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  UNION ALL
+  SELECT id,
+    'Set Trà Sữa 4 Ly',
+    'Mua 3 tặng 1 cho nhóm bạn',
+    'Ẩm thực',
+    220000,
+    139000,
+    120,
+    NOW() - INTERVAL '1 days',
+    NOW() + INTERVAL '20 days',
+    NOW() + INTERVAL '45 days',
+    'Không áp dụng vào lễ/tết.',
+    'https://images.unsplash.com/photo-1542444459-db37a1f5d3b4?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  UNION ALL
+  SELECT id,
+    'Spa Thư Giãn 90 Phút',
+    'Gói chăm sóc cơ thể tại Spa Nhà Nhỏ',
+    'Làm đẹp',
+    900000,
+    490000,
+    60,
+    NOW() - INTERVAL '3 days',
+    NOW() + INTERVAL '45 days',
+    NOW() + INTERVAL '90 days',
+    'Cần đặt lịch trước 1 ngày.',
+    'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  UNION ALL
+  SELECT id,
+    'Gói Tập Yoga 10 Buổi',
+    'Lớp yoga cơ bản cho người mới',
+    'Sức khỏe',
+    1500000,
+    790000,
+    40,
+    NOW() - INTERVAL '5 days',
+    NOW() + INTERVAL '25 days',
+    NOW() + INTERVAL '60 days',
+    'Vui lòng đến sớm 10 phút trước giờ học.',
+    'https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  UNION ALL
+  SELECT id,
+    'Tour Củ Chi 1 Ngày',
+    'Trải nghiệm lịch sử tại địa đạo Củ Chi',
+    'Du lịch',
+    850000,
+    590000,
+    50,
+    NOW() - INTERVAL '2 days',
+    NOW() + INTERVAL '40 days',
+    NOW() + INTERVAL '90 days',
+    'Bao gồm xe đưa đón và hướng dẫn viên.',
+    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  UNION ALL
+  SELECT id,
+    'Vé Phim Cuối Tuần',
+    'Vé xem phim 2D tại cụm rạp đối tác',
+    'Giải trí',
+    220000,
+    99000,
+    0,
+    NOW() - INTERVAL '10 days',
+    NOW() - INTERVAL '1 days',
+    NOW() + INTERVAL '10 days',
+    'Voucher hết hạn không hoàn lại.',
+    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
+    'APPROVED'::voucher_status
+  FROM partner_ref
+  RETURNING id
+),
+branch_all AS (
+  SELECT id FROM branch_a
+  UNION ALL
+  SELECT id FROM branch_b
+)
+INSERT INTO voucher_applicable_branches (voucher_id, branch_id)
+SELECT v.id, b.id
+FROM voucher_rows v
+CROSS JOIN branch_all b
+ON CONFLICT DO NOTHING;

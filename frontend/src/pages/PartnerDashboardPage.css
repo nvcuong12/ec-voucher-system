@@ -1,0 +1,317 @@
+/* ── Partner Dashboard ─────────────────────────────── */
+.partner-page {
+  padding: 2.5rem 0 4rem;
+}
+
+/* Header */
+.partner-page-header {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.partner-page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.partner-page-hero h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  background: var(--color-primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.partner-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Tab Navigation */
+.partner-tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.partner-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-btn);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.partner-tab-btn svg {
+  font-size: 1.1rem;
+}
+
+.partner-tab-btn:hover {
+  background: rgba(15, 118, 110, 0.06);
+  color: var(--color-primary);
+}
+
+.partner-tab-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+}
+
+/* Stat Cards */
+.partner-stats {
+  margin-bottom: 2rem;
+}
+
+.partner-stat-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.partner-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.partner-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.psi-voucher  { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+.psi-revenue  { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.psi-status   { background: rgba(14, 165, 233, 0.12); color: #0ea5e9; }
+
+.partner-stat-info { flex: 1; }
+
+.partner-stat-info h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.partner-stat-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+}
+
+.partner-stat-sub {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+/* Section Cards */
+.partner-section-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.partner-section-card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Status Banner */
+.partner-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.partner-status-banner.pending  { background: #fefce8; border-color: #fde047; }
+.partner-status-banner.approved { background: #f0fdf4; border-color: #86efac; }
+.partner-status-banner.rejected { background: #fef2f2; border-color: #fca5a5; }
+.partner-status-banner.suspended{ background: #f8fafc; border-color: #cbd5e1; }
+
+.psb-icon {
+  font-size: 1.75rem;
+}
+
+.psb-body { flex: 1; }
+.psb-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.psb-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Register / Profile Form */
+.partner-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.partner-form-full {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .partner-form-grid { grid-template-columns: 1fr; }
+  .partner-form-full { grid-column: span 1; }
+}
+
+.partner-form-footer {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Branch Cards */
+.partner-branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.partner-branch-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition);
+  flex-wrap: wrap;
+}
+
+.partner-branch-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.partner-branch-info { flex: 1; }
+
+.partner-branch-name {
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.partner-branch-addr {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.partner-branch-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pbs-active   { color: #0f766e; font-size: 0.82rem; font-weight: 600; }
+.pbs-inactive { color: #b45309; font-size: 0.82rem; font-weight: 600; }
+
+/* Add Branch Form */
+.partner-add-branch-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .partner-add-branch-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .partner-add-branch-form button {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .partner-add-branch-form {
+    grid-template-columns: 1fr;
+  }
+  .partner-add-branch-form button {
+    grid-column: span 1;
+  }
+}
+
+/* Error */
+.partner-error-box {
+  padding: 1rem 1.25rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Fade-in */
+.partner-fade-in {
+  animation: partnerFade 0.3s ease;
+}
+
+@keyframes partnerFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

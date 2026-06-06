@@ -1,0 +1,416 @@
+/* ── Admin Dashboard Refactor Styles ── */
+
+.admin-page {
+  padding: 2.5rem 0 4rem;
+}
+
+.admin-header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-hero h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+  background: var(--color-primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Tab Navigation */
+.admin-tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.admin-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-btn);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.admin-tab-btn svg {
+  font-size: 1.1rem;
+}
+
+.admin-tab-btn:hover {
+  background: rgba(15, 118, 110, 0.05);
+  color: var(--color-primary);
+}
+
+.admin-tab-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+}
+
+/* Sub-tab Navigation (Content Tab) */
+.admin-sub-tab-nav {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 1px;
+}
+
+.admin-sub-tab-btn {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition);
+}
+
+.admin-sub-tab-btn:hover {
+  color: var(--color-primary);
+}
+
+.admin-sub-tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Stats Cards */
+.admin-stats {
+  margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-stat-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.users-icon {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+}
+
+.vouchers-icon {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
+
+.revenue-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.admin-stat-info {
+  flex: 1;
+}
+
+.admin-stat-info h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.stat-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
+.admin-revenue {
+  color: var(--color-primary);
+}
+
+.stat-sub-grid {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Sections */
+.admin-section {
+  padding: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+}
+
+.admin-section h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header-row h2 {
+  margin: 0;
+}
+
+/* Lists */
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-item {
+  padding: 1.25rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition);
+}
+
+.admin-item:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-item-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.admin-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-select {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  width: auto;
+}
+
+/* Alerts */
+.admin-alert-error {
+  padding: 1rem 1.25rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Compact Logs (Overview) */
+.admin-log-item-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.log-badge-wrapper {
+  min-width: 140px;
+}
+
+.log-action-badge {
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--color-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.log-details-wrapper {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.log-time {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Full Audit Logs */
+.admin-log-item-full {
+  padding: 1.5rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.log-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-body-row {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.log-details-json {
+  margin-top: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.log-details-json pre {
+  margin-top: 0.25rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  overflow-x: auto;
+}
+
+/* Branches Management */
+.admin-branch-list {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-branch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* Forms */
+.admin-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-banner-item-card,
+.admin-page-item-card {
+  padding: 1.25rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

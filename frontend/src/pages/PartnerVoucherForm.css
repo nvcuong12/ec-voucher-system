@@ -1,0 +1,129 @@
+.pvf-container {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+.pvf-header {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  color: #fff;
+  margin-bottom: 1.2rem;
+}
+
+.pvf-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.pvf-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+}
+
+.pvf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pvf-full {
+  grid-column: 1 / -1;
+}
+
+.pvf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pvf-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.pvf-group input,
+.pvf-group textarea,
+.pvf-group select {
+  width: 100%;
+  padding: 0.62rem 0.82rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  background: #fff;
+}
+
+.pvf-group input:focus,
+.pvf-group textarea:focus,
+.pvf-group select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.pvf-group textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.pvf-branch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.pvf-branch-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.7rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.pvf-branch-item strong {
+  display: block;
+}
+
+.pvf-branch-item small {
+  color: var(--color-text-muted);
+}
+
+.pvf-help {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.pvf-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.pvf-error {
+  margin-bottom: 1rem;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.pvf-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .pvf-grid,
+  .pvf-branch-grid {
+    grid-template-columns: 1fr;
+  }
+}
