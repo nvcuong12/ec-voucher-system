@@ -12,6 +12,9 @@
   align-items: center;
   gap: 1.5rem;
   height: 84px; /* Tăng chiều cao Header */
+  flex-wrap: nowrap;
+  max-width: 1400px;
+  width: 100%;
 }
 
 /* ── Brand ── */
@@ -60,6 +63,7 @@
   padding: 0.5rem 1rem;
   border-radius: var(--radius-xl);
   transition: all var(--transition);
+  white-space: nowrap;
 }
 .navbar__mega-trigger:hover,
 .navbar__mega-trigger.active {
@@ -133,12 +137,25 @@
 }
 
 .mega-menu-footer {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
   padding-top: 1rem;
   border-top: 1px solid var(--color-border);
+  text-align: left;
 }
 .mega-menu-footer a {
+  display: block;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
   font-weight: 600;
+  text-decoration: none;
+}
+.mega-menu-footer a:hover {
+  color: var(--color-primary);
+  background: var(--color-bg);
 }
 
 /* ── Search Bar ── */
@@ -192,6 +209,7 @@
   align-items: center;
   gap: 1rem;
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .navbar__cart {
@@ -203,6 +221,7 @@
   color: var(--color-text);
   font-weight: 600;
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 .navbar__cart:hover {
   color: var(--color-primary);
@@ -234,6 +253,7 @@
   padding: 0.25rem;
   border-radius: var(--radius-xl);
   transition: background var(--transition);
+  white-space: nowrap;
 }
 .navbar__user:hover {
   background: var(--color-bg);

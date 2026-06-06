@@ -244,6 +244,27 @@ const VoucherDetailPage = () => {
             <p>{voucher.terms || "Chưa có điều khoản."}</p>
           </div>
 
+          <div className="vd-section">
+            <h3>Chính sách hoàn/hủy</h3>
+            <p>
+              Chính sách hoàn/hủy của voucher này tuân theo điều kiện chương trình và chính sách sàn.
+              Voucher đã sử dụng hoặc hết hạn có thể không được hỗ trợ hoàn/hủy, trừ khi yêu cầu được
+              quản trị viên phê duyệt sau khi kiểm tra.
+            </p>
+          </div>
+
+          <div className="vd-section vd-policy-links">
+            <Link className="vd-policy-link" to="/pages/chinh-sach-hoan-huy">
+              Xem chính sách hoàn/hủy
+            </Link>
+            <Link className="vd-policy-link" to="/pages/dieu-khoan-voucher">
+              Xem điều khoản voucher
+            </Link>
+            <Link className="vd-policy-link" to="/pages/huong-dan-su-dung">
+              Hướng dẫn sử dụng
+            </Link>
+          </div>
+
           {/* Add to Cart Button */}
           {user?.role === "CUSTOMER" && (
             <button
@@ -263,7 +284,7 @@ const VoucherDetailPage = () => {
           <RiMapPinLine /> Chi nhánh áp dụng
         </h3>
         {voucher.applicable_branches.length === 0 ? (
-          <p className="text-muted">Voucher này chưa cấu hình chi nhánh áp dụng.</p>
+          <p className="text-muted">Voucher này áp dụng tại toàn bộ chi nhánh đang hoạt động của đối tác.</p>
         ) : (
           <div className="vd-branches-grid">
             {voucher.applicable_branches.map((branch) => (

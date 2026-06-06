@@ -10,9 +10,11 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiFlashlightLine,
+  RiVipDiamondLine,
 } from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { getActivePopupRequest } from "../services/content.service";
 import "./HomePage.css";
 
 const formatPrice = (price) =>
@@ -60,6 +62,8 @@ const HomePage = () => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [activePopup, setActivePopup] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,6 +75,27 @@ const HomePage = () => {
       .finally(() => isMounted && setLoading(false));
     return () => (isMounted = false);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    getActivePopupRequest()
+      .then((popup) => {
+        if (!isMounted || !popup) return;
+        const closedKey = `voucherhub_popup_closed_${popup.id}`;
+        if (sessionStorage.getItem(closedKey)) return;
+        setActivePopup(popup);
+        setShowPopup(true);
+      })
+      .catch(() => {});
+    return () => (isMounted = false);
+  }, []);
+
+  const closePopup = () => {
+    if (activePopup?.id) {
+      sessionStorage.setItem(`voucherhub_popup_closed_${activePopup.id}`, "1");
+    }
+    setShowPopup(false);
+  };
 
   useEffect(() => {
     if (vouchers.length === 0) return;
@@ -86,6 +111,21 @@ const HomePage = () => {
 
   return (
     <div className="home-wrapper">
+      {showPopup && activePopup && (
+        <div className="home-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+          <div className="home-popup">
+            <button className="home-popup-close" type="button" aria-label="Dong popup" onClick={closePopup}>
+              x
+            </button>
+            <h2 id="home-popup-title">{activePopup.title}</h2>
+            <p>{activePopup.content}</p>
+            <button className="btn btn-primary" type="button" onClick={closePopup}>
+              Da hieu
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Banner */}
       {heroVoucher && !loading && (
         <section className="home-hero-full">
@@ -186,7 +226,9 @@ const HomePage = () => {
       {featuredVouchers.length > 0 && (
         <section className="home-section container">
           <div className="section-header">
-            <h2 className="section-title">🎯 Voucher nổi bật</h2>
+            <h2 className="section-title">
+              <RiVipDiamondLine aria-hidden="true" /> Voucher nổi bật
+            </h2>
             <Link to="/vouchers" className="btn btn-outline btn-sm">
               Xem thêm
             </Link>

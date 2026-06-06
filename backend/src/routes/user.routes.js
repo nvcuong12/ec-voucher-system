@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware.js";
-import { getMyVouchers, getProfile, updateProfile } from "../controllers/user.controller.js";
+import {
+  createComplaint,
+  getMyComplaints,
+  getMyVouchers,
+  getProfile,
+  updateProfile,
+} from "../controllers/user.controller.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 
 const router = Router();
@@ -12,5 +18,7 @@ router.get(
   authenticate,
   asyncHandler(getMyVouchers)
 );
+router.get("/complaints", authenticate, asyncHandler(getMyComplaints));
+router.post("/complaints", authenticate, asyncHandler(createComplaint));
 
 export default router;

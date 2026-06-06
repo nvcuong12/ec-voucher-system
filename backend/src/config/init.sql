@@ -12,6 +12,7 @@ CREATE TYPE partner_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDE
 CREATE TYPE voucher_status AS ENUM ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'EXPIRED', 'SOLD_OUT');
 CREATE TYPE order_status AS ENUM ('PENDING', 'PAID', 'CANCELLED', 'REFUNDED');
 CREATE TYPE issued_voucher_status AS ENUM ('UNUSED', 'USED', 'EXPIRED', 'CANCELLED');
+CREATE TYPE complaint_status AS ENUM ('PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED');
 
 -- Allow evolving enum values safely in existing databases
 ALTER TYPE voucher_status ADD VALUE IF NOT EXISTS 'SUSPENDED';
@@ -155,6 +156,23 @@ CREATE TABLE IF NOT EXISTS reviews (
   UNIQUE (issued_voucher_id)
 );
 
+-- Complaints / customer support feedback
+CREATE TABLE IF NOT EXISTS complaints (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id       UUID NOT NULL REFERENCES users(id),
+  voucher_id        UUID REFERENCES vouchers(id),
+  issued_voucher_id UUID REFERENCES issued_vouchers(id),
+  order_id          UUID REFERENCES orders(id),
+  subject           VARCHAR(255) NOT NULL,
+  message           TEXT NOT NULL,
+  status            complaint_status NOT NULL DEFAULT 'PENDING',
+  admin_response    TEXT,
+  resolved_by       UUID REFERENCES users(id),
+  resolved_at       TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── Content Management ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -185,6 +203,17 @@ CREATE TABLE IF NOT EXISTS content_pages (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS popups (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title       VARCHAR(255) NOT NULL,
+  content     TEXT NOT NULL,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  start_date  TIMESTAMPTZ,
+  end_date    TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── System Logs ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS system_logs (
   id          BIGSERIAL PRIMARY KEY,
@@ -207,6 +236,9 @@ CREATE INDEX idx_issued_customer    ON issued_vouchers(customer_id);
 CREATE INDEX idx_issued_voucher     ON issued_vouchers(voucher_id);
 CREATE INDEX idx_issued_code        ON issued_vouchers(code);
 CREATE INDEX idx_reviews_voucher    ON reviews(voucher_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_customer ON complaints(customer_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
+CREATE INDEX IF NOT EXISTS idx_complaints_created ON complaints(created_at DESC);
 CREATE INDEX idx_logs_user          ON system_logs(user_id);
 CREATE INDEX idx_logs_created       ON system_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_vab_voucher ON voucher_applicable_branches(voucher_id);
@@ -214,6 +246,7 @@ CREATE INDEX IF NOT EXISTS idx_vab_branch  ON voucher_applicable_branches(branch
 CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active);
 CREATE INDEX IF NOT EXISTS idx_banners_active ON banners(is_active);
 CREATE INDEX IF NOT EXISTS idx_pages_active ON content_pages(is_active);
+CREATE INDEX IF NOT EXISTS idx_popups_active_dates ON popups(is_active, start_date, end_date);
 
 -- ─── Seed: Default Admin ─────────────────────────────────────────
 -- Password: Admin@123 (bcrypt hash, change in production!)

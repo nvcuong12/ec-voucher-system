@@ -11,6 +11,12 @@ const UUID_RE =
 
 const isValidUuid = (v) => UUID_RE.test(String(v ?? ""));
 
+const getRequestIp = (req) =>
+  req.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+  req.ip ||
+  req.socket?.remoteAddress ||
+  null;
+
 export const createReview = async (req, res, next) => {
   try {
     const { voucher_id, issued_voucher_id, rating, comment } = req.body || {};
@@ -90,18 +96,53 @@ export const replyReview = async (req, res, next) => {
       return next(new BusinessException("VALIDATION_FAILED", "partner_reply is required", 400));
     }
 
+    const partnerRes = await query(
+      "SELECT id FROM partners WHERE user_id = $1 AND status = 'APPROVED'",
+      [req.user.id]
+    );
+    const partner = partnerRes.rows[0];
+    if (!partner) {
+      return next(new BusinessException("FORBIDDEN", "Partner profile not found or not approved", 403));
+    }
+
     const result = await query(
-      `UPDATE reviews
+      `UPDATE reviews r
        SET partner_reply = $1
-       WHERE id = $2
-       RETURNING id, voucher_id, customer_id, issued_voucher_id, rating, comment, partner_reply, created_at`,
-      [partner_reply, id]
+       FROM vouchers v
+       WHERE r.id = $2
+         AND r.voucher_id = v.id
+         AND v.partner_id = $3
+       RETURNING r.id, r.voucher_id, r.customer_id, r.issued_voucher_id, r.rating, r.comment, r.partner_reply, r.created_at`,
+      [partner_reply, id, partner.id]
     );
 
     const review = result.rows[0];
     if (!review) {
-      return next(new BusinessException("NOT_FOUND", "Review not found", 404));
+      const exists = await query("SELECT id FROM reviews WHERE id = $1", [id]);
+      if (!exists.rows[0]) {
+        return next(new BusinessException("NOT_FOUND", "Review not found", 404));
+      }
+      return next(
+        new BusinessException(
+          "FORBIDDEN",
+          "Bạn không có quyền phản hồi đánh giá này",
+          403
+        )
+      );
     }
+
+    await query(
+      `INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6)`,
+      [
+        req.user.id,
+        "PARTNER_REPLY_REVIEW",
+        "review",
+        review.id,
+        JSON.stringify({ voucher_id: review.voucher_id }),
+        getRequestIp(req),
+      ]
+    );
 
     return res.json({ data: { review } });
   } catch (err) {

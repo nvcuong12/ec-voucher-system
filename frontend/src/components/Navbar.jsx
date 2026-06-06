@@ -118,7 +118,7 @@ const MegaMenu = () => {
           </div>
           <div className="mega-menu-footer">
             <Link to="/vouchers" onClick={() => setOpen(false)}>
-              Xem tất cả voucher ➔
+              Xem tất cả voucher
             </Link>
           </div>
         </div>
@@ -142,7 +142,7 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      navigate(`/vouchers?search=${encodeURIComponent(search.trim())}`);
+      navigate(`/vouchers?q=${encodeURIComponent(search.trim())}`);
     }
   };
 
@@ -154,7 +154,7 @@ const Navbar = () => {
 
   const dashboardPath = () => {
     if (!user) return "/login";
-    if (user.role === "ADMIN") return "/admin/vouchers";
+    if (user.role === "ADMIN") return "/admin";
     if (user.role === "PARTNER") return "/partner";
     return "/my-vouchers";
   };
@@ -198,12 +198,6 @@ const Navbar = () => {
                   <span className="cart-text">Giỏ hàng</span>
                 </Link>
               )}
-              {user.role === "CUSTOMER" && (
-                <Link to="/orders" className="btn btn-ghost btn-sm">
-                  Đơn hàng
-                </Link>
-              )}
-
               <Link to={dashboardPath()} className="btn btn-ghost btn-sm">
                 <span className="btn-icon" aria-hidden="true">
                   <DashboardIcon />
@@ -212,7 +206,7 @@ const Navbar = () => {
                   ? "Quản lý"
                   : user.role === "PARTNER"
                   ? "Quản lý"
-                  : "Tài khoản"}
+                  : "Voucher của tôi"}
               </Link>
 
               <Link to="/profile" className="navbar__user">

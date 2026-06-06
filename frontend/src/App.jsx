@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 
 import Navbar from "./components/Navbar";
+import CustomerFooter from "./components/CustomerFooter";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import HomePage from "./pages/HomePage";
@@ -19,11 +20,11 @@ import MyVouchersPage from "./pages/MyVouchersPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import PartnerDashboardPage from "./pages/PartnerDashboardPage";
 import PartnerVoucherScan from "./pages/PartnerVoucherScan";
-import OrdersPage from "./pages/OrdersPage";
 import PartnerVouchers from "./pages/PartnerVouchers";
 import PartnerVoucherForm from "./pages/PartnerVoucherForm";
 import PartnerReports from "./pages/PartnerReports";
 import AdminVoucherReview from "./pages/AdminVoucherReview";
+import ContentPage from "./pages/ContentPage";
 
 const App = () => (
   <BrowserRouter>
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/vouchers"  element={<VouchersPage />} />
             <Route path="/vouchers/:id" element={<VoucherDetailPage />} />
+            <Route path="/pages/:slug" element={<ContentPage />} />
 
             {/* ─── Authenticated (All Roles) ───────────── */}
             <Route path="/profile" element={
@@ -55,7 +57,7 @@ const App = () => (
             } />
             <Route path="/orders" element={
               <ProtectedRoute roles={["CUSTOMER"]}>
-                <OrdersPage />
+                <Navigate to="/my-vouchers" replace />
               </ProtectedRoute>
             } />
             <Route path="/my-vouchers" element={
@@ -113,6 +115,7 @@ const App = () => (
             <Route path="*"             element={<NotFoundPage />} />
           </Routes>
         </main>
+        <CustomerFooter />
       </CartProvider>
     </AuthProvider>
   </BrowserRouter>

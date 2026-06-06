@@ -10,6 +10,9 @@ import {
   createBannerQuery,
   createCategoryQuery,
   createContentPageQuery,
+  createPopupQuery,
+  getActiveContentPageBySlugQuery,
+  getActivePopupQuery,
   listAllVouchersQuery,
   listAllPartnersQuery,
   listBannersQuery,
@@ -18,10 +21,12 @@ import {
   listPartnerBranchesQuery,
   listPendingPartnersQuery,
   listPendingVouchersQuery,
+  listPopupsQuery,
   updateBannerQuery,
   updateBranchStatusQuery,
   updateCategoryQuery,
   updateContentPageQuery,
+  updatePopupQuery,
   updatePartnerStatusAnyQuery,
   approveVoucherQuery,
   insertSystemLogQuery,
@@ -39,11 +44,24 @@ const isValidUuid = (value) => UUID_PATTERN.test(String(value || ""));
 
 const sendSuccess = (res, data, status = 200) => res.status(status).json({ data });
 
-const logAdminAction = async (userId, action, entity, entityId) => {
-  if (!userId) return;
+const getRequestIp = (req) =>
+  req.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+  req.ip ||
+  req.socket?.remoteAddress ||
+  null;
+
+const logAdminAction = async (req, action, entity, entityId, details = null) => {
+  if (!req.user?.id) return;
 
   try {
-    await query(insertSystemLogQuery, [userId, action, entity, entityId]);
+    await query(insertSystemLogQuery, [
+      req.user.id,
+      action,
+      entity,
+      entityId,
+      details ? JSON.stringify(details) : null,
+      getRequestIp(req),
+    ]);
   } catch (err) {
     console.error("Failed to write admin audit log:", err.message);
   }
@@ -111,7 +129,7 @@ export const updateUserStatus = async (req, res, next) => {
     }
 
     await logAdminAction(
-      req.user?.id,
+      req,
       ADMIN_LOG_ACTION.UPDATE_USER_STATUS,
       ADMIN_LOG_ENTITY.USER,
       user.id
@@ -142,7 +160,7 @@ export const updateUserRole = async (req, res, next) => {
     }
 
     await logAdminAction(
-      req.user?.id,
+      req,
       ADMIN_LOG_ACTION.UPDATE_USER_ROLE,
       ADMIN_LOG_ENTITY.USER,
       user.id
@@ -180,6 +198,15 @@ export const approveVoucher = async (req, res, next) => {
       return next(new BusinessException("VALIDATION_FAILED", "Invalid voucher id", 400));
     }
 
+    const currentResult = await query(
+      `SELECT v.id, v.name, v.status, p.business_name
+       FROM vouchers v
+       JOIN partners p ON p.id = v.partner_id
+       WHERE v.id = $1`,
+      [id]
+    );
+    const currentVoucher = currentResult.rows[0];
+
     const result = await query(approveVoucherQuery, [
       ADMIN_VOUCHER_STATUS.APPROVED,
       id,
@@ -196,10 +223,16 @@ export const approveVoucher = async (req, res, next) => {
     }
 
     await logAdminAction(
-      req.user?.id,
+      req,
       ADMIN_LOG_ACTION.APPROVE_VOUCHER,
       ADMIN_LOG_ENTITY.VOUCHER,
-      voucher.id
+      voucher.id,
+      {
+        voucher_name: voucher.name,
+        partner: currentVoucher?.business_name,
+        old_status: currentVoucher?.status,
+        new_status: voucher.status,
+      }
     );
 
     return sendSuccess(res, { voucher });
@@ -223,6 +256,15 @@ export const rejectVoucher = async (req, res, next) => {
       return next(new BusinessException("VALIDATION_FAILED", "rejection_reason is required", 400));
     }
 
+    const currentResult = await query(
+      `SELECT v.id, v.name, v.status, p.business_name
+       FROM vouchers v
+       JOIN partners p ON p.id = v.partner_id
+       WHERE v.id = $1`,
+      [id]
+    );
+    const currentVoucher = currentResult.rows[0];
+
     const result = await query(rejectVoucherQuery, [
       ADMIN_VOUCHER_STATUS.REJECTED,
       rejectionReason,
@@ -240,10 +282,17 @@ export const rejectVoucher = async (req, res, next) => {
     }
 
     await logAdminAction(
-      req.user?.id,
+      req,
       ADMIN_LOG_ACTION.REJECT_VOUCHER,
       ADMIN_LOG_ENTITY.VOUCHER,
-      voucher.id
+      voucher.id,
+      {
+        voucher_name: voucher.name,
+        partner: currentVoucher?.business_name,
+        old_status: currentVoucher?.status,
+        new_status: voucher.status,
+        rejection_reason: rejectionReason,
+      }
     );
 
     return sendSuccess(res, { voucher });
@@ -279,7 +328,7 @@ export const updateVoucherStatus = async (req, res, next) => {
       ? ADMIN_LOG_ACTION.SUSPEND_VOUCHER
       : ADMIN_LOG_ACTION.RESUME_VOUCHER;
 
-    await logAdminAction(req.user?.id, action, ADMIN_LOG_ENTITY.VOUCHER, voucher.id);
+    await logAdminAction(req, action, ADMIN_LOG_ENTITY.VOUCHER, voucher.id, { status: nextStatus });
 
     return sendSuccess(res, { voucher });
   } catch (err) {
@@ -342,7 +391,7 @@ export const updatePartnerApprovalStatus = async (req, res, next) => {
     }
 
     await logAdminAction(
-      req.user?.id,
+      req,
       nextStatus === ADMIN_PARTNER_STATUS.APPROVED
         ? ADMIN_LOG_ACTION.APPROVE_PARTNER
         : ADMIN_LOG_ACTION.REJECT_PARTNER,
@@ -391,7 +440,7 @@ export const updatePartnerStatusAny = async (req, res, next) => {
       ? ADMIN_LOG_ACTION.SUSPEND_PARTNER
       : ADMIN_LOG_ACTION.RESUME_PARTNER;
 
-    await logAdminAction(req.user?.id, action, ADMIN_LOG_ENTITY.PARTNER, partner.id);
+    await logAdminAction(req, action, ADMIN_LOG_ENTITY.PARTNER, partner.id, { status: nextStatus });
 
     return sendSuccess(res, { partner });
   } catch (err) {
@@ -430,7 +479,7 @@ export const updatePartnerBranchStatus = async (req, res, next) => {
       return next(new BusinessException("NOT_FOUND", "Branch not found", 404));
     }
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.PARTNER, branch.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.PARTNER, branch.id, { is_active: req.body.is_active });
     return sendSuccess(res, { branch });
   } catch (err) {
     next(err);
@@ -522,7 +571,7 @@ export const updateOrderStatus = async (req, res, next) => {
       );
     }
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_ORDER_STATUS, ADMIN_LOG_ENTITY.ORDER, order.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_ORDER_STATUS, ADMIN_LOG_ENTITY.ORDER, order.id, { status: nextStatus });
 
     return sendSuccess(res, { order });
   } catch (err) {
@@ -542,6 +591,86 @@ export const getLogs = async (_req, res, next) => {
     );
 
     return res.json({ data: { logs: result.rows } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getComplaints = async (_req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT c.id, c.customer_id, c.voucher_id, c.issued_voucher_id, c.order_id,
+              c.subject, c.message, c.status, c.admin_response, c.resolved_by,
+              c.resolved_at, c.created_at, c.updated_at,
+              u.email AS customer_email,
+              u.full_name AS customer_name,
+              v.name AS voucher_name,
+              iv.code AS voucher_code
+       FROM complaints c
+       JOIN users u ON u.id = c.customer_id
+       LEFT JOIN vouchers v ON v.id = c.voucher_id
+       LEFT JOIN issued_vouchers iv ON iv.id = c.issued_voucher_id
+       ORDER BY c.created_at DESC`
+    );
+
+    return res.json({ data: { complaints: result.rows } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateComplaintStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid complaint id", 400));
+    }
+
+    const nextStatus = typeof req.body?.status === "string"
+      ? req.body.status.trim().toUpperCase()
+      : "";
+    const allowedStatuses = ["PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"];
+    if (!allowedStatuses.includes(nextStatus)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid complaint status", 400));
+    }
+
+    const adminResponse = typeof req.body?.admin_response === "string"
+      ? req.body.admin_response.trim()
+      : null;
+    if ((nextStatus === "RESOLVED" || nextStatus === "REJECTED") && !adminResponse) {
+      return next(
+        new BusinessException(
+          "VALIDATION_FAILED",
+          "admin_response is required when resolving or rejecting a complaint",
+          400
+        )
+      );
+    }
+
+    const result = await query(
+      `UPDATE complaints
+       SET status = $1,
+           admin_response = COALESCE($2, admin_response),
+           resolved_by = CASE WHEN $1 IN ('RESOLVED', 'REJECTED') THEN $3 ELSE resolved_by END,
+           resolved_at = CASE WHEN $1 IN ('RESOLVED', 'REJECTED') THEN NOW() ELSE resolved_at END,
+           updated_at = NOW()
+       WHERE id = $4
+       RETURNING id, customer_id, voucher_id, issued_voucher_id, order_id,
+                 subject, message, status, admin_response, resolved_by,
+                 resolved_at, created_at, updated_at`,
+      [nextStatus, adminResponse, req.user.id, id]
+    );
+
+    const complaint = result.rows[0];
+    if (!complaint) {
+      return next(new BusinessException("NOT_FOUND", "Complaint not found", 404));
+    }
+
+    await logAdminAction(req, "UPDATE_COMPLAINT_STATUS", "complaint", complaint.id, {
+      status: nextStatus,
+    });
+
+    return res.json({ data: { complaint } });
   } catch (err) {
     next(err);
   }
@@ -567,7 +696,7 @@ export const createCategory = async (req, res, next) => {
     const result = await query(createCategoryQuery, [name, isActive]);
     const category = result.rows[0];
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id, { type: "category", operation: "create" });
     return sendSuccess(res, { category }, 201);
   } catch (err) {
     next(err);
@@ -589,7 +718,7 @@ export const updateCategory = async (req, res, next) => {
       return next(new BusinessException("NOT_FOUND", "Category not found", 404));
     }
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, category.id, { type: "category", operation: "update" });
     return sendSuccess(res, { category });
   } catch (err) {
     next(err);
@@ -620,7 +749,7 @@ export const createBanner = async (req, res, next) => {
     const result = await query(createBannerQuery, [title, imageUrl, linkUrl, sortOrder, isActive]);
     const banner = result.rows[0];
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id, { type: "banner", operation: "create" });
     return sendSuccess(res, { banner }, 201);
   } catch (err) {
     next(err);
@@ -646,7 +775,7 @@ export const updateBanner = async (req, res, next) => {
       return next(new BusinessException("NOT_FOUND", "Banner not found", 404));
     }
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, banner.id, { type: "banner", operation: "update" });
     return sendSuccess(res, { banner });
   } catch (err) {
     next(err);
@@ -657,6 +786,24 @@ export const getContentPages = async (_req, res, next) => {
   try {
     const result = await query(listContentPagesQuery);
     return sendSuccess(res, { pages: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPublicContentPage = async (req, res, next) => {
+  try {
+    const slug = typeof req.params?.slug === "string" ? req.params.slug.trim() : "";
+    if (!slug) {
+      return next(new BusinessException("VALIDATION_FAILED", "slug is required", 400));
+    }
+
+    const result = await query(getActiveContentPageBySlugQuery, [slug]);
+    const page = result.rows[0];
+    if (!page) {
+      return next(new BusinessException("NOT_FOUND", "Content page not found", 404));
+    }
+    return sendSuccess(res, { page });
   } catch (err) {
     next(err);
   }
@@ -675,7 +822,7 @@ export const createContentPage = async (req, res, next) => {
     const result = await query(createContentPageQuery, [slug, title, content, isActive]);
     const page = result.rows[0];
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id, { type: "page", operation: "create" });
     return sendSuccess(res, { page }, 201);
   } catch (err) {
     next(err);
@@ -700,8 +847,95 @@ export const updateContentPage = async (req, res, next) => {
       return next(new BusinessException("NOT_FOUND", "Page not found", 404));
     }
 
-    await logAdminAction(req.user?.id, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id);
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, page.id, { type: "page", operation: "update" });
     return sendSuccess(res, { page });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const normalizeOptionalDate = (value) => {
+  if (value === undefined || value === null || value === "") return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+};
+
+export const getActivePopup = async (_req, res, next) => {
+  try {
+    const result = await query(getActivePopupQuery);
+    return sendSuccess(res, { popup: result.rows[0] || null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPopups = async (_req, res, next) => {
+  try {
+    const result = await query(listPopupsQuery);
+    return sendSuccess(res, { popups: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createPopup = async (req, res, next) => {
+  try {
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
+    if (!title || !content) {
+      return next(new BusinessException("VALIDATION_FAILED", "title and content are required", 400));
+    }
+
+    const startDate = normalizeOptionalDate(req.body?.start_date);
+    const endDate = normalizeOptionalDate(req.body?.end_date);
+    if (startDate === undefined || endDate === undefined) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid popup date", 400));
+    }
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      return next(new BusinessException("VALIDATION_FAILED", "start_date must be before end_date", 400));
+    }
+
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : true;
+    const result = await query(createPopupQuery, [title, content, isActive, startDate, endDate]);
+    const popup = result.rows[0];
+
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, popup.id, { type: "popup", operation: "create" });
+    return sendSuccess(res, { popup }, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePopup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid popup id", 400));
+    }
+
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : null;
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : null;
+    const isActive = typeof req.body?.is_active === "boolean" ? req.body.is_active : null;
+    const startDate = normalizeOptionalDate(req.body?.start_date);
+    const endDate = normalizeOptionalDate(req.body?.end_date);
+    if (startDate === undefined || endDate === undefined) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid popup date", 400));
+    }
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      return next(new BusinessException("VALIDATION_FAILED", "start_date must be before end_date", 400));
+    }
+
+    const result = await query(updatePopupQuery, [id, title, content, isActive, startDate, endDate]);
+    const popup = result.rows[0];
+    if (!popup) {
+      return next(new BusinessException("NOT_FOUND", "Popup not found", 404));
+    }
+
+    await logAdminAction(req, ADMIN_LOG_ACTION.UPDATE_CONTENT, ADMIN_LOG_ENTITY.CONTENT, popup.id, {
+      type: "popup",
+      operation: isActive === false ? "hide" : "update",
+    });
+    return sendSuccess(res, { popup });
   } catch (err) {
     next(err);
   }
@@ -709,7 +943,7 @@ export const updateContentPage = async (req, res, next) => {
 
 export const getDashboard = async (_req, res, next) => {
   try {
-    const [users, partners, vouchers, orders, revenue] = await Promise.all([
+    const [users, partners, vouchers, orders, revenue, issued, topVouchers, revenueByDay] = await Promise.all([
       query(
         `SELECT
            COUNT(*) AS total,
@@ -746,6 +980,44 @@ export const getDashboard = async (_req, res, next) => {
          FROM orders
          WHERE status = 'PAID'`
       ),
+      query(
+        `SELECT
+           COUNT(*) AS total,
+           COUNT(*) FILTER (WHERE status = 'UNUSED') AS unused,
+           COUNT(*) FILTER (WHERE status = 'USED') AS used,
+           COUNT(*) FILTER (
+             WHERE status = 'EXPIRED'
+                OR (status = 'UNUSED' AND expires_at IS NOT NULL AND expires_at <= NOW())
+           ) AS expired
+         FROM issued_vouchers`
+      ),
+      query(
+        `SELECT
+           v.id,
+           v.name,
+           p.business_name,
+           SUM(oi.quantity) AS sold_count,
+           SUM(oi.quantity * oi.unit_price) AS revenue
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         JOIN vouchers v ON v.id = oi.voucher_id
+         JOIN partners p ON p.id = v.partner_id
+         WHERE o.status = 'PAID'
+         GROUP BY v.id, v.name, p.business_name
+         ORDER BY sold_count DESC, revenue DESC
+         LIMIT 5`
+      ),
+      query(
+        `SELECT
+           DATE_TRUNC('day', paid_at)::date AS day,
+           COUNT(*) AS paid_orders,
+           COALESCE(SUM(total_amount), 0) AS revenue
+         FROM orders
+         WHERE status = 'PAID' AND paid_at IS NOT NULL
+         GROUP BY DATE_TRUNC('day', paid_at)::date
+         ORDER BY day DESC
+         LIMIT 7`
+      ),
     ]);
 
     return res.json({
@@ -755,6 +1027,9 @@ export const getDashboard = async (_req, res, next) => {
         vouchers: vouchers.rows[0],
         orders: orders.rows[0],
         revenue: revenue.rows[0],
+        issued_vouchers: issued.rows[0],
+        top_vouchers: topVouchers.rows,
+        revenue_by_day: revenueByDay.rows,
       },
     });
   } catch (err) {

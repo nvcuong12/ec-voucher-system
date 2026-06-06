@@ -279,9 +279,9 @@ export const updatePartnerStatusQuery = `
 `;
 
 export const insertSystemLogQuery = `
-  INSERT INTO system_logs (user_id, action, entity, entity_id)
-  VALUES ($1, $2, $3, $4)
-  RETURNING id, user_id, action, entity, entity_id, created_at
+  INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
+  VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+  RETURNING id, user_id, action, entity, entity_id, details, ip_address, created_at
 `;
 
 export const listCategoriesQuery = `
@@ -335,6 +335,13 @@ export const listContentPagesQuery = `
   ORDER BY created_at DESC
 `;
 
+export const getActiveContentPageBySlugQuery = `
+  SELECT id, slug, title, content, is_active, created_at, updated_at
+  FROM content_pages
+  WHERE slug = $1 AND is_active = TRUE
+  LIMIT 1
+`;
+
 export const createContentPageQuery = `
   INSERT INTO content_pages (slug, title, content, is_active)
   VALUES ($1, $2, $3, $4)
@@ -350,4 +357,38 @@ export const updateContentPageQuery = `
       updated_at = NOW()
   WHERE id = $1
   RETURNING id, slug, title, content, is_active, created_at, updated_at
+`;
+
+export const listPopupsQuery = `
+  SELECT id, title, content, is_active, start_date, end_date, created_at, updated_at
+  FROM popups
+  ORDER BY created_at DESC
+`;
+
+export const getActivePopupQuery = `
+  SELECT id, title, content, is_active, start_date, end_date, created_at, updated_at
+  FROM popups
+  WHERE is_active = TRUE
+    AND (start_date IS NULL OR start_date <= NOW())
+    AND (end_date IS NULL OR end_date >= NOW())
+  ORDER BY created_at DESC
+  LIMIT 1
+`;
+
+export const createPopupQuery = `
+  INSERT INTO popups (title, content, is_active, start_date, end_date)
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING id, title, content, is_active, start_date, end_date, created_at, updated_at
+`;
+
+export const updatePopupQuery = `
+  UPDATE popups
+  SET title = COALESCE($2, title),
+      content = COALESCE($3, content),
+      is_active = COALESCE($4, is_active),
+      start_date = $5,
+      end_date = $6,
+      updated_at = NOW()
+  WHERE id = $1
+  RETURNING id, title, content, is_active, start_date, end_date, created_at, updated_at
 `;

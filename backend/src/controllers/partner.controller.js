@@ -19,6 +19,12 @@ const UUID_RE =
 
 const isValidUuid = (v) => UUID_RE.test(String(v ?? ""));
 
+const getRequestIp = (req) =>
+  req.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+  req.ip ||
+  req.socket?.remoteAddress ||
+  null;
+
 const requirePartner = async (userId) => {
   const result = await query(getPartnerByUserIdQuery, [userId]);
   return result.rows[0] ?? null;
@@ -36,13 +42,42 @@ const requireApprovedPartner = async (userId) => {
 };
 
 const ensurePartnerBranch = async (client, partnerId, branchId) => {
-  if (!branchId) return;
+  if (!branchId) {
+    throw new BusinessException("VALIDATION_FAILED", "branch_id is required", 400);
+  }
   const branchRes = await client.query(
     `SELECT id FROM partner_branches WHERE id = $1 AND partner_id = $2 AND is_active = TRUE`,
     [branchId, partnerId]
   );
   if (!branchRes.rows[0]) {
-    throw new BusinessException("FORBIDDEN", "Branch does not belong to partner", 403);
+    throw new BusinessException("FORBIDDEN", "Chi nhánh không thuộc đối tác hiện tại", 403);
+  }
+};
+
+const ensureVoucherApplicableAtBranch = async (client, voucherId, branchId) => {
+  const mappingRes = await client.query(
+    `SELECT COUNT(*)::int AS total
+     FROM voucher_applicable_branches
+     WHERE voucher_id = $1`,
+    [voucherId]
+  );
+
+  // Existing voucher creation allows no branch_ids. Treat that as "all active branches of this partner".
+  if (mappingRes.rows[0]?.total === 0) return;
+
+  const applicableRes = await client.query(
+    `SELECT 1
+     FROM voucher_applicable_branches
+     WHERE voucher_id = $1 AND branch_id = $2`,
+    [voucherId, branchId]
+  );
+
+  if (!applicableRes.rows[0]) {
+    throw new BusinessException(
+      "FORBIDDEN",
+      "Voucher không áp dụng tại chi nhánh này",
+      403
+    );
   }
 };
 
@@ -232,6 +267,7 @@ export const checkVoucher = async (req, res, next) => {
       if (issued.partner_id !== partner.id) {
         throw new BusinessException("FORBIDDEN", "Voucher does not belong to your partner", 403);
       }
+      await ensureVoucherApplicableAtBranch(client, issued.voucher_id, branch_id);
 
       const now = new Date();
       const expired = issued.expires_at && new Date(issued.expires_at) <= now;
@@ -239,10 +275,10 @@ export const checkVoucher = async (req, res, next) => {
       let reason = null;
       if (issued.status !== "UNUSED") {
         valid = false;
-        reason = "Voucher already used or cancelled";
+        reason = "Voucher đã được sử dụng";
       } else if (expired) {
         valid = false;
-        reason = "Voucher expired";
+        reason = "Voucher đã hết hạn";
       }
 
       return { valid, reason, issued, voucher: issued };
@@ -277,11 +313,12 @@ export const scanVoucher = async (req, res, next) => {
       if (issued.partner_id !== partner.id) {
         throw new BusinessException("FORBIDDEN", "Voucher does not belong to your partner", 403);
       }
+      await ensureVoucherApplicableAtBranch(client, issued.voucher_id, branch_id);
       if (issued.status !== "UNUSED") {
-        throw new BusinessException("CONFLICT", "Voucher already used or cancelled", 409);
+        throw new BusinessException("CONFLICT", "Voucher đã được sử dụng", 409);
       }
       if (issued.expires_at && new Date(issued.expires_at) <= new Date()) {
-        throw new BusinessException("CONFLICT", "Voucher expired", 409);
+        throw new BusinessException("CONFLICT", "Voucher đã hết hạn", 409);
       }
 
       const updateRes = await client.query(
@@ -292,6 +329,19 @@ export const scanVoucher = async (req, res, next) => {
          WHERE id = $1
          RETURNING id, code, status, used_at, used_at_branch, expires_at`,
         [issued.id, branch_id || null]
+      );
+
+      await client.query(
+        `INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
+         VALUES ($1, $2, $3, $4, $5::jsonb, $6)`,
+        [
+          req.user.id,
+          "PARTNER_SCAN_VOUCHER",
+          "issued_voucher",
+          issued.id,
+          JSON.stringify({ voucher_id: issued.voucher_id, branch_id }),
+          getRequestIp(req),
+        ]
       );
 
       return { issued: updateRes.rows[0], voucher: issued };

@@ -140,6 +140,37 @@
   flex-shrink: 0;
 }
 
+.my-voucher-qr-mock {
+  width: 72px;
+  min-height: 72px;
+  background:
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px),
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    var(--color-bg);
+  background-size: 12px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  font-size: 1.35rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.my-voucher-qr-mock span {
+  display: block;
+  padding: 0.08rem 0.25rem;
+  background: var(--color-surface);
+  border-radius: 4px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+}
+
 .my-voucher-code-label {
   display: block;
   font-size: 0.7rem;
@@ -187,6 +218,57 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text);
+}
+
+.my-voucher-complaint {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.my-voucher-complaint-history {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.my-voucher-complaint-item {
+  padding: 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-size: 0.82rem;
+}
+
+.my-voucher-complaint-item strong,
+.my-voucher-complaint-item span,
+.my-voucher-complaint-item p {
+  display: block;
+}
+
+.my-voucher-complaint-item span {
+  margin-top: 0.15rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.my-voucher-complaint-item p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.my-voucher-complaint-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.my-voucher-complaint-form textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.my-voucher-complaint-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 480px) {
