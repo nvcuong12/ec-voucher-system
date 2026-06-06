@@ -6,6 +6,7 @@
 import crypto from "crypto";
 import { query, withTransaction } from "../config/database.js";
 import { BusinessException } from "../utils/BusinessException.js";
+import { capturePaypalOrder } from "../utils/paypal.js";
 import {
   insertOrderItemQuery,
   insertOrderQuery,
@@ -187,13 +188,44 @@ export const payOrder = async (req, res, next) => {
       return next(new BusinessException("VALIDATION_FAILED", "Invalid order id", 400));
     }
 
+    // Fetch the order to check status and payment method before starting SQL transaction
+    const orderRes = await query(selectOrderByIdQuery, [id]);
+    const order = orderRes.rows[0];
+    if (!order || order.customer_id !== req.user.id) {
+      return next(new BusinessException("NOT_FOUND", "Order not found", 404));
+    }
+    if (order.status !== "PENDING") {
+      return next(new BusinessException("CONFLICT", "Order cannot be paid", 409));
+    }
+
+    let finalPaymentRef = req.body?.payment_ref;
+    if (order.payment_method === "PAYPAL") {
+      if (!finalPaymentRef) {
+        return next(new BusinessException("VALIDATION_FAILED", "payment_ref (PayPal Order ID) is required for PayPal payment", 400));
+      }
+      try {
+        const captureResult = await capturePaypalOrder(finalPaymentRef);
+        if (captureResult.status !== "COMPLETED") {
+          return next(new BusinessException("CONFLICT", `PayPal payment not completed. Status: ${captureResult.status}`, 409));
+        }
+        finalPaymentRef = captureResult.id || finalPaymentRef;
+      } catch (err) {
+        return next(new BusinessException("CONFLICT", `PayPal capture failed: ${err.message}`, 409));
+      }
+    } else {
+      if (!finalPaymentRef) {
+        finalPaymentRef = `MOCK-${Date.now()}`;
+      }
+    }
+
     const result = await withTransaction(async (client) => {
-      const orderRes = await client.query(selectOrderByIdQuery, [id]);
-      const order = orderRes.rows[0];
-      if (!order || order.customer_id !== req.user.id) {
+      // Re-verify the order status inside the transaction to avoid race conditions
+      const orderResTx = await client.query(`${selectOrderByIdQuery} FOR UPDATE`, [id]);
+      const orderTx = orderResTx.rows[0];
+      if (!orderTx || orderTx.customer_id !== req.user.id) {
         throw new BusinessException("NOT_FOUND", "Order not found", 404);
       }
-      if (order.status !== "PENDING") {
+      if (orderTx.status !== "PENDING") {
         throw new BusinessException("CONFLICT", "Order cannot be paid", 409);
       }
 
@@ -227,8 +259,7 @@ export const payOrder = async (req, res, next) => {
         }
       }
 
-      const paymentRef = `MOCK-${Date.now()}`;
-      const paidOrderRes = await client.query(updateOrderPaidQuery, [paymentRef, id]);
+      const paidOrderRes = await client.query(updateOrderPaidQuery, [finalPaymentRef, id]);
       const paidOrder = paidOrderRes.rows[0];
       if (!paidOrder) {
         throw new BusinessException("CONFLICT", "Order payment failed", 409);
@@ -261,9 +292,10 @@ export const payOrder = async (req, res, next) => {
       return paidOrder.id;
     });
 
-    const order = await buildOrderResponse(result);
-    return res.json({ data: { order } });
+    const orderResponse = await buildOrderResponse(result);
+    return res.json({ data: { order: orderResponse } });
   } catch (err) {
     next(err);
   }
 };
+

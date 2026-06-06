@@ -41,6 +41,10 @@ const VoucherCard = ({ voucher }) => {
           src={voucher.image_url || "https://via.placeholder.com/400x250?text=Voucher"}
           alt={voucher.name}
           className="v-card__img"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://via.placeholder.com/400x250?text=Image+Not+Found";
+          }}
         />
         <span className="v-card__tag">-{discount}%</span>
       </div>
@@ -67,7 +71,7 @@ const HomePage = () => {
       .then(({ data }) => {
         if (isMounted) setVouchers(data.data.vouchers || []);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => isMounted && setLoading(false));
     return () => (isMounted = false);
   }, []);

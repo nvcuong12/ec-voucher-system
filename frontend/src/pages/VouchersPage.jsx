@@ -40,6 +40,10 @@ const VoucherCard = ({ voucher }) => {
           src={voucher.image_url || "https://via.placeholder.com/400x250?text=Voucher"}
           alt={voucher.name}
           className="v-card__img"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://via.placeholder.com/400x250?text=Image+Not+Found";
+          }}
         />
         <span className="v-card__tag">-{discount}%</span>
       </div>
@@ -187,14 +191,14 @@ const VouchersPage = () => {
     const [min, max] = values;
     setMinPrice(min);
     setMaxPrice(max);
-    
+
     const nextParams = new URLSearchParams(searchParams);
     if (min > 0) nextParams.set("min_price", min);
     else nextParams.delete("min_price");
-    
+
     if (max < PRICE_MAX) nextParams.set("max_price", max);
     else nextParams.delete("max_price");
-    
+
     nextParams.delete("page");
     setSearchParams(nextParams);
   };

@@ -90,14 +90,14 @@ const VoucherDetailPage = () => {
     let mounted = true;
     getReviewsByVoucherRequest(id)
       .then((data) => mounted && setReviews(data))
-      .catch(() => {});
+      .catch(() => { });
     if (user?.role === "CUSTOMER") {
       getMyIssuedVouchersRequest()
         .then((data) => {
           if (!mounted) return;
           setIssuedOptions(data.filter((v) => v.voucher_id === id));
         })
-        .catch(() => {});
+        .catch(() => { });
     }
     return () => { mounted = false; };
   }, [id, user?.role]);
@@ -165,6 +165,10 @@ const VoucherDetailPage = () => {
               src={voucher.image_url || "https://via.placeholder.com/600x400?text=Voucher"}
               alt={voucher.name}
               className="vd-image"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/600x400?text=Image+Not+Found";
+              }}
             />
           </div>
         </div>

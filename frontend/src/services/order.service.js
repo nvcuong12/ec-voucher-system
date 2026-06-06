@@ -5,8 +5,8 @@ export const createOrderRequest = async (payload) => {
   return data.data.order;
 };
 
-export const payOrderRequest = async (orderId) => {
-  const { data } = await api.post(`/orders/${orderId}/pay`);
+export const payOrderRequest = async (orderId, payload = {}) => {
+  const { data } = await api.post(`/orders/${orderId}/pay`, payload);
   return data.data.order;
 };
 

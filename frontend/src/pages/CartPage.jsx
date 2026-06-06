@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { createOrderRequest, payOrderRequest } from "../services/order.service";
+import PayPalButton from "../components/PayPalButton";
 import "./CartPage.css";
 
 const formatMoney = (value) =>
@@ -54,6 +55,42 @@ const CartPage = () => {
       navigate("/my-vouchers");
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không thể thanh toán đơn hàng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaypalValidate = async () => {
+    setError("");
+    if (!form.recipient_name || !form.recipient_phone) {
+      setError("Vui lòng nhập tên và số điện thoại người nhận");
+      return null;
+    }
+    try {
+      const order = await createOrderRequest({
+        items: items.map((item) => ({
+          voucher_id: item.voucher.id,
+          quantity: item.quantity,
+        })),
+        ...form,
+      });
+      return order.id;
+    } catch (err) {
+      const errMsg = err.response?.data?.error?.message || "Không thể tạo đơn hàng";
+      setError(errMsg);
+      throw new Error(errMsg);
+    }
+  };
+
+  const handlePaypalSuccess = async (systemOrderId, paypalOrderId) => {
+    setLoading(true);
+    try {
+      await payOrderRequest(systemOrderId, { payment_ref: paypalOrderId });
+      clearCart();
+      navigate("/my-vouchers");
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Cập nhật đơn hàng thanh toán PayPal thất bại.");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -126,6 +163,7 @@ const CartPage = () => {
               <label>Phương thức thanh toán</label>
               <select className="input" value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
                 <option value="COD">Thanh toán mô phỏng</option>
+                <option value="PAYPAL">PayPal Sandbox</option>
               </select>
             </div>
             <div className="form-group cart-field">
@@ -142,10 +180,19 @@ const CartPage = () => {
               </p>
             )}
             <div className="cart-actions">
-              <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
-                {loading ? "Đang xử lý..." : "Thanh toán ngay"}
-              </button>
-              <button className="btn btn-outline" onClick={clearCart} disabled={loading}>
+              {form.payment_method === "PAYPAL" ? (
+                <PayPalButton
+                  amountVND={total}
+                  onValidate={handlePaypalValidate}
+                  onSuccess={handlePaypalSuccess}
+                  onError={(err) => console.error(err)}
+                />
+              ) : (
+                <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
+                  {loading ? "Đang xử lý..." : "Thanh toán ngay"}
+                </button>
+              )}
+              <button className="btn btn-outline" onClick={clearCart} disabled={loading} style={{ marginTop: form.payment_method === "PAYPAL" ? "10px" : "0" }}>
                 Xóa giỏ hàng
               </button>
             </div>
