@@ -25,6 +25,7 @@ import PartnerVoucherForm from "./pages/PartnerVoucherForm";
 import PartnerReports from "./pages/PartnerReports";
 import AdminVoucherReview from "./pages/AdminVoucherReview";
 import ContentPage from "./pages/ContentPage";
+import VnpayReturnPage from "./pages/VnpayReturnPage";
 
 const App = () => (
   <BrowserRouter>
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/vouchers"  element={<VouchersPage />} />
             <Route path="/vouchers/:id" element={<VoucherDetailPage />} />
             <Route path="/pages/:slug" element={<ContentPage />} />
+            <Route path="/payment/vnpay-return" element={<VnpayReturnPage />} />
 
             {/* ─── Authenticated (All Roles) ───────────── */}
             <Route path="/profile" element={
