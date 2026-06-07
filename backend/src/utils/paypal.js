@@ -72,6 +72,12 @@ export const capturePaypalOrder = async (paypalOrderId) => {
 
   if (!response.ok) {
     const errorText = await response.text();
+    // Nếu frontend đã capture rồi, PayPal sẽ trả về 422 ORDER_ALREADY_CAPTURED.
+    // Trong trường hợp đó, ta vẫn coi là thành công vì tiền đã thực sự được trừ.
+    if (response.status === 422 && errorText.includes("ORDER_ALREADY_CAPTURED")) {
+      console.log(`PayPal Order ${paypalOrderId} was already captured by the client.`);
+      return { status: "COMPLETED", id: paypalOrderId };
+    }
     throw new Error(`Failed to capture PayPal order: ${response.status} - ${errorText}`);
   }
 

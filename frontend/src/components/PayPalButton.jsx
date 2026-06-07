@@ -87,8 +87,11 @@ const PayPalButton = ({ amountVND, onValidate, onSuccess, onError }) => {
         onApprove: async (data, actions) => {
           const systemOrderId = containerRef.current.dataset.orderId;
           try {
-            // data.orderID là PayPal Order ID trả về sau khi khách thanh toán thành công
-            await onSuccess(systemOrderId, data.orderID);
+            // Gọi capture từ phía client để PayPal thực sự trừ tiền ví
+            return actions.order.capture().then(async (details) => {
+              // Gửi kết quả về backend (với PayPal Order ID)
+              await onSuccess(systemOrderId, details.id);
+            });
           } catch (err) {
             setError(err.message || "Thanh toán thành công nhưng cập nhật trạng thái đơn hàng thất bại.");
             if (onError) onError(err);
