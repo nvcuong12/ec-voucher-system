@@ -118,13 +118,13 @@ const HomePage = () => {
       {showPopup && activePopup && (
         <div className="home-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
           <div className="home-popup">
-            <button className="home-popup-close" type="button" aria-label="Dong popup" onClick={closePopup}>
+            <button className="home-popup-close" type="button" aria-label="Đóng popup" onClick={closePopup}>
               x
             </button>
             <h2 id="home-popup-title">{activePopup.title}</h2>
             <p>{activePopup.content}</p>
             <button className="btn btn-primary" type="button" onClick={closePopup}>
-              Da hieu
+              Đã hiểu
             </button>
           </div>
         </div>

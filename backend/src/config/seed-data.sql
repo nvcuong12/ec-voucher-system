@@ -288,7 +288,7 @@ ON CONFLICT (slug) DO UPDATE SET
 INSERT INTO popups (title, content, is_active, start_date, end_date)
 SELECT
   'Flash Sale Demo',
-  'VoucherHub dang co chuong trinh uu dai demo. Admin co the sua hoac tat popup nay trong tab Noi dung > Popups.',
+  'VoucherHub đang có chương trình ưu đãi demo. Admin có thể sửa hoặc tắt popup này trong tab Nội dung > Popups.',
   TRUE,
   NOW() - INTERVAL '1 day',
   NOW() + INTERVAL '30 days'
@@ -1292,10 +1292,10 @@ WHERE u.email='admin@vouchersystem.com' LIMIT 1;
 -- Complaints demo data
 INSERT INTO complaints (customer_id, voucher_id, issued_voucher_id, order_id, subject, message, status, admin_response, resolved_by, resolved_at)
 SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
-  'Nhan vien kiem tra ma hoi cham',
-  'Khach hang da xuat trinh ma voucher nhung chi nhanh can nhieu thoi gian de xac thuc.',
+  'Nhân viên kiểm tra mã hơi chậm',
+  'Khách hàng đã xuất trình mã voucher nhưng chi nhánh cần nhiều thời gian để xác thực.',
   'IN_PROGRESS'::complaint_status,
-  'Bo phan ho tro da lien he doi tac de cai thien quy trinh scan voucher.',
+  'Bộ phận hỗ trợ đã liên hệ đối tác để cải thiện quy trình scan voucher.',
   (SELECT id FROM users WHERE email='admin@vouchersystem.com'),
   NULL
 FROM issued_vouchers iv
@@ -1305,10 +1305,10 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO complaints (customer_id, voucher_id, issued_voucher_id, order_id, subject, message, status, admin_response, resolved_by, resolved_at)
 SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
-  'Can ho tro hoan tien voucher',
-  'Khach hang muon hoan tien vi chua su dung voucher va lich hen bi huy.',
+  'Cần hỗ trợ hoàn tiền voucher',
+  'Khách hàng muốn hoàn tiền vì chưa sử dụng voucher và lịch hẹn bị hủy.',
   'RESOLVED'::complaint_status,
-  'Yeu cau da duoc xu ly theo chinh sach hoan tien demo.',
+  'Yêu cầu đã được xử lý theo chính sách hoàn tiền demo.',
   (SELECT id FROM users WHERE email='admin@vouchersystem.com'),
   NOW() - INTERVAL '1 day'
 FROM issued_vouchers iv
@@ -1392,22 +1392,22 @@ WITH partner_ref AS (
 ),
 voucher_seed AS (
   SELECT * FROM (VALUES
-    ('partner.food@example.com', 'Highlands Coffee - Combo Freeze va banh', 'Combo Freeze size L kem banh ngot tai Highlands Demo.', 'Am thuc', 180000, 99000, 80, -2, 30, 60, 'Ap dung tai cac chi nhanh Highlands Demo. Khong quy doi tien mat.', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.food@example.com', 'Phuc Long - Tra sua signature size L', 'Voucher tra sua signature size L cho 2 nguoi.', 'Am thuc', 160000, 89000, 70, -1, 25, 45, 'Ap dung tu 9h den 21h moi ngay.', 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.food@example.com', 'KFC - Bucket ga ran gia dinh', 'Bucket ga ran 6 mieng kem khoai va nuoc.', 'Am thuc', 399000, 249000, 60, -3, 35, 60, 'Khong ap dung dong thoi voi khuyen mai khac.', 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.food@example.com', 'Pizza 4Ps - Set pizza va pasta cao cap', 'Set pizza, pasta va salad cho 2 nguoi.', 'Am thuc', 750000, 499000, 35, -1, 40, 75, 'Can dat ban truoc 2 gio.', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.beauty@example.com', 'Spa thu gian 90 phut', 'Massage body va cham soc da thu gian 90 phut.', 'Lam dep', 900000, 499000, 45, -2, 45, 90, 'Dat lich truoc 24h. Khong ap dung ngay le.', 'https://images.unsplash.com/photo-1544161515-4ab6ce6a9f8c?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.food@example.com', 'Ve xem phim CGV cuoi tuan', 'Ve 2D cuoi tuan kem bap nuoc size vua.', 'Giai tri', 220000, 129000, 90, -1, 20, 45, 'Ap dung rap demo doi tac, khong ap dung suat dac biet.', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
-    ('partner.beauty@example.com', 'Goi cham soc da Luxury Pending', 'Goi cham soc da dang cho admin duyet.', 'Lam dep', 1200000, 699000, 30, -1, 30, 80, 'Can xac minh noi dung truoc khi ban.', 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
-    ('partner.food@example.com', 'Buffet lau Thai Pending', 'Voucher buffet lau Thai dang cho duyet.', 'Am thuc', 450000, 299000, 50, -1, 35, 70, 'Thong tin menu can admin kiem tra.', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
-    ('partner.beauty@example.com', 'Triet long cong nghe moi Pending', 'Voucher cong nghe moi can duyet noi dung.', 'Lam dep', 1500000, 799000, 20, -1, 30, 90, 'Can bo sung chung nhan dich vu.', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
-    ('partner.food@example.com', 'Set hai san gia soc Rejected', 'Voucher bi tu choi do mo ta khong ro.', 'Am thuc', 980000, 399000, 20, -5, 20, 40, 'Thong tin dieu kien chua day du.', 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Mo ta uu dai va dieu kien ap dung chua ro rang'),
-    ('partner.beauty@example.com', 'Botox Flash Deal Rejected', 'Voucher bi tu choi do khong phu hop chinh sach san.', 'Lam dep', 2500000, 990000, 10, -5, 20, 50, 'Can chung tu dich vu y te.', 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Dich vu can giay phep/chung tu bo sung'),
-    ('partner.food@example.com', 'Coffee Pass Suspended', 'Voucher dang tam ngung ban de doi soat.', 'Am thuc', 500000, 299000, 10, -10, 10, 30, 'Tam ngung trong thoi gian kiem tra doi tac.', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
-    ('partner.beauty@example.com', 'Goi goi dau duong sinh Suspended', 'Voucher tam ngung do lich hen qua tai.', 'Lam dep', 350000, 199000, 12, -8, 15, 45, 'Chi mo lai khi partner cap nhat lich trong.', 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
-    ('partner.food@example.com', 'Combo banh mi he 2025 Expired', 'Voucher da het han ban.', 'Am thuc', 120000, 69000, 25, -90, -10, -1, 'Khong con hieu luc.', 'https://images.unsplash.com/photo-1600628421060-939639517883?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
-    ('partner.beauty@example.com', 'Spa detox thang truoc Expired', 'Voucher da het han su dung.', 'Lam dep', 1100000, 599000, 15, -120, -30, -5, 'Khong the su dung sau han.', 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
-    ('partner.travel@example.com', 'Tour Sai Gon nua ngay Pending Partner', 'Voucher cua partner pending, dung demo duyet partner.', 'Du lich', 650000, 399000, 40, -1, 45, 90, 'Chi ban sau khi partner duoc approve.', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL)
+    ('partner.food@example.com', 'Highlands Coffee - Combo Freeze và bánh', 'Combo Freeze size L kèm bánh ngọt tại Highlands Demo.', 'Ẩm thực', 180000, 99000, 80, -2, 30, 60, 'Áp dụng tại các chi nhánh Highlands Demo. Không quy đổi tiền mặt.', 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Phúc Long - Trà sữa signature size L', 'Voucher trà sữa signature size L cho 2 người.', 'Ẩm thực', 160000, 89000, 70, -1, 25, 45, 'Áp dụng từ 9h đến 21h mỗi ngày.', 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'KFC - Bucket gà rán gia đình', 'Bucket gà rán 6 miếng kèm khoai và nước.', 'Ẩm thực', 399000, 249000, 60, -3, 35, 60, 'Không áp dụng đồng thời với khuyến mãi khác.', 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Pizza 4Ps - Set pizza và pasta cao cấp', 'Set pizza, pasta và salad cho 2 người.', 'Ẩm thực', 750000, 499000, 35, -1, 40, 75, 'Cần đặt bàn trước 2 giờ.', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.beauty@example.com', 'Spa thư giãn 90 phút', 'Massage body và chăm sóc da thư giãn 90 phút.', 'Làm đẹp', 900000, 499000, 45, -2, 45, 90, 'Đặt lịch trước 24h. Không áp dụng ngày lễ.', 'https://images.unsplash.com/photo-1544161515-4ab6ce6a9f8c?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.food@example.com', 'Vé xem phim CGV cuối tuần', 'Vé 2D cuối tuần kèm bắp nước size vừa.', 'Giải trí', 220000, 129000, 90, -1, 20, 45, 'Áp dụng rạp demo đối tác, không áp dụng suất đặc biệt.', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80', 'APPROVED', NULL),
+    ('partner.beauty@example.com', 'Gói chăm sóc da Luxury Pending', 'Gói chăm sóc da đang chờ admin duyệt.', 'Làm đẹp', 1200000, 699000, 30, -1, 30, 80, 'Cần xác minh nội dung trước khi bán.', 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.food@example.com', 'Buffet lẩu Thái Pending', 'Voucher buffet lẩu Thái đang chờ duyệt.', 'Ẩm thực', 450000, 299000, 50, -1, 35, 70, 'Thông tin menu cần admin kiểm tra.', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.beauty@example.com', 'Triệt lông công nghệ mới Pending', 'Voucher công nghệ mới cần duyệt nội dung.', 'Làm đẹp', 1500000, 799000, 20, -1, 30, 90, 'Cần bổ sung chứng nhận dịch vụ.', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL),
+    ('partner.food@example.com', 'Set hải sản giá sốc Rejected', 'Voucher bị từ chối do mô tả không rõ.', 'Ẩm thực', 980000, 399000, 20, -5, 20, 40, 'Thông tin điều kiện chưa đầy đủ.', 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Mô tả ưu đãi và điều kiện áp dụng chưa rõ ràng'),
+    ('partner.beauty@example.com', 'Botox Flash Deal Rejected', 'Voucher bị từ chối do không phù hợp chính sách sàn.', 'Làm đẹp', 2500000, 990000, 10, -5, 20, 50, 'Cần chứng từ dịch vụ y tế.', 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80', 'REJECTED', 'Dịch vụ cần giấy phép/chứng từ bổ sung'),
+    ('partner.food@example.com', 'Coffee Pass Suspended', 'Voucher đang tạm ngưng bán để đối soát.', 'Ẩm thực', 500000, 299000, 10, -10, 10, 30, 'Tạm ngưng trong thời gian kiểm tra đối tác.', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
+    ('partner.beauty@example.com', 'Gói gội đầu dưỡng sinh Suspended', 'Voucher tạm ngưng do lịch hẹn quá tải.', 'Làm đẹp', 350000, 199000, 12, -8, 15, 45, 'Chỉ mở lại khi partner cập nhật lịch trống.', 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80', 'SUSPENDED', NULL),
+    ('partner.food@example.com', 'Combo bánh mì hè 2025 Expired', 'Voucher đã hết hạn bán.', 'Ẩm thực', 120000, 69000, 25, -90, -10, -1, 'Không còn hiệu lực.', 'https://images.unsplash.com/photo-1600628421060-939639517883?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
+    ('partner.beauty@example.com', 'Spa detox tháng trước Expired', 'Voucher đã hết hạn sử dụng.', 'Làm đẹp', 1100000, 599000, 15, -120, -30, -5, 'Không thể sử dụng sau hạn.', 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80', 'EXPIRED', NULL),
+    ('partner.travel@example.com', 'Tour Sài Gòn nửa ngày Pending Partner', 'Voucher của partner pending, dùng demo duyệt partner.', 'Du lịch', 650000, 399000, 40, -1, 45, 90, 'Chỉ bán sau khi partner được approve.', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80', 'PENDING_APPROVAL', NULL)
   ) AS s(email, name, description, category, original_price, sale_price, stock, sale_start_offset, sale_end_offset, valid_until_offset, terms, image_url, status, rejection_reason)
 )
 INSERT INTO vouchers (partner_id, name, description, category, original_price, sale_price, stock, sale_start, sale_end, valid_until, terms, image_url, status, rejection_reason)
@@ -1567,23 +1567,23 @@ SELECT iv.customer_id, iv.voucher_id, iv.id, oi.order_id,
 FROM issued_vouchers iv
 JOIN order_items oi ON oi.id = iv.order_item_id
 CROSS JOIN (VALUES
-  ('VCH-2026-C3M1N8', 'Khong dung duoc voucher tai chi nhanh', 'Nhan vien bao chi nhanh chua cap nhat chuong trinh khuyen mai.', 'PENDING', NULL),
-  ('VCH-2026-A8F2K9', 'Ma QR khong quet duoc', 'Khach hang can ho tro vi QR mock khong duoc doi tac xac nhan ngay.', 'PENDING', NULL),
-  ('VCH-2026-U7D3X2', 'Doi tac tu choi ap dung khuyen mai', 'Doi tac yeu cau dat lich lai du khach da dung dieu kien.', 'IN_PROGRESS', 'Bo phan ho tro dang lien he quan ly chi nhanh.'),
-  ('VCH-2026-C3M1N8', 'Muon hoan tien vi lich hen bi huy', 'Khach hang muon hoan tien do partner huy lich hen.', 'RESOLVED', 'Yeu cau hoan tien mock da duoc chap nhan theo chinh sach san.'),
-  ('VCH-2026-A8F2K9', 'Thong tin dieu kien su dung chua ro', 'Khach hang can giai thich them ve dieu kien dat lich truoc.', 'RESOLVED', 'Da cap nhat huong dan va gui lai chinh sach su dung voucher.'),
-  ('VCH-2026-U7D3X2', 'Yeu cau hoan tien sau khi voucher da dung', 'Khach hang yeu cau hoan tien nhung voucher da duoc scan thanh cong.', 'REJECTED', 'Yeu cau bi tu choi do voucher da su dung thanh cong.')
+  ('VCH-2026-C3M1N8', 'Không dùng được voucher tại chi nhánh', 'Nhân viên báo chi nhánh chưa cập nhật chương trình khuyến mãi.', 'PENDING', NULL),
+  ('VCH-2026-A8F2K9', 'Mã QR không quét được', 'Khách hàng cần hỗ trợ vì QR mock không được đối tác xác nhận ngay.', 'PENDING', NULL),
+  ('VCH-2026-U7D3X2', 'Đối tác từ chối áp dụng khuyến mãi', 'Đối tác yêu cầu đặt lịch lại dù khách đã dùng điều kiện.', 'IN_PROGRESS', 'Bộ phận hỗ trợ đang liên hệ quản lý chi nhánh.'),
+  ('VCH-2026-C3M1N8', 'Muốn hoàn tiền vì lịch hẹn bị hủy', 'Khách hàng muốn hoàn tiền do partner hủy lịch hẹn.', 'RESOLVED', 'Yêu cầu hoàn tiền mock đã được chấp nhận theo chính sách sàn.'),
+  ('VCH-2026-A8F2K9', 'Thông tin điều kiện sử dụng chưa rõ', 'Khách hàng cần giải thích thêm về điều kiện đặt lịch trước.', 'RESOLVED', 'Đã cập nhật hướng dẫn và gửi lại chính sách sử dụng voucher.'),
+  ('VCH-2026-U7D3X2', 'Yêu cầu hoàn tiền sau khi voucher đã dùng', 'Khách hàng yêu cầu hoàn tiền nhưng voucher đã được scan thành công.', 'REJECTED', 'Yêu cầu bị từ chối do voucher đã sử dụng thành công.')
 ) AS c(code, subject, message, status, admin_response)
 WHERE iv.code = c.code
   AND NOT EXISTS (SELECT 1 FROM complaints existing WHERE existing.subject = c.subject);
 
 INSERT INTO popups (title, content, is_active, start_date, end_date)
-SELECT 'Khuyen mai gio vang', 'Giam den 50% cho nhom voucher am thuc va lam dep trong tuan demo.', TRUE, NOW() - INTERVAL '1 hour', NOW() + INTERVAL '7 days'
-WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Khuyen mai gio vang');
+SELECT 'Khuyến mãi giờ vàng', 'Giảm đến 50% cho nhóm voucher ẩm thực và làm đẹp trong tuần demo.', TRUE, NOW() - INTERVAL '1 hour', NOW() + INTERVAL '7 days'
+WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Khuyến mãi giờ vàng');
 
 INSERT INTO popups (title, content, is_active, start_date, end_date)
-SELECT 'Chuong trinh da ket thuc', 'Popup het han dung de admin demo trang thai inactive/expired.', FALSE, NOW() - INTERVAL '20 days', NOW() - INTERVAL '5 days'
-WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Chuong trinh da ket thuc');
+SELECT 'Chương trình đã kết thúc', 'Popup hết hạn dùng để admin demo trạng thái inactive/expired.', FALSE, NOW() - INTERVAL '20 days', NOW() - INTERVAL '5 days'
+WHERE NOT EXISTS (SELECT 1 FROM popups WHERE title='Chương trình đã kết thúc');
 
 INSERT INTO system_logs (user_id, action, entity, entity_id, details, ip_address)
 SELECT admin.id, l.action, l.entity, l.entity_id, l.details::jsonb, '192.168.10.10'
@@ -1591,14 +1591,14 @@ FROM users admin
 CROSS JOIN LATERAL (VALUES
   ('LOGIN_ADMIN', 'users', admin.id, '{"method":"email","result":"success"}'),
   ('APPROVE_PARTNER', 'partners', (SELECT p.id FROM partners p JOIN users u ON u.id=p.user_id WHERE u.email='partner.food@example.com'), '{"partner":"Highlands Coffee Demo"}'),
-  ('SUSPEND_PARTNER', 'partners', (SELECT p.id FROM partners p JOIN users u ON u.id=p.user_id WHERE u.email='partner.suspended@example.com'), '{"reason":"doi soat demo"}'),
-  ('APPROVE_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Highlands Coffee - Combo Freeze va banh'), '{"status":"APPROVED"}'),
-  ('REJECT_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Set hai san gia soc Rejected'), '{"reason":"mo ta chua ro"}'),
-  ('SUSPEND_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Coffee Pass Suspended'), '{"reason":"tam ngung ban"}'),
+  ('SUSPEND_PARTNER', 'partners', (SELECT p.id FROM partners p JOIN users u ON u.id=p.user_id WHERE u.email='partner.suspended@example.com'), '{"reason":"đối soát demo"}'),
+  ('APPROVE_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Highlands Coffee - Combo Freeze và bánh'), '{"status":"APPROVED"}'),
+  ('REJECT_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Set hải sản giá sốc Rejected'), '{"reason":"mô tả chưa rõ"}'),
+  ('SUSPEND_VOUCHER', 'vouchers', (SELECT id FROM vouchers WHERE name='Coffee Pass Suspended'), '{"reason":"tạm ngưng bán"}'),
   ('CANCEL_ORDER', 'orders', (SELECT id FROM orders WHERE payment_ref='DEMO-PAY-CUS5-CANCELLED'), '{"payment_ref":"DEMO-PAY-CUS5-CANCELLED"}'),
-  ('UPDATE_COMPLAINT_STATUS', 'complaint', (SELECT id FROM complaints WHERE subject='Muon hoan tien vi lich hen bi huy' LIMIT 1), '{"status":"RESOLVED"}'),
-  ('UPDATE_CONTENT', 'content', (SELECT id FROM popups WHERE title='Khuyen mai gio vang'), '{"type":"popup","operation":"create"}'),
-  ('UPDATE_CATEGORY', 'content', (SELECT id FROM categories WHERE name='Giao duc'), '{"type":"category","operation":"upsert"}')
+  ('UPDATE_COMPLAINT_STATUS', 'complaint', (SELECT id FROM complaints WHERE subject='Muốn hoàn tiền vì lịch hẹn bị hủy' LIMIT 1), '{"status":"RESOLVED"}'),
+  ('UPDATE_CONTENT', 'content', (SELECT id FROM popups WHERE title='Khuyến mãi giờ vàng'), '{"type":"popup","operation":"create"}'),
+  ('UPDATE_CATEGORY', 'content', (SELECT id FROM categories WHERE name='Giáo dục'), '{"type":"category","operation":"upsert"}')
 ) AS l(action, entity, entity_id, details)
 WHERE admin.email='admin@voucherhub.vn'
   AND l.entity_id IS NOT NULL

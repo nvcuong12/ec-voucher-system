@@ -227,7 +227,18 @@ const OrdersPage = ({
                               <div className="order-item-main">
                                 <span className="order-item-dot" />
                                 <div className="order-item-name">
-                                  <strong>{voucherName}</strong>
+                                  {item.voucher_id ? (
+                                    <Link 
+                                      to={`/vouchers/${item.voucher_id}`} 
+                                      style={{ color: "var(--primary)", textDecoration: "none" }}
+                                      onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+                                      onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
+                                    >
+                                      <strong>{voucherName}</strong>
+                                    </Link>
+                                  ) : (
+                                    <strong>{voucherName}</strong>
+                                  )}
                                   <span>{formatMoney(item.unit_price)} x {item.quantity}</span>
                                 </div>
                                 <div className="order-item-subtotal">
