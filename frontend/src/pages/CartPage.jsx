@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { createOrderRequest, payOrderRequest } from "../services/order.service";
+import { createOrderRequest, payOrderRequest, createVnpayUrlRequest } from "../services/order.service";
 import PayPalButton from "../components/PayPalButton";
 import "./CartPage.css";
 
@@ -56,6 +56,37 @@ const CartPage = () => {
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không thể thanh toán đơn hàng");
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVnpayCheckout = async () => {
+    setLoading(true);
+    setError("");
+    if (!form.recipient_name || !form.recipient_phone) {
+      setError("Vui lòng nhập tên và số điện thoại người nhận");
+      setLoading(false);
+      return;
+    }
+    try {
+      // Tạo đơn hàng với payment_method = VNPAY
+      const order = await createOrderRequest({
+        items: items.map((item) => ({
+          voucher_id: item.voucher.id,
+          quantity: item.quantity,
+        })),
+        ...form,
+        payment_method: "VNPAY",
+      });
+      // Lấy URL thanh toán VNPay
+      const { vnpayUrl } = await createVnpayUrlRequest(order.id);
+      // Lưu orderId vào sessionStorage để trang return có thể dùng
+      sessionStorage.setItem("vnpay_order_id", order.id);
+      clearCart();
+      // Redirect sang trang thanh toán VNPay
+      window.location.href = vnpayUrl;
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Không thể tạo thanh toán VNPay");
       setLoading(false);
     }
   };
@@ -163,6 +194,7 @@ const CartPage = () => {
               <label>Phương thức thanh toán</label>
               <select className="input" value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
                 <option value="COD">Thanh toán mô phỏng</option>
+                <option value="VNPAY">VNPay Sandbox</option>
                 <option value="PAYPAL">PayPal Sandbox</option>
               </select>
             </div>
@@ -187,12 +219,16 @@ const CartPage = () => {
                   onSuccess={handlePaypalSuccess}
                   onError={(err) => console.error(err)}
                 />
+              ) : form.payment_method === "VNPAY" ? (
+                <button className="btn btn-primary vnpay-btn" onClick={handleVnpayCheckout} disabled={loading}>
+                  {loading ? "Đang chuyển hướng..." : "Thanh toán qua VNPay"}
+                </button>
               ) : (
                 <button className="btn btn-primary" onClick={handleCheckout} disabled={loading}>
                   {loading ? "Đang xử lý..." : "Thanh toán ngay"}
                 </button>
               )}
-              <button className="btn btn-outline" onClick={clearCart} disabled={loading} style={{ marginTop: form.payment_method === "PAYPAL" ? "10px" : "0" }}>
+              <button className="btn btn-outline" onClick={clearCart} disabled={loading} style={{ marginTop: ["PAYPAL", "VNPAY"].includes(form.payment_method) ? "10px" : "0" }}>
                 Xóa giỏ hàng
               </button>
             </div>
