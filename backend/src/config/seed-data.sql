@@ -1365,6 +1365,19 @@ FROM (VALUES
 JOIN users u ON u.email = p.email
 WHERE NOT EXISTS (SELECT 1 FROM partners existing WHERE existing.user_id = u.id);
 
+INSERT INTO partner_appeals (partner_id, user_id, title, content, status)
+SELECT p.id, u.id,
+       'Yeu cau mo khoa tai khoan doi tac',
+       'Doi tac da cap nhat quy trinh doi soat noi bo va mong duoc quan tri vien xem xet mo khoa tai khoan.',
+       'PENDING'::partner_appeal_status
+FROM users u
+JOIN partners p ON p.user_id = u.id
+WHERE u.email = 'partner.suspended@example.com'
+  AND NOT EXISTS (
+    SELECT 1 FROM partner_appeals existing
+    WHERE existing.partner_id = p.id AND existing.status = 'PENDING'
+  );
+
 INSERT INTO partner_branches (partner_id, name, address, phone, is_active)
 SELECT p.id, b.name, b.address, b.phone, b.is_active
 FROM (VALUES

@@ -47,6 +47,26 @@
   background: rgba(15, 118, 110, 0.1);
 }
 
+.partner-report-restricted {
+  width: min(520px, 100%);
+  margin: 2.5rem auto 0;
+  padding: 2rem;
+  text-align: center;
+  background: #fef9c3;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius-lg);
+  color: #78350f;
+}
+
+.partner-report-restricted h2 {
+  margin: 0 0 0.5rem;
+  color: #92400e;
+}
+
+.partner-report-restricted p {
+  margin-bottom: 1.25rem;
+}
+
 @media (max-width: 960px) {
   .report-row {
     grid-template-columns: 1fr 1fr;

@@ -49,6 +49,16 @@ export const updateAdminComplaintRequest = async (id, payload) => {
   return data.data.complaint;
 };
 
+export const getAdminPartnerAppealsRequest = async (params = {}) => {
+  const { data } = await api.get("/admin/partner-appeals", { params });
+  return data.data.appeals || [];
+};
+
+export const updateAdminPartnerAppealRequest = async (id, payload) => {
+  const { data } = await api.patch(`/admin/partner-appeals/${id}`, payload);
+  return data.data.appeal;
+};
+
 export const getAdminUsersRequest = async () => {
   const { data } = await api.get("/admin/users");
   return data.data.users || [];

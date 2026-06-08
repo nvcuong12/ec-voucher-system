@@ -41,6 +41,21 @@ const requireApprovedPartner = async (userId) => {
   return partner;
 };
 
+const requireSuspendedPartner = async (userId) => {
+  const partner = await requirePartner(userId);
+  if (!partner) {
+    throw new BusinessException("NOT_FOUND", "Partner profile not found", 404);
+  }
+  if (partner.status !== "SUSPENDED") {
+    throw new BusinessException(
+      "FORBIDDEN",
+      "Only suspended partners can submit unlock appeals",
+      403
+    );
+  }
+  return partner;
+};
+
 const ensurePartnerBranch = async (client, partnerId, branchId) => {
   if (!branchId) {
     throw new BusinessException("VALIDATION_FAILED", "branch_id is required", 400);
@@ -220,10 +235,7 @@ export const updatePartnerBranch = async (req, res, next) => {
       return next(new BusinessException("VALIDATION_FAILED", "address cannot be empty", 400));
     }
 
-    const partner = await requirePartner(req.user.id);
-    if (!partner) {
-      return next(new BusinessException("NOT_FOUND", "Partner profile not found", 404));
-    }
+    const partner = await requireApprovedPartner(req.user.id);
     if (partner.status !== "APPROVED") {
       return next(
         new BusinessException(
@@ -250,6 +262,72 @@ export const updatePartnerBranch = async (req, res, next) => {
     }
 
     return res.json({ data: { branch } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createPartnerAppeal = async (req, res, next) => {
+  try {
+    const partner = await requireSuspendedPartner(req.user.id);
+    const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
+    const evidenceUrl = typeof req.body?.evidence_url === "string"
+      ? req.body.evidence_url.trim()
+      : null;
+
+    if (!title) {
+      return next(new BusinessException("VALIDATION_FAILED", "title is required", 400));
+    }
+    if (!content) {
+      return next(new BusinessException("VALIDATION_FAILED", "content is required", 400));
+    }
+    if (content.length < 20) {
+      return next(new BusinessException("VALIDATION_FAILED", "content must be at least 20 characters", 400));
+    }
+
+    const existing = await query(
+      `SELECT id
+       FROM partner_appeals
+       WHERE partner_id = $1 AND status = 'PENDING'
+       LIMIT 1`,
+      [partner.id]
+    );
+    if (existing.rows[0]) {
+      return next(new BusinessException("CONFLICT", "A pending appeal already exists", 409));
+    }
+
+    const result = await query(
+      `INSERT INTO partner_appeals (partner_id, user_id, title, content, evidence_url)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, partner_id, user_id, title, content, evidence_url,
+                 status, admin_response, reviewed_by, reviewed_at, created_at, updated_at`,
+      [partner.id, req.user.id, title, content, evidenceUrl || null]
+    );
+
+    return res.status(201).json({ data: { appeal: result.rows[0] } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getMyPartnerAppeals = async (req, res, next) => {
+  try {
+    const partner = await requirePartner(req.user.id);
+    if (!partner) {
+      return next(new BusinessException("NOT_FOUND", "Partner profile not found", 404));
+    }
+
+    const result = await query(
+      `SELECT id, partner_id, user_id, title, content, evidence_url,
+              status, admin_response, reviewed_by, reviewed_at, created_at, updated_at
+       FROM partner_appeals
+       WHERE partner_id = $1
+       ORDER BY created_at DESC`,
+      [partner.id]
+    );
+
+    return res.json({ data: { appeals: result.rows } });
   } catch (err) {
     next(err);
   }
@@ -406,10 +484,7 @@ export const getPartnerDashboard = async (req, res, next) => {
 
 export const getPartnerReport = async (req, res, next) => {
   try {
-    const partner = await requirePartner(req.user.id);
-    if (!partner) {
-      return next(new BusinessException("NOT_FOUND", "Partner profile not found", 404));
-    }
+    const partner = await requireApprovedPartner(req.user.id);
 
     const [summaryRevenue, summaryIssued, voucherStats] = await Promise.all([
       query(

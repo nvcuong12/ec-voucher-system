@@ -21,6 +21,7 @@ import {
   getLogs,
   getDashboard,
   getPartnerBranches,
+  getPartnerAppeals,
   getPendingPartners,
   rejectVoucher,
   updateBanner,
@@ -30,6 +31,7 @@ import {
   updateOrderStatus,
   updatePopup,
   updatePartnerBranchStatus,
+  updatePartnerAppealStatus,
   updatePartnerApprovalStatus,
   updatePartnerStatusAny,
   updateUserRole,
@@ -78,6 +80,8 @@ router.get("/dashboard", asyncHandler(getDashboard));
 router.get("/logs", asyncHandler(getLogs));
 router.get("/complaints", asyncHandler(getComplaints));
 router.patch("/complaints/:id", asyncHandler(updateComplaintStatus));
+router.get("/partner-appeals", asyncHandler(getPartnerAppeals));
+router.patch("/partner-appeals/:id", asyncHandler(updatePartnerAppealStatus));
 
 router.get("/content/categories", asyncHandler(getCategories));
 router.post("/content/categories", asyncHandler(createCategory));

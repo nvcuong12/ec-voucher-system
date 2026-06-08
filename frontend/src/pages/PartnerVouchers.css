@@ -109,6 +109,12 @@
   justify-content: flex-end;
 }
 
+.pv-action-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .pv-badge {
   display: inline-block;
   padding: 0.2rem 0.55rem;

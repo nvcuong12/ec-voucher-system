@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   RiDashboardLine,
   RiStore2Line,
+  RiArrowLeftLine,
   RiUserLine,
   RiTicket2Line,
   RiFileList3Line,
@@ -22,6 +23,7 @@ import {
   getAdminLogsRequest,
   getAdminOrdersRequest,
   getAdminPagesRequest,
+  getAdminPartnerAppealsRequest,
   getAdminPartnersRequest,
   getAdminPopupsRequest,
   getAdminUsersRequest,
@@ -33,6 +35,7 @@ import {
   updateAdminComplaintRequest,
   updateAdminOrderStatusRequest,
   updateAdminPageRequest,
+  updateAdminPartnerAppealRequest,
   updateAdminPartnerBranchRequest,
   updateAdminPartnerStatusRequest,
   updateAdminPopupRequest,
@@ -86,6 +89,7 @@ const AdminDashboardPage = () => {
   const [partners, setPartners] = useState([]);
   const [orders, setOrders] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [partnerAppeals, setPartnerAppeals] = useState([]);
   const [logs, setLogs] = useState([]);
   const [users, setUsers] = useState([]);
   const [pendingVouchers, setPendingVouchers] = useState([]);
@@ -120,9 +124,13 @@ const AdminDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [partnerView, setPartnerView] = useState("list");
   const [contentSubTab, setContentSubTab] = useState("categories");
   const [voucherStatusFilter, setVoucherStatusFilter] = useState("ALL");
   const [voucherSearch, setVoucherSearch] = useState("");
+  const [partnerAppealFilter, setPartnerAppealFilter] = useState("ALL");
+  const [partnerAppealSearch, setPartnerAppealSearch] = useState("");
+  const [partnerAppealResponses, setPartnerAppealResponses] = useState({});
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [rejectingVoucher, setRejectingVoucher] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -137,6 +145,7 @@ const AdminDashboardPage = () => {
         allPartners,
         orderList,
         complaintList,
+        appealList,
         logList,
         userList,
         categoryList,
@@ -151,6 +160,7 @@ const AdminDashboardPage = () => {
         getAdminPartnersRequest(),
         getAdminOrdersRequest(),
         getAdminComplaintsRequest(),
+        getAdminPartnerAppealsRequest(),
         getAdminLogsRequest(),
         getAdminUsersRequest(),
         getAdminCategoriesRequest(),
@@ -164,6 +174,7 @@ const AdminDashboardPage = () => {
       setPartners(allPartners.length ? allPartners : pending);
       setOrders(orderList);
       setComplaints(complaintList);
+      setPartnerAppeals(appealList);
       setLogs(logList);
       setUsers(userList);
       setPendingVouchers(pendingVoucherList);
@@ -191,6 +202,18 @@ const AdminDashboardPage = () => {
       voucher.name?.toLowerCase().includes(keyword) ||
       voucher.business_name?.toLowerCase().includes(keyword) ||
       voucher.partner_email?.toLowerCase().includes(keyword);
+    return matchesStatus && matchesSearch;
+  });
+
+  const filteredPartnerAppeals = partnerAppeals.filter((appeal) => {
+    const matchesStatus = partnerAppealFilter === "ALL" || appeal.status === partnerAppealFilter;
+    const keyword = partnerAppealSearch.trim().toLowerCase();
+    const matchesSearch =
+      !keyword ||
+      appeal.title?.toLowerCase().includes(keyword) ||
+      appeal.content?.toLowerCase().includes(keyword) ||
+      appeal.business_name?.toLowerCase().includes(keyword) ||
+      appeal.email?.toLowerCase().includes(keyword);
     return matchesStatus && matchesSearch;
   });
 
@@ -243,6 +266,25 @@ const AdminDashboardPage = () => {
       await loadAll();
     } catch (err) {
       alert(err.response?.data?.error?.message || "Không thể cập nhật khiếu nại");
+    }
+  };
+
+  const handlePartnerAppealStatus = async (appeal, status) => {
+    const adminResponse = partnerAppealResponses[appeal.id]?.trim() || "";
+    if (status === "REJECTED" && !adminResponse) {
+      alert("Vui lòng nhập phản hồi khi từ chối khiếu nại.");
+      return;
+    }
+
+    try {
+      await updateAdminPartnerAppealRequest(appeal.id, {
+        status,
+        admin_response: adminResponse,
+      });
+      setPartnerAppealResponses((prev) => ({ ...prev, [appeal.id]: "" }));
+      await loadAll();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể cập nhật khiếu nại đối tác");
     }
   };
 
@@ -424,7 +466,10 @@ const AdminDashboardPage = () => {
           </button>
           <button
             className={`admin-tab-btn ${activeTab === "partners" ? "active" : ""}`}
-            onClick={() => setActiveTab("partners")}
+            onClick={() => {
+              setActiveTab("partners");
+              setPartnerView("list");
+            }}
           >
             <RiStore2Line /> Đối tác
           </button>
@@ -716,8 +761,115 @@ const AdminDashboardPage = () => {
         {/* TAB 2: PARTNERS */}
         {activeTab === "partners" && (
           <div className="tab-pane fade-in">
+            {partnerView === "appeals" ? (
+              <section className="card admin-section">
+                <div className="section-header-row">
+                  <div>
+                    <button className="btn btn-outline btn-sm admin-back-btn" onClick={() => setPartnerView("list")}>
+                      <RiArrowLeftLine /> Quay lại
+                    </button>
+                    <h2><RiStore2Line /> Danh sách khiếu nại đối tác</h2>
+                    <p className="text-muted">Xem xét yêu cầu mở khóa từ các đối tác đang bị tạm khóa.</p>
+                  </div>
+                  <span className="badge badge-yellow">
+                    {partnerAppeals.filter((appeal) => appeal.status === "PENDING").length} chờ xử lý
+                  </span>
+                </div>
+
+                <div className="admin-voucher-toolbar">
+                  <input
+                    className="input"
+                    placeholder="Tìm theo tiêu đề, đối tác hoặc email"
+                    value={partnerAppealSearch}
+                    onChange={(e) => setPartnerAppealSearch(e.target.value)}
+                  />
+                  <select
+                    className="input admin-select"
+                    value={partnerAppealFilter}
+                    onChange={(e) => setPartnerAppealFilter(e.target.value)}
+                  >
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value="PENDING">Chờ xử lý</option>
+                    <option value="APPROVED">Đã duyệt</option>
+                    <option value="REJECTED">Đã từ chối</option>
+                  </select>
+                </div>
+
+                {filteredPartnerAppeals.length === 0 ? (
+                  <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không có khiếu nại đối tác phù hợp.</p>
+                ) : (
+                  <div className="admin-list">
+                    {filteredPartnerAppeals.map((appeal) => (
+                      <div key={appeal.id} className="card admin-item admin-partner-appeal-item">
+                        <div className="admin-item-row">
+                          <div className="admin-partner-appeal-summary">
+                            <strong className="admin-item-title">{appeal.title}</strong>
+                            <p className="text-muted">Đối tác: {appeal.business_name || "-"} ({appeal.email || "-"})</p>
+                            <p className="text-muted">Nội dung: {appeal.content}</p>
+                            {appeal.evidence_url && (
+                              <p className="text-muted">
+                                Minh chứng:{" "}
+                                <a href={appeal.evidence_url} target="_blank" rel="noreferrer">
+                                  {appeal.evidence_url}
+                                </a>
+                              </p>
+                            )}
+                            <p className="text-muted">
+                              Trạng thái:{" "}
+                              <span className={`badge ${
+                                appeal.status === "APPROVED"
+                                  ? "badge-green"
+                                  : appeal.status === "REJECTED"
+                                  ? "badge-red"
+                                  : "badge-yellow"
+                              }`}>
+                                {appeal.status === "PENDING" ? "Chờ xử lý" : appeal.status === "APPROVED" ? "Đã duyệt" : "Đã từ chối"}
+                              </span>
+                            </p>
+                            <p className="text-muted">Ngày gửi: {formatDateTime(appeal.created_at)}</p>
+                            {appeal.admin_response && (
+                              <p className="text-muted">Phản hồi admin: {appeal.admin_response}</p>
+                            )}
+                          </div>
+
+                          {appeal.status === "PENDING" && (
+                            <div className="admin-item-actions admin-partner-appeal-actions">
+                              <textarea
+                                className="input"
+                                placeholder="Phản hồi cho đối tác"
+                                value={partnerAppealResponses[appeal.id] || ""}
+                                onChange={(e) =>
+                                  setPartnerAppealResponses((prev) => ({
+                                    ...prev,
+                                    [appeal.id]: e.target.value,
+                                  }))
+                                }
+                              />
+                              <button className="btn btn-success btn-sm" onClick={() => handlePartnerAppealStatus(appeal, "APPROVED")}>
+                                Duyệt mở khóa
+                              </button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handlePartnerAppealStatus(appeal, "REJECTED")}>
+                                Từ chối
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ) : (
             <section className="card admin-section">
-              <h2>Duyệt và Quản lý đối tác</h2>
+              <div className="section-header-row">
+                <div>
+                  <h2>Duyệt và Quản lý đối tác</h2>
+                  <p className="text-muted">Quản lý hồ sơ, trạng thái và chi nhánh của đối tác.</p>
+                </div>
+                <button className="btn btn-outline btn-sm" onClick={() => setPartnerView("appeals")}>
+                  <RiStore2Line /> Xem khiếu nại từ Đối tác
+                </button>
+              </div>
               {partners.length === 0 ? (
                 <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không có đối tác chờ duyệt.</p>
               ) : (
@@ -798,6 +950,7 @@ const AdminDashboardPage = () => {
                 </div>
               )}
             </section>
+            )}
           </div>
         )}
 
@@ -1115,6 +1268,106 @@ const AdminDashboardPage = () => {
                             Từ chối
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* TAB 7: PARTNER APPEALS */}
+        {false && activeTab === "partnerAppeals" && (
+          <div className="tab-pane fade-in">
+            <section className="card admin-section">
+              <div className="section-header-row">
+                <div>
+                  <h2><RiStore2Line /> Khiếu nại đối tác</h2>
+                  <p className="text-muted">Xem xét yêu cầu mở khóa từ các đối tác đang bị tạm khóa.</p>
+                </div>
+                <span className="badge badge-yellow">
+                  {partnerAppeals.filter((appeal) => appeal.status === "PENDING").length} chờ xử lý
+                </span>
+              </div>
+
+              <div className="admin-voucher-toolbar">
+                <input
+                  className="input"
+                  placeholder="Tìm theo tiêu đề, đối tác hoặc email"
+                  value={partnerAppealSearch}
+                  onChange={(e) => setPartnerAppealSearch(e.target.value)}
+                />
+                <select
+                  className="input admin-select"
+                  value={partnerAppealFilter}
+                  onChange={(e) => setPartnerAppealFilter(e.target.value)}
+                >
+                  <option value="ALL">Tất cả trạng thái</option>
+                  <option value="PENDING">Chờ xử lý</option>
+                  <option value="APPROVED">Đã duyệt</option>
+                  <option value="REJECTED">Đã từ chối</option>
+                </select>
+              </div>
+
+              {filteredPartnerAppeals.length === 0 ? (
+                <p className="text-muted text-center" style={{ padding: "2rem 0" }}>Không có khiếu nại đối tác phù hợp.</p>
+              ) : (
+                <div className="admin-list">
+                  {filteredPartnerAppeals.map((appeal) => (
+                    <div key={appeal.id} className="card admin-item admin-partner-appeal-item">
+                      <div className="admin-item-row">
+                        <div className="admin-partner-appeal-summary">
+                          <strong className="admin-item-title">{appeal.title}</strong>
+                          <p className="text-muted">Đối tác: {appeal.business_name || "-"} ({appeal.email || "-"})</p>
+                          <p className="text-muted">Nội dung: {appeal.content}</p>
+                          {appeal.evidence_url && (
+                            <p className="text-muted">
+                              Minh chứng:{" "}
+                              <a href={appeal.evidence_url} target="_blank" rel="noreferrer">
+                                {appeal.evidence_url}
+                              </a>
+                            </p>
+                          )}
+                          <p className="text-muted">
+                            Trạng thái:{" "}
+                            <span className={`badge ${
+                              appeal.status === "APPROVED"
+                                ? "badge-green"
+                                : appeal.status === "REJECTED"
+                                ? "badge-red"
+                                : "badge-yellow"
+                            }`}>
+                              {appeal.status === "PENDING" ? "Chờ xử lý" : appeal.status === "APPROVED" ? "Đã duyệt" : "Đã từ chối"}
+                            </span>
+                          </p>
+                          <p className="text-muted">Ngày gửi: {formatDateTime(appeal.created_at)}</p>
+                          {appeal.admin_response && (
+                            <p className="text-muted">Phản hồi admin: {appeal.admin_response}</p>
+                          )}
+                        </div>
+
+                        {appeal.status === "PENDING" && (
+                          <div className="admin-item-actions admin-partner-appeal-actions">
+                            <textarea
+                              className="input"
+                              placeholder="Phản hồi cho đối tác"
+                              value={partnerAppealResponses[appeal.id] || ""}
+                              onChange={(e) =>
+                                setPartnerAppealResponses((prev) => ({
+                                  ...prev,
+                                  [appeal.id]: e.target.value,
+                                }))
+                              }
+                            />
+                            <button className="btn btn-success btn-sm" onClick={() => handlePartnerAppealStatus(appeal, "APPROVED")}>
+                              Duyệt mở khóa
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handlePartnerAppealStatus(appeal, "REJECTED")}>
+                              Từ chối
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

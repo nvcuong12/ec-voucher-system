@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import usePartnerStatus from "../hooks/usePartnerStatus";
 import { getPartnerReportsRequest } from "../services/partner.service";
 import "./PartnerReports.css";
 
@@ -11,8 +13,16 @@ const PartnerReports = () => {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { isRestricted, partnerStatus, statusLoading } = usePartnerStatus();
 
   useEffect(() => {
+    if (statusLoading) return undefined;
+    if (isRestricted) {
+      setLoading(false);
+      setReport(null);
+      return undefined;
+    }
+
     let mounted = true;
     setLoading(true);
     setError("");
@@ -32,7 +42,7 @@ const PartnerReports = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isRestricted, statusLoading]);
 
   const summary = report?.summary;
   const enrichedRows = (report?.vouchers ?? []).map((row) => {
@@ -42,7 +52,27 @@ const PartnerReports = () => {
     return { ...row, usageRate };
   });
 
-  if (loading) return <div className="container partner-reports">Đang tải...</div>;
+  if (loading || statusLoading) return <div className="container partner-reports">Đang tải...</div>;
+
+  if (isRestricted) {
+    const reason = partnerStatus === "PENDING"
+      ? "Tài khoản đối tác của bạn đang chờ duyệt."
+      : partnerStatus === "REJECTED"
+      ? "Hồ sơ đối tác của bạn đã bị từ chối."
+      : "Tài khoản đối tác của bạn đang bị tạm khóa.";
+
+    return (
+      <div className="container partner-reports">
+        <div className="partner-report-restricted">
+          <h2>Chưa thể xem báo cáo</h2>
+          <p>{reason}</p>
+          <Link to="/partner" className="btn btn-outline">
+            Về trang đối tác
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container partner-reports">

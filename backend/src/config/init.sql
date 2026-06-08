@@ -13,6 +13,7 @@ CREATE TYPE voucher_status AS ENUM ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'RE
 CREATE TYPE order_status AS ENUM ('PENDING', 'PAID', 'CANCELLED', 'REFUNDED');
 CREATE TYPE issued_voucher_status AS ENUM ('UNUSED', 'USED', 'EXPIRED', 'CANCELLED');
 CREATE TYPE complaint_status AS ENUM ('PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED');
+CREATE TYPE partner_appeal_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- Allow evolving enum values safely in existing databases
 ALTER TYPE voucher_status ADD VALUE IF NOT EXISTS 'SUSPENDED';
@@ -173,6 +174,22 @@ CREATE TABLE IF NOT EXISTS complaints (
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Partner unlock appeals for suspended partner accounts
+CREATE TABLE IF NOT EXISTS partner_appeals (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id      UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title           VARCHAR(255) NOT NULL,
+  content         TEXT NOT NULL,
+  evidence_url    VARCHAR(500),
+  status          partner_appeal_status NOT NULL DEFAULT 'PENDING',
+  admin_response  TEXT,
+  reviewed_by     UUID REFERENCES users(id),
+  reviewed_at     TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── Content Management ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -239,6 +256,11 @@ CREATE INDEX idx_reviews_voucher    ON reviews(voucher_id);
 CREATE INDEX IF NOT EXISTS idx_complaints_customer ON complaints(customer_id);
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
 CREATE INDEX IF NOT EXISTS idx_complaints_created ON complaints(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_partner_appeals_partner ON partner_appeals(partner_id);
+CREATE INDEX IF NOT EXISTS idx_partner_appeals_status ON partner_appeals(status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_partner_appeals_one_pending
+  ON partner_appeals(partner_id)
+  WHERE status = 'PENDING';
 CREATE INDEX idx_logs_user          ON system_logs(user_id);
 CREATE INDEX idx_logs_created       ON system_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_vab_voucher ON voucher_applicable_branches(voucher_id);

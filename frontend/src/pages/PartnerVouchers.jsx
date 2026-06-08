@@ -40,6 +40,8 @@ const PartnerVouchers = () => {
   const { isRestricted, partnerStatus } = usePartnerStatus();
   const restrictedTitle = partnerStatus === "PENDING"
     ? "Tài khoản chưa được duyệt"
+    : partnerStatus === "REJECTED"
+    ? "Hồ sơ đối tác bị từ chối"
     : partnerStatus === "SUSPENDED"
     ? "Tài khoản đang bị tạm khóa"
     : undefined;
@@ -134,7 +136,12 @@ const PartnerVouchers = () => {
               </div>
 
               <div className="pv-actions">
-                <Link className="btn btn-outline btn-sm" to={`/partner/vouchers/${voucher.id}/edit`}>
+                <Link
+                  className={`btn btn-outline btn-sm${isRestricted ? " pv-action-disabled" : ""}`}
+                  to={isRestricted ? "#" : `/partner/vouchers/${voucher.id}/edit`}
+                  title={isRestricted ? restrictedTitle : undefined}
+                  aria-disabled={isRestricted}
+                >
                   Sửa voucher
                 </Link>
               </div>

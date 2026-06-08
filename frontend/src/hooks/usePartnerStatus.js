@@ -6,7 +6,8 @@ import { getPartnerDashboardRequest } from "../services/partner.service";
  * Trả về:
  *   - partnerStatus: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" | null
  *   - isApproved: boolean — true khi status === "APPROVED"
- *   - isRestricted: boolean — true khi PENDING hoặc SUSPENDED (cần chặn tương tác)
+ *   - isRestricted: boolean — true khi PENDING, REJECTED hoặc SUSPENDED (cần chặn tương tác)
+ *   - canAppeal: boolean — true khi SUSPENDED
  *   - statusLoading: boolean
  */
 const usePartnerStatus = () => {
@@ -29,9 +30,10 @@ const usePartnerStatus = () => {
   }, []);
 
   const isApproved = partnerStatus === "APPROVED";
-  const isRestricted = partnerStatus === "PENDING" || partnerStatus === "SUSPENDED";
+  const isRestricted = ["PENDING", "REJECTED", "SUSPENDED"].includes(partnerStatus);
+  const canAppeal = partnerStatus === "SUSPENDED";
 
-  return { partnerStatus, isApproved, isRestricted, statusLoading };
+  return { partnerStatus, isApproved, isRestricted, canAppeal, statusLoading };
 };
 
 export default usePartnerStatus;

@@ -42,6 +42,16 @@ export const getPartnerReportsRequest = async () => {
   return data.data;
 };
 
+export const getMyPartnerAppealsRequest = async () => {
+  const { data } = await api.get("/partners/appeals");
+  return data.data.appeals || [];
+};
+
+export const createPartnerAppealRequest = async (payload) => {
+  const { data } = await api.post("/partners/appeals", payload);
+  return data.data.appeal;
+};
+
 export const checkVoucherRequest = async (payload) => {
   const { data } = await api.post("/partners/vouchers/check", payload);
   return data.data;

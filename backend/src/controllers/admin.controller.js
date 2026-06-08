@@ -1,4 +1,4 @@
-import { query } from "../config/database.js";
+import * as database from "../config/database.js";
 import { BusinessException } from "../utils/BusinessException.js";
 import {
   ADMIN_PARTNER_STATUS,
@@ -36,6 +36,8 @@ import {
   updateVoucherStatusQuery,
 } from "../models/admin.queries.js";
 import { selectOrderItemsByOrderIdsQuery } from "../models/order.queries.js";
+
+const { query } = database;
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -671,6 +673,119 @@ export const updateComplaintStatus = async (req, res, next) => {
     });
 
     return res.json({ data: { complaint } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPartnerAppeals = async (req, res, next) => {
+  try {
+    const status = typeof req.query?.status === "string"
+      ? req.query.status.trim().toUpperCase()
+      : "";
+    const q = typeof req.query?.q === "string" ? req.query.q.trim() : "";
+    const allowedStatuses = ["PENDING", "APPROVED", "REJECTED"];
+    if (status && !allowedStatuses.includes(status)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid appeal status", 400));
+    }
+
+    const result = await query(
+      `SELECT pa.id, pa.partner_id, pa.user_id, pa.title, pa.content, pa.evidence_url,
+              pa.status, pa.admin_response, pa.reviewed_by, pa.reviewed_at,
+              pa.created_at, pa.updated_at,
+              u.email AS partner_email,
+              u.full_name AS partner_user_name,
+              p.business_name,
+              p.representative,
+              p.status AS partner_status,
+              reviewer.email AS reviewer_email,
+              reviewer.full_name AS reviewer_name
+       FROM partner_appeals pa
+       JOIN partners p ON p.id = pa.partner_id
+       JOIN users u ON u.id = pa.user_id
+       LEFT JOIN users reviewer ON reviewer.id = pa.reviewed_by
+       WHERE ($1::text IS NULL OR pa.status = $1::partner_appeal_status)
+         AND (
+           $2::text IS NULL
+           OR u.email ILIKE '%' || $2 || '%'
+           OR u.full_name ILIKE '%' || $2 || '%'
+           OR p.business_name ILIKE '%' || $2 || '%'
+         )
+       ORDER BY pa.created_at DESC`,
+      [status || null, q || null]
+    );
+
+    return res.json({ data: { appeals: result.rows } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePartnerAppealStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUuid(id)) {
+      return next(new BusinessException("VALIDATION_FAILED", "Invalid appeal id", 400));
+    }
+
+    const nextStatus = typeof req.body?.status === "string"
+      ? req.body.status.trim().toUpperCase()
+      : "";
+    if (!["APPROVED", "REJECTED"].includes(nextStatus)) {
+      return next(new BusinessException("VALIDATION_FAILED", "status must be APPROVED or REJECTED", 400));
+    }
+
+    const adminResponse = typeof req.body?.admin_response === "string"
+      ? req.body.admin_response.trim()
+      : "";
+    if (nextStatus === "REJECTED" && !adminResponse) {
+      return next(new BusinessException("VALIDATION_FAILED", "admin_response is required when rejecting an appeal", 400));
+    }
+
+    const appeal = await database.withTransaction(async (client) => {
+      const appealResult = await client.query(
+        `UPDATE partner_appeals
+         SET status = $1,
+             admin_response = NULLIF($2, ''),
+             reviewed_by = $3,
+             reviewed_at = NOW(),
+             updated_at = NOW()
+         WHERE id = $4 AND status = 'PENDING'
+         RETURNING id, partner_id, user_id, title, content, evidence_url,
+                   status, admin_response, reviewed_by, reviewed_at, created_at, updated_at`,
+        [nextStatus, adminResponse, req.user.id, id]
+      );
+      const updated = appealResult.rows[0];
+      if (!updated) return null;
+
+      if (nextStatus === "APPROVED") {
+        await client.query(
+          `UPDATE partners
+           SET status = 'APPROVED',
+               rejection_reason = NULL,
+               updated_at = NOW()
+           WHERE id = $1 AND status = 'SUSPENDED'`,
+          [updated.partner_id]
+        );
+      }
+
+      return updated;
+    });
+
+    if (!appeal) {
+      const exists = await query("SELECT id FROM partner_appeals WHERE id = $1", [id]);
+      if (!exists.rows[0]) {
+        return next(new BusinessException("NOT_FOUND", "Partner appeal not found", 404));
+      }
+      return next(new BusinessException("CONFLICT", "Partner appeal is not pending", 409));
+    }
+
+    await logAdminAction(req, "UPDATE_PARTNER_APPEAL", "partner_appeal", appeal.id, {
+      status: nextStatus,
+      partner_id: appeal.partner_id,
+    });
+
+    return res.json({ data: { appeal } });
   } catch (err) {
     next(err);
   }

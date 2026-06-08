@@ -17,6 +17,8 @@ import {
 } from "react-icons/ri";
 import {
   createBranchRequest,
+  createPartnerAppealRequest,
+  getMyPartnerAppealsRequest,
   getPartnerBranchesWithInactiveRequest,
   getPartnerDashboardRequest,
   registerPartnerRequest,
@@ -79,17 +81,22 @@ const PartnerDashboardPage = () => {
     branch_phone: "",
   });
   const [branchForm, setBranchForm] = useState({ name: "", address: "", phone: "" });
+  const [appeals, setAppeals] = useState([]);
+  const [appealForm, setAppealForm] = useState({ title: "", content: "", evidence_url: "" });
+  const [appealSubmitting, setAppealSubmitting] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
     setError("");
     try {
-      const [dash, branchList] = await Promise.all([
+      const [dash, branchList, appealList] = await Promise.all([
         getPartnerDashboardRequest(),
         getPartnerBranchesWithInactiveRequest(),
+        getMyPartnerAppealsRequest().catch(() => []),
       ]);
       setDashboard(dash);
       setBranches(branchList);
+      setAppeals(appealList);
       if (dash?.partner) {
         setProfileForm({
           business_name: dash.partner.business_name || "",
@@ -149,6 +156,36 @@ const PartnerDashboardPage = () => {
     }
   };
 
+  const handleCreateAppeal = async (e) => {
+    e.preventDefault();
+    const title = appealForm.title.trim();
+    const content = appealForm.content.trim();
+    if (!title) {
+      setError("Vui lòng nhập tiêu đề khiếu nại");
+      return;
+    }
+    if (content.length < 20) {
+      setError("Nội dung khiếu nại cần tối thiểu 20 ký tự");
+      return;
+    }
+
+    setAppealSubmitting(true);
+    setError("");
+    try {
+      await createPartnerAppealRequest({
+        title,
+        content,
+        evidence_url: appealForm.evidence_url.trim() || null,
+      });
+      setAppealForm({ title: "", content: "", evidence_url: "" });
+      await loadAll();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Không thể gửi khiếu nại");
+    } finally {
+      setAppealSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container partner-page">
@@ -165,9 +202,13 @@ const PartnerDashboardPage = () => {
     : null;
 
   const partnerStatus = dashboard?.partner?.status ?? null;
-  const isRestricted = partnerStatus === "PENDING" || partnerStatus === "SUSPENDED";
+  const isRestricted = ["PENDING", "REJECTED", "SUSPENDED"].includes(partnerStatus);
+  const canAppeal = partnerStatus === "SUSPENDED";
+  const pendingAppeal = appeals.find((appeal) => appeal.status === "PENDING");
   const restrictedTitle = partnerStatus === "PENDING"
     ? "Tài khoản chưa được duyệt"
+    : partnerStatus === "REJECTED"
+    ? "Hồ sơ đối tác bị từ chối"
     : partnerStatus === "SUSPENDED"
     ? "Tài khoản đang bị tạm khóa"
     : undefined;
@@ -191,7 +232,13 @@ const PartnerDashboardPage = () => {
             >
               Xác thực voucher
             </Link>
-            <Link to="/partner/reports" className="btn btn-primary btn-sm">
+            <Link
+              to={isRestricted ? "#" : "/partner/reports"}
+              className={`btn btn-primary btn-sm${isRestricted ? " btn-disabled" : ""}`}
+              style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+              title={isRestricted ? restrictedTitle : undefined}
+              aria-disabled={isRestricted}
+            >
               Báo cáo
             </Link>
           </div>
@@ -289,7 +336,78 @@ const PartnerDashboardPage = () => {
                   <div className="psb-body">
                     <div className="psb-title">Trạng thái: {statusInfo.label}</div>
                     <div className="psb-desc">{statusInfo.desc}</div>
+                    {dashboard.partner.rejection_reason && (
+                      <div className="psb-desc">Lý do: {dashboard.partner.rejection_reason}</div>
+                    )}
                   </div>
+                </div>
+              )}
+
+              {canAppeal && (
+                <div className="partner-section-card">
+                  <h2><RiFileTextLine /> Khiếu nại đối tác</h2>
+                  <p className="text-muted" style={{ marginBottom: "1rem" }}>
+                    Tài khoản đối tác của bạn đang bị tạm khóa. Vui lòng gửi khiếu nại để quản trị viên xem xét mở khóa.
+                  </p>
+                  {pendingAppeal ? (
+                    <div className="partner-status-banner pending">
+                      <div className="psb-icon"><RiTimeLine /></div>
+                      <div className="psb-body">
+                        <div className="psb-title">Đơn khiếu nại đang chờ xử lý</div>
+                        <div className="psb-desc">{pendingAppeal.title}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleCreateAppeal} className="partner-appeal-form">
+                      <div className="form-group">
+                        <label>Tiêu đề khiếu nại</label>
+                        <input
+                          className="input"
+                          value={appealForm.title}
+                          onChange={(e) => setAppealForm({ ...appealForm, title: e.target.value })}
+                          placeholder="VD: Yêu cầu mở khóa tài khoản đối tác"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Nội dung giải trình</label>
+                        <textarea
+                          className="input"
+                          value={appealForm.content}
+                          onChange={(e) => setAppealForm({ ...appealForm, content: e.target.value })}
+                          placeholder="Mô tả lý do khiếu nại và các thông tin đã khắc phục..."
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>URL minh chứng (nếu có)</label>
+                        <input
+                          className="input"
+                          value={appealForm.evidence_url}
+                          onChange={(e) => setAppealForm({ ...appealForm, evidence_url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <div className="partner-form-footer">
+                        <button className="btn btn-primary" disabled={appealSubmitting}>
+                          {appealSubmitting ? "Đang gửi..." : "Gửi khiếu nại"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {appeals.length > 0 && (
+                    <div className="partner-appeal-history">
+                      <h3>Lịch sử khiếu nại</h3>
+                      {appeals.map((appeal) => (
+                        <div key={appeal.id} className="partner-appeal-item">
+                          <strong>{appeal.title}</strong>
+                          <span className={`partner-appeal-status ${appeal.status.toLowerCase()}`}>
+                            {appeal.status === "PENDING" ? "Chờ xử lý" : appeal.status === "APPROVED" ? "Đã duyệt" : "Đã từ chối"}
+                          </span>
+                          {appeal.admin_response && <p className="text-muted">Phản hồi: {appeal.admin_response}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -360,7 +478,13 @@ const PartnerDashboardPage = () => {
                   >
                     Xác thực voucher
                   </Link>
-                  <Link to="/partner/reports" className="btn btn-outline">
+                  <Link
+                    to={isRestricted ? "#" : "/partner/reports"}
+                    className="btn btn-outline"
+                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    title={isRestricted ? restrictedTitle : undefined}
+                    aria-disabled={isRestricted}
+                  >
                     Xem báo cáo
                   </Link>
                 </div>

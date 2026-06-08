@@ -215,6 +215,8 @@ const PartnerVoucherForm = () => {
   if (isRestricted) {
     const reason = partnerStatus === "PENDING"
       ? "Tài khoản đối tác của bạn đang chờ duyệt."
+      : partnerStatus === "REJECTED"
+      ? "Hồ sơ đối tác của bạn đã bị từ chối."
       : "Tài khoản đối tác của bạn đang bị tạm khóa.";
     return (
       <div className="container" style={{ padding: "3rem 1rem", textAlign: "center" }}>
@@ -228,7 +230,7 @@ const PartnerVoucherForm = () => {
         }}>
           <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>⚠️</div>
           <h2 style={{ margin: "0 0 0.5rem", color: "#92400e" }}>
-            {partnerStatus === "PENDING" ? "Chờ phê duyệt" : "Tài khoản bị tạm khóa"}
+            {partnerStatus === "PENDING" ? "Chờ phê duyệt" : partnerStatus === "REJECTED" ? "Hồ sơ bị từ chối" : "Tài khoản bị tạm khóa"}
           </h2>
           <p style={{ color: "#78350f", marginBottom: "1.5rem" }}>{reason}</p>
           <Link to="/partner/vouchers" className="btn btn-outline">

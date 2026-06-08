@@ -6,7 +6,9 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { BusinessException } from "../utils/BusinessException.js";
 import {
   createBranch,
+  createPartnerAppeal,
   checkVoucher,
+  getMyPartnerAppeals,
   getPartnerDashboard,
   getPartnerReport,
   registerPartner,
@@ -64,6 +66,20 @@ router.put(
   authenticate,
   authorize("PARTNER"),
   asyncHandler(updatePartnerProfile)
+);
+
+router.get(
+  "/appeals",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(getMyPartnerAppeals)
+);
+
+router.post(
+  "/appeals",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(createPartnerAppeal)
 );
 
 router.get(
