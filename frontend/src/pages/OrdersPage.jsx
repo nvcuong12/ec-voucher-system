@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { RiLoader4Line, RiShoppingBag3Line } from "react-icons/ri";
 import { getMyOrdersRequest } from "../services/order.service";
+import { createComplaintRequest } from "../services/complaint.service";
 import "./OrdersPage.css";
 
 const formatMoney = (value) =>
@@ -114,6 +115,124 @@ const VoucherCodeModal = ({ issued, voucherName, onClose }) => {
   );
 };
 
+const ComplaintModal = ({ selected, onClose, onSubmitSuccess }) => {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  if (!selected) return null;
+  const { issued, voucherName, orderId } = selected;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!subject.trim() || !message.trim()) {
+      setError("Vui lòng nhập đầy đủ tiêu đề và nội dung khiếu nại.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      await createComplaintRequest({
+        issued_voucher_id: issued.id,
+        voucher_id: issued.voucher_id,
+        order_id: orderId,
+        subject: subject.trim(),
+        message: message.trim(),
+      });
+      setSuccess(true);
+    } catch (err) {
+      setError(
+        err.response?.data?.error?.message ||
+          "Không thể gửi khiếu nại. Vui lòng thử lại sau."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="order-code-modal-backdrop" role="dialog" aria-modal="true">
+        <div className="order-code-modal">
+          <div className="order-code-modal-header">
+            <h2>Gửi khiếu nại thành công</h2>
+            <button type="button" className="order-code-modal-close" onClick={onClose}>
+              x
+            </button>
+          </div>
+          <p style={{ margin: "1.5rem 0", color: "var(--color-primary)", fontWeight: "600" }}>
+            Khiếu nại của bạn đã được gửi tới Ban quản trị. Chúng tôi sẽ phản hồi sớm nhất có thể.
+          </p>
+          <div className="order-code-actions">
+            <button type="button" className="btn btn-primary btn-sm" onClick={onSubmitSuccess}>
+              Đồng ý
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="order-code-modal-backdrop" role="dialog" aria-modal="true">
+      <div className="order-code-modal">
+        <div className="order-code-modal-header">
+          <h2>Khiếu nại / Hỗ trợ</h2>
+          <button type="button" className="order-code-modal-close" onClick={onClose}>
+            x
+          </button>
+        </div>
+        <p className="order-code-voucher-name">{voucherName}</p>
+        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "1rem" }}>
+          Mã voucher: <strong>{issued.code}</strong>
+        </div>
+
+        {error && <p className="text-danger" style={{ marginBottom: "1rem" }}>{error}</p>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group" style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "600" }}>
+              Chủ đề khiếu nại
+            </label>
+            <input
+              type="text"
+              className="input"
+              style={{ width: "100%", padding: "0.6rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)" }}
+              placeholder="Ví dụ: Đối tác từ chối áp dụng, Sai lệch dịch vụ..."
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "600" }}>
+              Nội dung chi tiết
+            </label>
+            <textarea
+              className="input"
+              style={{ width: "100%", minHeight: "100px", padding: "0.6rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", resize: "vertical" }}
+              placeholder="Mô tả sự cố bạn gặp phải khi sử dụng voucher..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+          <div className="order-code-actions">
+            <button type="submit" className="btn btn-danger btn-sm" disabled={submitting}>
+              {submitting ? "Đang gửi..." : "Gửi khiếu nại"}
+            </button>
+            <button type="button" className="btn btn-outline btn-sm" onClick={onClose} disabled={submitting}>
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const OrdersPage = ({
   title = "Đơn hàng của tôi",
   description,
@@ -122,6 +241,7 @@ const OrdersPage = ({
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCode, setSelectedCode] = useState(null);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -151,6 +271,12 @@ const OrdersPage = ({
         issued={selectedCode?.issued}
         voucherName={selectedCode?.voucherName}
         onClose={() => setSelectedCode(null)}
+      />
+
+      <ComplaintModal
+        selected={selectedComplaint}
+        onClose={() => setSelectedComplaint(null)}
+        onSubmitSuccess={() => setSelectedComplaint(null)}
       />
 
       <div className="orders-header">
@@ -288,24 +414,33 @@ const OrdersPage = ({
                                             <strong>Hướng dẫn sử dụng:</strong> {getIssuedGuide(issued)}
                                           </div>
                                         </div>
-                                        {issued.status === "UNUSED" && issued.code && (
+                                        <div className="order-issued-actions" style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+                                          {issued.status === "UNUSED" && issued.code && (
+                                            <button
+                                              type="button"
+                                              className="btn btn-primary btn-sm order-code-button"
+                                              onClick={() => setSelectedCode({ issued, voucherName })}
+                                            >
+                                              Xem mã / QR
+                                            </button>
+                                          )}
+                                          {issued.status === "USED" && (
+                                            <Link
+                                              to={`/vouchers/${item.voucher_id}?issued_voucher_id=${issued.id}#write-review`}
+                                              className="btn btn-success btn-sm order-code-button"
+                                              style={{ textDecoration: "none" }}
+                                            >
+                                              Đánh giá
+                                            </Link>
+                                          )}
                                           <button
                                             type="button"
-                                            className="btn btn-primary btn-sm order-code-button"
-                                            onClick={() => setSelectedCode({ issued, voucherName })}
+                                            className="btn btn-danger btn-sm order-code-button"
+                                            onClick={() => setSelectedComplaint({ issued, voucherName, orderId: order.id })}
                                           >
-                                            Xem mã / QR
+                                            Khiếu nại
                                           </button>
-                                        )}
-                                        {issued.status === "USED" && (
-                                          <Link
-                                            to={`/vouchers/${item.voucher_id}?issued_voucher_id=${issued.id}#write-review`}
-                                            className="btn btn-success btn-sm order-code-button"
-                                            style={{ textDecoration: "none" }}
-                                          >
-                                            Đánh giá
-                                          </Link>
-                                        )}
+                                        </div>
                                       </div>
                                     );
                                   })}
