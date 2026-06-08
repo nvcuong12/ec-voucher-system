@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   RiLoader4Line,
   RiArrowLeftLine,
@@ -56,6 +56,8 @@ const StarPicker = ({ value, onChange }) => (
 
 const VoucherDetailPage = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const queryIssuedVoucherId = searchParams.get("issued_voucher_id");
   const [voucher, setVoucher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -95,12 +97,30 @@ const VoucherDetailPage = () => {
       getMyIssuedVouchersRequest()
         .then((data) => {
           if (!mounted) return;
-          setIssuedOptions(data.filter((v) => v.voucher_id === id));
+          setIssuedOptions(data.filter((v) => v.voucher_id === id && v.status === "USED"));
         })
         .catch(() => { });
     }
     return () => { mounted = false; };
   }, [id, user?.role]);
+
+  useEffect(() => {
+    if (queryIssuedVoucherId) {
+      setReviewForm((prev) => ({ ...prev, issued_voucher_id: queryIssuedVoucherId }));
+    }
+  }, [queryIssuedVoucherId]);
+
+  useEffect(() => {
+    if (queryIssuedVoucherId && !loading && voucher) {
+      const timer = setTimeout(() => {
+        const formEl = document.querySelector(".vd-review-form");
+        if (formEl) {
+          formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [queryIssuedVoucherId, loading, voucher]);
 
   const handleAddToCart = () => {
     addItem(voucher, 1);
@@ -360,7 +380,7 @@ const VoucherDetailPage = () => {
               try {
                 const review = await createReviewRequest({
                   voucher_id: id,
-                  issued_voucher_id: reviewForm.issued_voucher_id || issuedOptions[0]?.id,
+                  issued_voucher_id: reviewForm.issued_voucher_id || queryIssuedVoucherId || issuedOptions[0]?.id,
                   rating: reviewForm.rating,
                   comment: reviewForm.comment,
                 });
@@ -376,19 +396,31 @@ const VoucherDetailPage = () => {
             </h4>
             {reviewError && <p className="text-danger">{reviewError}</p>}
 
-            <div className="form-group">
-              <label>Chọn voucher đã mua</label>
-              <select
-                className="input"
-                value={reviewForm.issued_voucher_id}
-                onChange={(e) => setReviewForm({ ...reviewForm, issued_voucher_id: e.target.value })}
-              >
-                <option value="">Chọn mã voucher</option>
-                {issuedOptions.map((option) => (
-                  <option key={option.id} value={option.id}>{option.code}</option>
-                ))}
-              </select>
-            </div>
+            {queryIssuedVoucherId ? (
+              <div className="form-group">
+                <label>Mã voucher đánh giá</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={issuedOptions.find((option) => option.id === queryIssuedVoucherId)?.code || ""}
+                  disabled
+                />
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Chọn voucher đã mua</label>
+                <select
+                  className="input"
+                  value={reviewForm.issued_voucher_id}
+                  onChange={(e) => setReviewForm({ ...reviewForm, issued_voucher_id: e.target.value })}
+                >
+                  <option value="">Chọn mã voucher</option>
+                  {issuedOptions.map((option) => (
+                    <option key={option.id} value={option.id}>{option.code}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="form-group">
               <label>Đánh giá của bạn</label>

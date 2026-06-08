@@ -169,16 +169,7 @@ const VouchersPage = () => {
     setSearchParams(nextParams);
   };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    const nextParams = new URLSearchParams(searchParams);
-    if (value) nextParams.set("q", value);
-    else nextParams.delete("q");
-    nextParams.delete("search");
-    nextParams.delete("page");
-    setSearchParams(nextParams);
-  };
+
 
   const handleFilterChange = (key, value) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -254,17 +245,6 @@ const VouchersPage = () => {
       <div className="vp-layout">
         {/* ── Sidebar Filters ── */}
         <aside className="vp-sidebar">
-          <div className="vp-filter-box">
-            <h3 className="vp-filter-title">Tìm kiếm</h3>
-            <input
-              type="text"
-              className="vp-search-input"
-              placeholder="Tên voucher..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-
           <div className="vp-filter-box">
             <h3 className="vp-filter-title">Danh Mục</h3>
             <ul className="vp-cat-list">

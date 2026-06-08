@@ -297,6 +297,15 @@ const OrdersPage = ({
                                             Xem mã / QR
                                           </button>
                                         )}
+                                        {issued.status === "USED" && (
+                                          <Link
+                                            to={`/vouchers/${item.voucher_id}?issued_voucher_id=${issued.id}#write-review`}
+                                            className="btn btn-success btn-sm order-code-button"
+                                            style={{ textDecoration: "none" }}
+                                          >
+                                            Đánh giá
+                                          </Link>
+                                        )}
                                       </div>
                                     );
                                   })}
