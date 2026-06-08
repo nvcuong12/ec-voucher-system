@@ -319,7 +319,12 @@ const PartnerVoucherForm = () => {
             {branches.length > 0 ? (
               <div className="pvf-branch-grid">
                 {branches.map((branch) => (
-                  <label key={branch.id} className="pvf-branch-item">
+                  <label
+                    key={branch.id}
+                    className={`pvf-branch-item ${
+                      form.branch_ids.includes(branch.id) ? "selected" : ""
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={form.branch_ids.includes(branch.id)}
