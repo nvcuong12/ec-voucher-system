@@ -482,9 +482,11 @@ export const listVouchers = async (req, res, next) => {
       : "ACTIVE";
     const normalizedStatus = publicStatus === "ALL" ? null : publicStatus;
 
+    const searchQuery = (q && typeof q === "string" && q.trim() !== "") ? q.trim() : null;
+
     const [rows, count] = await Promise.all([
       query(listPublicVouchersQuery, [
-        q || null,
+        searchQuery,
         category || null,
         partner_id || null,
         min_price ? parseFloat(min_price) : null,
@@ -497,7 +499,7 @@ export const listVouchers = async (req, res, next) => {
         max_discount ? parseFloat(max_discount) : null,
       ]),
       query(countPublicVouchersQuery, [
-        q || null,
+        searchQuery,
         category || null,
         partner_id || null,
         min_price ? parseFloat(min_price) : null,

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   RiTicket2Line,
   RiMenuLine,
@@ -132,7 +132,13 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    setSearch(q);
+  }, [searchParams]);
 
   const handleLogout = () => {
     logout();
@@ -141,9 +147,18 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (search.trim()) {
-      navigate(`/vouchers?q=${encodeURIComponent(search.trim())}`);
-    }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    const isVouchersPage = window.location.pathname === "/vouchers";
+    const targetUrl = value.trim()
+      ? `/vouchers?q=${encodeURIComponent(value.trim())}`
+      : `/vouchers`;
+
+    navigate(targetUrl, { replace: isVouchersPage });
   };
 
   const DashboardIcon = user?.role === "ADMIN"
@@ -177,7 +192,7 @@ const Navbar = () => {
             type="text"
             placeholder="Tìm voucher nhà hàng, trà sữa, rạp phim..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
           />
           <button type="submit" aria-label="Tìm kiếm">
             <RiSearchLine />
