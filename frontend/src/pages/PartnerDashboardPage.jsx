@@ -164,6 +164,14 @@ const PartnerDashboardPage = () => {
     ? STATUS_CONFIG[dashboard.partner.status] || { label: dashboard.partner.status, icon: null, cls: "pending", desc: "" }
     : null;
 
+  const partnerStatus = dashboard?.partner?.status ?? null;
+  const isRestricted = partnerStatus === "PENDING" || partnerStatus === "SUSPENDED";
+  const restrictedTitle = partnerStatus === "PENDING"
+    ? "Tài khoản chưa được duyệt"
+    : partnerStatus === "SUSPENDED"
+    ? "Tài khoản đang bị tạm khóa"
+    : undefined;
+
   return (
     <div className="container partner-page">
       {/* ── Header ── */}
@@ -174,7 +182,13 @@ const PartnerDashboardPage = () => {
             <Link to="/partner/vouchers" className="btn btn-outline btn-sm">
               <RiTicket2Line /> Quản lý voucher
             </Link>
-            <Link to="/partner/scan" className="btn btn-outline btn-sm">
+            <Link
+              to={isRestricted ? "#" : "/partner/scan"}
+              className={`btn btn-outline btn-sm${isRestricted ? " btn-disabled" : ""}`}
+              style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+              title={isRestricted ? restrictedTitle : undefined}
+              aria-disabled={isRestricted}
+            >
               Xác thực voucher
             </Link>
             <Link to="/partner/reports" className="btn btn-primary btn-sm">
@@ -328,10 +342,22 @@ const PartnerDashboardPage = () => {
               <div className="partner-section-card">
                 <h2><RiTicket2Line /> Thao tác nhanh</h2>
                 <div className="grid-3" style={{ gap: "1rem" }}>
-                  <Link to="/partner/vouchers/new" className="btn btn-primary">
+                  <Link
+                    to={isRestricted ? "#" : "/partner/vouchers/new"}
+                    className="btn btn-primary"
+                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    title={isRestricted ? restrictedTitle : undefined}
+                    aria-disabled={isRestricted}
+                  >
                     <RiAddLine /> Tạo voucher mới
                   </Link>
-                  <Link to="/partner/scan" className="btn btn-outline">
+                  <Link
+                    to={isRestricted ? "#" : "/partner/scan"}
+                    className="btn btn-outline"
+                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    title={isRestricted ? restrictedTitle : undefined}
+                    aria-disabled={isRestricted}
+                  >
                     Xác thực voucher
                   </Link>
                   <Link to="/partner/reports" className="btn btn-outline">
@@ -382,29 +408,43 @@ const PartnerDashboardPage = () => {
               <h2><RiMapPinLine /> Quản lý chi nhánh</h2>
 
               {/* Add Branch Form */}
-              <form onSubmit={handleCreateBranch} className="partner-add-branch-form">
-                <div className="form-group">
-                  <label><RiBuilding2Line style={{ display: "inline", marginRight: 4 }} />Tên chi nhánh</label>
-                  <input className="input" placeholder="Chi nhánh Q1" value={branchForm.name}
-                    onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })} />
+              {isRestricted ? (
+                <div className="partner-restricted-notice" style={{
+                  background: "var(--color-warning-soft, #fef9c3)",
+                  border: "1px solid #fcd34d",
+                  borderRadius: "0.5rem",
+                  padding: "0.875rem 1rem",
+                  color: "#92400e",
+                  marginBottom: "1.25rem",
+                  fontSize: "0.9rem",
+                }}>
+                  ⚠️ {restrictedTitle} — Bạn không thể thêm chi nhánh mới.
                 </div>
-                <div className="form-group">
-                  <label><RiMapPinLine style={{ display: "inline", marginRight: 4 }} />Địa chỉ</label>
-                  <input className="input" placeholder="123 Đường ABC, Q1" value={branchForm.address}
-                    onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label><RiPhoneLine style={{ display: "inline", marginRight: 4 }} />Điện thoại</label>
-                  <input className="input" placeholder="0912 345 678" value={branchForm.phone}
-                    onChange={(e) => setBranchForm({ ...branchForm, phone: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>&nbsp;</label>
-                  <button className="btn btn-primary" type="submit">
-                    <RiAddLine /> Thêm
-                  </button>
-                </div>
-              </form>
+              ) : (
+                <form onSubmit={handleCreateBranch} className="partner-add-branch-form">
+                  <div className="form-group">
+                    <label><RiBuilding2Line style={{ display: "inline", marginRight: 4 }} />Tên chi nhánh</label>
+                    <input className="input" placeholder="Chi nhánh Q1" value={branchForm.name}
+                      onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label><RiMapPinLine style={{ display: "inline", marginRight: 4 }} />Địa chỉ</label>
+                    <input className="input" placeholder="123 Đường ABC, Q1" value={branchForm.address}
+                      onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label><RiPhoneLine style={{ display: "inline", marginRight: 4 }} />Điện thoại</label>
+                    <input className="input" placeholder="0912 345 678" value={branchForm.phone}
+                      onChange={(e) => setBranchForm({ ...branchForm, phone: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>&nbsp;</label>
+                    <button className="btn btn-primary" type="submit">
+                      <RiAddLine /> Thêm
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {/* Branch List */}
               {branches.length === 0 ? (
@@ -429,7 +469,10 @@ const PartnerDashboardPage = () => {
                         <button
                           className={`btn btn-sm ${branch.is_active ? "btn-warning" : "btn-success"}`}
                           type="button"
-                          onClick={() => handleToggleBranch(branch)}
+                          onClick={() => !isRestricted && handleToggleBranch(branch)}
+                          disabled={isRestricted}
+                          title={isRestricted ? restrictedTitle : undefined}
+                          style={isRestricted ? { opacity: 0.45, cursor: "not-allowed" } : {}}
                         >
                           {branch.is_active ? "Tạm ngừng" : "Mở lại"}
                         </button>

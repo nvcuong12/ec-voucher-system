@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
+import usePartnerStatus from "../hooks/usePartnerStatus";
 import "./PartnerVoucherForm.css";
 
 const CATEGORY_OPTIONS = [
@@ -46,6 +47,8 @@ const PartnerVoucherForm = () => {
     branch_ids: [],
     submit_for_approval: false,
   });
+
+  const { isRestricted, partnerStatus, statusLoading } = usePartnerStatus();
 
   useEffect(() => {
     let mounted = true;
@@ -204,8 +207,36 @@ const PartnerVoucherForm = () => {
     }
   };
 
-  if (loading || branchesLoading) {
+  if (loading || branchesLoading || statusLoading) {
     return <div className="container" style={{ padding: "2rem 1rem" }}>Đang tải dữ liệu...</div>;
+  }
+
+  // Chặn partner chưa duyệt / bị khóa truy cập form tạo/sửa voucher
+  if (isRestricted) {
+    const reason = partnerStatus === "PENDING"
+      ? "Tài khoản đối tác của bạn đang chờ duyệt."
+      : "Tài khoản đối tác của bạn đang bị tạm khóa.";
+    return (
+      <div className="container" style={{ padding: "3rem 1rem", textAlign: "center" }}>
+        <div style={{
+          display: "inline-block",
+          background: "#fef9c3",
+          border: "1px solid #fcd34d",
+          borderRadius: "0.75rem",
+          padding: "2rem 2.5rem",
+          maxWidth: 480,
+        }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>⚠️</div>
+          <h2 style={{ margin: "0 0 0.5rem", color: "#92400e" }}>
+            {partnerStatus === "PENDING" ? "Chờ phê duyệt" : "Tài khoản bị tạm khóa"}
+          </h2>
+          <p style={{ color: "#78350f", marginBottom: "1.5rem" }}>{reason}</p>
+          <Link to="/partner/vouchers" className="btn btn-outline">
+            Quay lại danh sách voucher
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

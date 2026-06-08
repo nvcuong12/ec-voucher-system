@@ -224,6 +224,16 @@ export const updatePartnerBranch = async (req, res, next) => {
     if (!partner) {
       return next(new BusinessException("NOT_FOUND", "Partner profile not found", 404));
     }
+    if (partner.status !== "APPROVED") {
+      return next(
+        new BusinessException(
+          "FORBIDDEN",
+          "Partner account must be approved before updating branches",
+          403
+        )
+      );
+    }
+
 
     const result = await query(updatePartnerBranchQuery, [
       id,

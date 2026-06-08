@@ -734,6 +734,20 @@ export const getBanners = async (_req, res, next) => {
   }
 };
 
+export const getActiveBanners = async (_req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT id, title, image_url, link_url, sort_order
+       FROM banners
+       WHERE is_active = TRUE
+       ORDER BY sort_order ASC, created_at DESC`
+    );
+    return sendSuccess(res, { banners: result.rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const createBanner = async (req, res, next) => {
   try {
     const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";

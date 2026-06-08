@@ -14,7 +14,7 @@ import {
 } from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import { getActivePopupRequest } from "../services/content.service";
+import { getActivePopupRequest, getActiveBannersRequest } from "../services/content.service";
 import "./HomePage.css";
 
 const formatPrice = (price) =>
@@ -64,6 +64,7 @@ const VoucherCard = ({ voucher }) => {
 const HomePage = () => {
   const { user } = useAuth();
   const [vouchers, setVouchers] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activePopup, setActivePopup] = useState(null);
@@ -77,6 +78,14 @@ const HomePage = () => {
       })
       .catch(() => { })
       .finally(() => isMounted && setLoading(false));
+    return () => (isMounted = false);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    getActiveBannersRequest().then((list) => {
+      if (isMounted) setBanners(list);
+    });
     return () => (isMounted = false);
   }, []);
 
@@ -101,15 +110,34 @@ const HomePage = () => {
     setShowPopup(false);
   };
 
+  // Slider dùng banner từ admin nếu có, fallback về vouchers
+  const sliderItems = banners.length > 0
+    ? banners.map((b) => ({
+        id: b.id,
+        image_url: b.image_url,
+        title: b.title,
+        link_url: b.link_url || null,
+        isBanner: true,
+      }))
+    : vouchers.map((v) => ({
+        id: v.id,
+        image_url: v.image_url,
+        title: v.name,
+        description: v.description,
+        link_url: `/vouchers/${v.id}`,
+        isBanner: false,
+        voucher: v,
+      }));
+
   useEffect(() => {
-    if (vouchers.length === 0) return;
+    if (sliderItems.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % vouchers.length);
+      setCurrentSlide((prev) => (prev + 1) % sliderItems.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [vouchers.length]);
+  }, [sliderItems.length]);
 
-  const heroVoucher = vouchers[currentSlide];
+  const currentItem = sliderItems[currentSlide];
   const flashSaleVouchers = vouchers.slice(0, 5);
   const featuredVouchers = vouchers.slice(0, 4);
 
@@ -131,16 +159,16 @@ const HomePage = () => {
       )}
 
       {/* Hero Banner */}
-      {heroVoucher && !loading && (
+      {currentItem && !loading && (
         <section className="home-hero-full">
           <div className="hero-slider-full">
             <div className="hero-img-wrap-full">
-              {vouchers.map((v, idx) => (
+              {sliderItems.map((item, idx) => (
                 <div
-                  key={v.id}
+                  key={item.id}
                   className={`hero-img-bg ${idx === currentSlide ? "active" : ""}`}
                   style={{
-                    backgroundImage: `url(${v.image_url || "https://via.placeholder.com/1200x600"})`,
+                    backgroundImage: `url(${item.image_url || "https://via.placeholder.com/1200x600"})`,
                   }}
                 >
                   <div className="hero-overlay"></div>
@@ -150,24 +178,28 @@ const HomePage = () => {
 
             <button
               className="hero-arrow prev"
-              onClick={() => setCurrentSlide((prev) => (prev - 1 + vouchers.length) % vouchers.length)}
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + sliderItems.length) % sliderItems.length)}
             >
               <RiArrowLeftSLine />
             </button>
             <button
               className="hero-arrow next"
-              onClick={() => setCurrentSlide((prev) => (prev + 1) % vouchers.length)}
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % sliderItems.length)}
             >
               <RiArrowRightSLine />
             </button>
 
             <div className="hero-slide-content-full container">
-              <h1 className="hero-title-full">{heroVoucher.name}</h1>
-              <p className="hero-desc-full">{heroVoucher.description || "Ưu đãi hấp dẫn chờ bạn khám phá"}</p>
+              <h1 className="hero-title-full">{currentItem.title}</h1>
+              {!currentItem.isBanner && (
+                <p className="hero-desc-full">{currentItem.description || "Ưu đãi hấp dẫn chờ bạn khám phá"}</p>
+              )}
               <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-                <Link to={`/vouchers/${heroVoucher.id}`} className="btn btn-primary btn-lg">
-                  Xem chi tiết
-                </Link>
+                {currentItem.link_url && (
+                  <Link to={currentItem.link_url} className="btn btn-primary btn-lg">
+                    {currentItem.isBanner ? "Xem ngay" : "Xem chi tiết"}
+                  </Link>
+                )}
                 {user?.role === "PARTNER" && (
                   <Link to="/partner/vouchers" className="btn btn-outline btn-lg">
                     Quản lý voucher
@@ -180,7 +212,7 @@ const HomePage = () => {
                 )}
               </div>
               <div className="hero-dots-full">
-                {vouchers.map((_, idx) => (
+                {sliderItems.map((_, idx) => (
                   <button
                     key={idx}
                     className={`hero-dot-full ${idx === currentSlide ? "active" : ""}`}

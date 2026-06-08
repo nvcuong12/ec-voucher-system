@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import usePartnerStatus from "../hooks/usePartnerStatus";
 import "./PartnerVouchers.css";
 
 const STATUS_OPTIONS = [
@@ -36,6 +37,13 @@ const PartnerVouchers = () => {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
+  const { isRestricted, partnerStatus } = usePartnerStatus();
+  const restrictedTitle = partnerStatus === "PENDING"
+    ? "Tài khoản chưa được duyệt"
+    : partnerStatus === "SUSPENDED"
+    ? "Tài khoản đang bị tạm khóa"
+    : undefined;
+
   const fetchVouchers = async (selectedStatus) => {
     setLoading(true);
     setError("");
@@ -65,7 +73,13 @@ const PartnerVouchers = () => {
           <h1>Voucher của đối tác</h1>
           <p>Quản lý danh sách voucher, trạng thái duyệt và thao tác chỉnh sửa.</p>
         </div>
-        <Link to="/partner/vouchers/new" className="btn btn-primary btn-lg">
+        <Link
+          to={isRestricted ? "#" : "/partner/vouchers/new"}
+          className="btn btn-primary btn-lg"
+          style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+          title={isRestricted ? restrictedTitle : undefined}
+          aria-disabled={isRestricted}
+        >
           + Tạo voucher mới
         </Link>
       </section>

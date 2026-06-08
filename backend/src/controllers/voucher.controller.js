@@ -245,6 +245,15 @@ export const updateVoucher = async (req, res, next) => {
     if (!partner) {
       return next(new BusinessException("FORBIDDEN", "Partner profile not found", 403));
     }
+    if (partner.status !== "APPROVED") {
+      return next(
+        new BusinessException(
+          "FORBIDDEN",
+          "Partner account must be approved before editing vouchers",
+          403
+        )
+      );
+    }
 
     // 2. Kiểm tra voucher tồn tại và thuộc partner
     const existing = await query(getVoucherByIdFullQuery, [id]);

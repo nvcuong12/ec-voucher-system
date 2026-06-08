@@ -7,6 +7,7 @@ import {
   createContentPage,
   getAllVouchers,
   getAllPartners,
+  getActiveBanners,
   getBanners,
   getCategories,
   getComplaints,
@@ -41,6 +42,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 const router = Router();
 
 router.get("/content/popups/active", asyncHandler(getActivePopup));
+router.get("/content/banners/active", asyncHandler(getActiveBanners));
 router.get("/content/pages/public/:slug", asyncHandler(getPublicContentPage));
 
 // All admin routes require ADMIN role
