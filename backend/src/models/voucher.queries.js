@@ -13,6 +13,7 @@ export const VOUCHER_STATUS = Object.freeze({
   SUSPENDED: "SUSPENDED",
   EXPIRED: "EXPIRED",
   SOLD_OUT: "SOLD_OUT",
+  CANCELLED: "CANCELLED",
 });
 
 // Statuses a partner is allowed to edit
@@ -270,4 +271,22 @@ export const countPartnerVouchersQuery = `
   WHERE v.partner_id = $1
     AND ($2::voucher_status IS NULL OR v.status = $2::voucher_status)
     AND ($3::text IS NULL OR v.category = $3)
+`;
+
+/** Xóa voucher (chỉ DRAFT / REJECTED) */
+export const deleteVoucherQuery = `
+  DELETE FROM vouchers
+  WHERE id = $1 AND partner_id = $2 AND status = ANY($3::voucher_status[])
+  RETURNING id
+`;
+
+/** Hủy voucher (ngưng bán) */
+export const cancelVoucherQuery = `
+  UPDATE vouchers
+  SET
+    status = 'CANCELLED',
+    sale_end = NOW(),
+    updated_at = NOW()
+  WHERE id = $1 AND partner_id = $2 AND status = ANY($3::voucher_status[])
+  RETURNING id
 `;

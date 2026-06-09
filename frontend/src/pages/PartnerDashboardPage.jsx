@@ -64,7 +64,9 @@ const PartnerDashboardPage = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     business_name: "",
     representative: "",
@@ -139,9 +141,14 @@ const PartnerDashboardPage = () => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
     try {
       await updatePartnerProfileRequest(profileForm);
       await loadAll();
+      setSuccess("Lưu hồ sơ đối tác thành công!");
+      setIsEditingProfile(false);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không thể cập nhật hồ sơ đối tác");
     }
@@ -270,6 +277,7 @@ const PartnerDashboardPage = () => {
       </div>
 
       {error && <div className="partner-error-box">{error}</div>}
+      {success && <div className="partner-success-box">{success}</div>}
 
       {/* ── No partner yet: Registration Form ── */}
       {!dashboard && (
@@ -459,33 +467,47 @@ const PartnerDashboardPage = () => {
               {/* Quick Links */}
               <div className="partner-section-card">
                 <h2><RiTicket2Line /> Thao tác nhanh</h2>
-                <div className="grid-3" style={{ gap: "1rem" }}>
+                <div className="action-cards-grid">
                   <Link
                     to={isRestricted ? "#" : "/partner/vouchers/new"}
-                    className="btn btn-primary"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    <RiAddLine /> Tạo voucher mới
+                    <div className="action-card-icon">
+                      <RiAddLine />
+                    </div>
+                    <h3>Tạo voucher mới</h3>
+                    <p>Đăng bán voucher, mã giảm giá mới lên hệ thống VoucherHub.</p>
                   </Link>
+
                   <Link
                     to={isRestricted ? "#" : "/partner/scan"}
-                    className="btn btn-outline"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    Xác thực voucher
+                    <div className="action-card-icon">
+                      <RiMapPinLine />
+                    </div>
+                    <h3>Xác thực voucher</h3>
+                    <p>Quét mã QR hoặc nhập mã thủ công để áp dụng cho khách hàng.</p>
                   </Link>
+
                   <Link
                     to={isRestricted ? "#" : "/partner/reports"}
-                    className="btn btn-outline"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    Xem báo cáo
+                    <div className="action-card-icon">
+                      <RiFileTextLine />
+                    </div>
+                    <h3>Xem báo cáo</h3>
+                    <p>Phân tích doanh thu, thống kê chi tiết lượt dùng voucher.</p>
                   </Link>
                 </div>
               </div>
@@ -495,34 +517,76 @@ const PartnerDashboardPage = () => {
           {/* ── TAB: PROFILE ── */}
           {activeTab === "profile" && (
             <div className="partner-section-card">
-              <h2><RiUserLine /> Hồ sơ đối tác</h2>
-              <form onSubmit={handleProfileUpdate}>
-                <div className="partner-form-grid">
-                  <div className="form-group">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                <h2 style={{ marginBottom: 0 }}><RiUserLine /> Hồ sơ đối tác</h2>
+                {!isEditingProfile && (
+                  <button className="btn btn-outline btn-sm" onClick={() => setIsEditingProfile(true)}>
+                    Chỉnh sửa
+                  </button>
+                )}
+              </div>
+
+              {!isEditingProfile ? (
+                <div className="partner-profile-view">
+                  <div className="profile-info-group">
                     <label>Tên doanh nghiệp</label>
-                    <input className="input" value={profileForm.business_name}
-                      onChange={(e) => setProfileForm({ ...profileForm, business_name: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.business_name || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Người đại diện</label>
-                    <input className="input" value={profileForm.representative}
-                      onChange={(e) => setProfileForm({ ...profileForm, representative: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.representative || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Giấy phép kinh doanh</label>
-                    <input className="input" value={profileForm.business_license}
-                      onChange={(e) => setProfileForm({ ...profileForm, business_license: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.business_license || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Địa chỉ</label>
-                    <input className="input" value={profileForm.address}
-                      onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.address || "Chưa cập nhật"}</div>
                   </div>
                 </div>
-                <div className="partner-form-footer">
-                  <button className="btn btn-primary" type="submit">Lưu thay đổi</button>
-                </div>
-              </form>
+              ) : (
+                <form onSubmit={handleProfileUpdate}>
+                  <div className="partner-form-grid">
+                    <div className="form-group">
+                      <label>Tên doanh nghiệp</label>
+                      <input className="input" value={profileForm.business_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, business_name: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Người đại diện</label>
+                      <input className="input" value={profileForm.representative}
+                        onChange={(e) => setProfileForm({ ...profileForm, representative: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Giấy phép kinh doanh</label>
+                      <input className="input" value={profileForm.business_license}
+                        onChange={(e) => setProfileForm({ ...profileForm, business_license: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Địa chỉ</label>
+                      <input className="input" value={profileForm.address}
+                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="partner-form-footer" style={{ gap: "0.75rem" }}>
+                    <button className="btn btn-outline" type="button" onClick={() => {
+                        setIsEditingProfile(false);
+                        if (dashboard?.partner) {
+                          setProfileForm({
+                            business_name: dashboard.partner.business_name || "",
+                            representative: dashboard.partner.representative || "",
+                            business_license: dashboard.partner.business_license || "",
+                            address: dashboard.partner.address || "",
+                          });
+                        }
+                      }}>
+                      Hủy
+                    </button>
+                    <button className="btn btn-primary" type="submit">Lưu thay đổi</button>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
