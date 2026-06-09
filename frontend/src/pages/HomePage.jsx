@@ -201,12 +201,12 @@ const HomePage = () => {
                   </Link>
                 )}
                 {user?.role === "PARTNER" && (
-                  <Link to="/partner/vouchers" className="btn btn-outline btn-lg">
+                  <Link to="/partner/vouchers" className="btn btn-outline hero-btn-outline btn-lg">
                     Quản lý voucher
                   </Link>
                 )}
                 {user?.role === "ADMIN" && (
-                  <Link to="/admin/vouchers" className="btn btn-outline btn-lg">
+                  <Link to="/admin/vouchers" className="btn btn-outline hero-btn-outline btn-lg">
                     Duyệt voucher
                   </Link>
                 )}

@@ -94,7 +94,7 @@ const PartnerVoucherScan = () => {
             className="input"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="Nhap ma hoac quet QR mo phong"
+            placeholder="Nhập mã hoặc quét QR mô phỏng"
           />
         </div>
         <div className="form-group scan-field">
