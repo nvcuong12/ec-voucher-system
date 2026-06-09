@@ -467,33 +467,47 @@ const PartnerDashboardPage = () => {
               {/* Quick Links */}
               <div className="partner-section-card">
                 <h2><RiTicket2Line /> Thao tác nhanh</h2>
-                <div className="grid-3" style={{ gap: "1rem" }}>
+                <div className="action-cards-grid">
                   <Link
                     to={isRestricted ? "#" : "/partner/vouchers/new"}
-                    className="btn btn-primary"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    <RiAddLine /> Tạo voucher mới
+                    <div className="action-card-icon">
+                      <RiAddLine />
+                    </div>
+                    <h3>Tạo voucher mới</h3>
+                    <p>Đăng bán voucher, mã giảm giá mới lên hệ thống VoucherHub.</p>
                   </Link>
+
                   <Link
                     to={isRestricted ? "#" : "/partner/scan"}
-                    className="btn btn-outline"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    Xác thực voucher
+                    <div className="action-card-icon">
+                      <RiMapPinLine />
+                    </div>
+                    <h3>Xác thực voucher</h3>
+                    <p>Quét mã QR hoặc nhập mã thủ công để áp dụng cho khách hàng.</p>
                   </Link>
+
                   <Link
                     to={isRestricted ? "#" : "/partner/reports"}
-                    className="btn btn-outline"
-                    style={isRestricted ? { opacity: 0.45, pointerEvents: "none", cursor: "not-allowed" } : {}}
+                    className="action-card"
+                    style={isRestricted ? { opacity: 0.5, pointerEvents: "none", filter: "grayscale(1)" } : {}}
                     title={isRestricted ? restrictedTitle : undefined}
                     aria-disabled={isRestricted}
                   >
-                    Xem báo cáo
+                    <div className="action-card-icon">
+                      <RiFileTextLine />
+                    </div>
+                    <h3>Xem báo cáo</h3>
+                    <p>Phân tích doanh thu, thống kê chi tiết lượt dùng voucher.</p>
                   </Link>
                 </div>
               </div>
