@@ -1,0 +1,36 @@
+\section{Tổng Quan}
+Các luồng xử lý được mô tả theo template thống nhất. Sơ đồ hình: \textbf{NOTE: Nhóm cần bổ sung Activity Diagram/BPMN dạng hình cho từng luồng tương ứng.}
+
+\newcommand{\flowblock}[8]{
+\subsection{#1}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.26\linewidth}>{\raggedright\arraybackslash}p{0.68\linewidth}}
+Mục tiêu & #2\\
+Actor & #3\\
+Điều kiện bắt đầu & #4\\
+Các bước xử lý & #5\\
+Điều kiện kết thúc & #6\\
+Ngoại lệ & #7\\
+Bằng chứng codebase & #8\\
+Ghi chú hình & \textbf{NOTE: Nhóm cần bổ sung Activity Diagram/BPMN dạng hình cho luồng này.}\\
+\end{longtable}
+}
+
+\flowblock{Luồng Đăng Ký/Đăng Nhập}{Xác thực người dùng theo vai trò}{Người dùng}{Chưa có phiên hợp lệ}{1. Nhập credential. 2. API auth validate. 3. Hash/so khớp password. 4. Phát JWT. 5. Lưu AuthContext.}{Token hợp lệ, redirect dashboard}{Trùng email; sai password; 401}{\texttt{auth.controller.js}, \texttt{AuthContext.jsx}}
+
+\flowblock{Luồng Mua Voucher}{Hoàn tất mua voucher hợp lệ}{Khách hàng}{Đã đăng nhập CUSTOMER; giỏ không rỗng}{1. Thêm giỏ. 2. createOrder kiểm RB-01/04/15. 3. Tạo PENDING order.}{Order PENDING tạo thành công}{Voucher chưa duyệt; hết stock}{\texttt{CartPage.jsx}, \texttt{order.controller.js}}
+
+\flowblock{Luồng Thanh Toán}{Chuyển đơn sang PAID}{Khách hàng}{Order PENDING}{1. Chọn COD/VNPay/PayPal. 2. payOrder hoặc callback. 3. Giảm stock. 4. Sinh issued\_vouchers.}{Order PAID, có mã}{Thanh toán thất bại; stock race}{\texttt{payOrder}, \texttt{vnpay.js}, \texttt{paypal.js}}
+
+\flowblock{Luồng Phát Hành Voucher Code}{Sinh mã duy nhất sau thanh toán}{Hệ thống}{Order chuyển PAID}{1. Duyệt order\_items. 2. generateCode VCH-*. 3. INSERT issued\_vouchers với expires\_at.}{Bản ghi UNUSED trong DB}{Đơn CANCELLED không sinh mã}{RB-05: \texttt{order.controller.js}, bảng \texttt{issued\_vouchers}}
+
+\flowblock{Luồng Sử Dụng Voucher}{Xác nhận khách đã dùng dịch vụ}{Đối tác}{Partner APPROVED; mã hợp lệ}{1. Nhập code. 2. checkVoucher/scanVoucher. 3. Kiểm partner\_id, branch, hạn. 4. UPDATE USED.}{status=USED}{Đã USED; sai đối tác; hết hạn}{\texttt{partner.controller.js}, \texttt{PartnerVoucherScan.jsx}}
+
+\flowblock{Luồng Đối Tác Tạo Và Gửi Duyệt}{Tạo voucher chờ admin}{Đối tác}{Partner APPROVED}{1. Form nhập dữ liệu. 2. Validate RB-02/03. 3. Lưu DRAFT hoặc PENDING\_APPROVAL. 4. Gắn chi nhánh.}{Voucher lưu DB}{Partner chưa duyệt bị chặn}{\texttt{PartnerVoucherForm.jsx}, \texttt{voucher.controller.js}}
+
+\flowblock{Luồng Admin Duyệt Voucher}{Kiểm soát voucher được bán}{Admin}{Đăng nhập ADMIN}{1. Lấy pending list. 2. Xem chi tiết. 3. approve/reject. 4. Cập nhật status.}{APPROVED hoặc REJECTED}{—}{\texttt{admin.controller.js}, \texttt{AdminVoucherReview.jsx}}
+
+\flowblock{Luồng Admin Duyệt Đối Tác}{Kích hoạt đối tác}{Admin}{Partner PENDING}{1. Xem hồ sơ. 2. approve/reject. 3. Cập nhật partners.status.}{APPROVED — cho phép tạo voucher}{—}{\texttt{approvePartner}, \texttt{AdminDashboardPage.jsx}}
+
+\flowblock{Luồng Khiếu Nại}{Xử lý phản hồi khách}{Khách hàng, Admin}{Khách đã mua/có vấn đề}{1. POST complaint. 2. Admin xem list. 3. PATCH status + response.}{RESOLVED/REJECTED}{—}{\texttt{user.controller.js}, \texttt{admin.controller.js}, \texttt{complaints}}
+
+\flowblock{Luồng Dashboard/Báo Cáo}{Tổng hợp KPI}{Admin, Đối tác}{Đã đăng nhập}{1. Gọi getDashboard/getReports. 2. Aggregate SQL. 3. Hiển thị UI.}{Số liệu hiển thị}{—}{\texttt{admin.queries.js}, \texttt{partner.queries.js}, \texttt{PartnerReports.jsx}}

@@ -1,0 +1,129 @@
+\section{Giới Thiệu}
+Từ điển dữ liệu mô tả các bảng quan trọng theo \texttt{backend/src/config/init.sql}. Kiểu dữ liệu lấy từ schema; nếu không rõ ghi \textit{Cần kiểm tra thêm}.
+
+\section{Quy Ước}
+Snake\_case; PK thường UUID (trừ \texttt{system\_logs.id} BIGSERIAL); enum PostgreSQL cho trạng thái.
+
+\newcommand{\dicttable}[1]{\subsection{#1}}
+\newcommand{\dicthead}{\begin{longtable}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.08\linewidth}>{\raggedright\arraybackslash}p{0.10\linewidth}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.10\linewidth}}
+\toprule
+\textbf{Trường} & \textbf{Kiểu} & \textbf{BB} & \textbf{Khóa} & \textbf{Mô tả} & \textbf{Quy tắc} & \textbf{GC}\\
+\midrule
+\endhead}
+\newcommand{\dictfoot}{\bottomrule\end{longtable}}
+
+\dicttable{users}
+\small\dicthead
+id & UUID & Có & PK & Định danh & DEFAULT gen\_random\_uuid() & \\
+email & VARCHAR(255) & Không & UQ & Email đăng nhập & Nullable cho phone-only & \\
+password & VARCHAR(255) & Có & — & Hash bcrypt & Không lưu plain text & \\
+full\_name & VARCHAR(255) & Có & — & Họ tên & & \\
+phone & VARCHAR(20) & Không & UQ* & SĐT & Partial unique index & \\
+role & user\_role & Có & — & ADMIN/PARTNER/CUSTOMER & DEFAULT CUSTOMER & \\
+is\_active & BOOLEAN & Có & — & Khóa tài khoản & DEFAULT TRUE & \\
+created\_at & TIMESTAMPTZ & Có & — & Tạo & DEFAULT NOW() & \\
+updated\_at & TIMESTAMPTZ & Có & — & Cập nhật & & \\
+\dictfoot\normalsize
+
+\dicttable{partners}
+\small\dicthead
+id & UUID & Có & PK & Đối tác & & \\
+user\_id & UUID & Có & FK & Liên kết user & ON DELETE CASCADE & \\
+business\_name & VARCHAR(255) & Có & — & Tên DN & & \\
+business\_license & VARCHAR(100) & Không & — & Giấy phép & & \\
+representative & VARCHAR(255) & Có & — & Người đại diện & & \\
+address & TEXT & Không & — & Địa chỉ & & \\
+status & partner\_status & Có & — & PENDING/APPROVED/... & DEFAULT PENDING & \\
+rejection\_reason & TEXT & Không & — & Lý do từ chối & & \\
+\dictfoot\normalsize
+
+\dicttable{partner\_branches}
+\small\dicthead
+id & UUID & Có & PK & Chi nhánh & & \\
+partner\_id & UUID & Có & FK & Thuộc đối tác & CASCADE & \\
+name & VARCHAR(255) & Có & — & Tên chi nhánh & & \\
+address & TEXT & Có & — & Địa chỉ & & \\
+phone & VARCHAR(20) & Không & — & Liên hệ & & \\
+is\_active & BOOLEAN & Có & — & Hoạt động & DEFAULT TRUE & \\
+\dictfoot\normalsize
+
+\dicttable{vouchers}
+\small\dicthead
+id & UUID & Có & PK & Voucher & & \\
+partner\_id & UUID & Có & FK & Chủ sở hữu & & \\
+name & VARCHAR(255) & Có & — & Tên SP & & \\
+original\_price & NUMERIC(15,2) & Có & — & Giá gốc & RB-02: $>$ sale\_price & \\
+sale\_price & NUMERIC(15,2) & Có & — & Giá bán & chk\_price & \\
+stock & INTEGER & Có & — & Tồn & $\geq 0$; RB-15 & \\
+sale\_start/end & TIMESTAMPTZ & Không & — & Thời gian bán & RB-03 & \\
+valid\_until & TIMESTAMPTZ & Không & — & Hạn dùng sau mua & & \\
+status & voucher\_status & Có & — & Vòng đời & RB-01 & \\
+\dictfoot\normalsize
+
+\dicttable{orders}
+\small\dicthead
+id & UUID & Có & PK & Đơn hàng & & \\
+customer\_id & UUID & Có & FK & Khách & & \\
+total\_amount & NUMERIC(15,2) & Có & — & Tổng tiền & & \\
+status & order\_status & Có & — & PENDING/PAID/... & RB-13 & \\
+payment\_method & VARCHAR(50) & Không & — & COD/VNPAY/PAYPAL & & \\
+payment\_ref & VARCHAR(255) & Không & — & Mã GD & & \\
+recipient\_* & VARCHAR & Không & — & Người nhận quà & & \\
+paid\_at & TIMESTAMPTZ & Không & — & Thời điểm TT & & \\
+\dictfoot\normalsize
+
+\dicttable{order\_items}
+\small\dicthead
+id & UUID & Có & PK & Dòng đơn & & \\
+order\_id & UUID & Có & FK & Thuộc order & CASCADE & \\
+voucher\_id & UUID & Có & FK & Voucher mua & & \\
+quantity & INTEGER & Có & — & SL & $>$ 0 & \\
+unit\_price & NUMERIC(15,2) & Có & — & Giá tại thời điểm mua & & \\
+\dictfoot\normalsize
+
+\dicttable{issued\_vouchers}
+\small\dicthead
+code & VARCHAR(64) & Có & UQ & Mã voucher & RB-06 unique & \\
+order\_item\_id & UUID & Có & FK & Nguồn đơn & RB-05 & \\
+status & issued\_voucher\_status & Có & — & UNUSED/USED/... & RB-07 & \\
+used\_at & TIMESTAMPTZ & Không & — & Thời điểm dùng & & \\
+used\_at\_branch & UUID & Không & FK & Chi nhánh dùng & RB-09 & \\
+expires\_at & TIMESTAMPTZ & Không & — & Hết hạn mã & RB-08 & \\
+\dictfoot\normalsize
+
+\dicttable{reviews}
+\small\dicthead
+issued\_voucher\_id & UUID & Có & FK,UQ & Một review/mã & RB-10 & \\
+rating & SMALLINT & Có & — & 1--5 sao & CHECK 1--5 & \\
+comment & TEXT & Không & — & Bình luận & & \\
+partner\_reply & TEXT & Không & — & Trả lời đối tác & & \\
+\dictfoot\normalsize
+
+\dicttable{complaints}
+\small\dicthead
+customer\_id & UUID & Có & FK & Người gửi & & \\
+subject & VARCHAR(255) & Có & — & Tiêu đề & & \\
+message & TEXT & Có & — & Nội dung & & \\
+status & complaint\_status & Có & — & PENDING/... & & \\
+admin\_response & TEXT & Không & — & Phản hồi admin & & \\
+\dictfoot\normalsize
+
+\dicttable{partner\_appeals}
+\small\dicthead
+partner\_id & UUID & Có & FK & Đối tác khiếu nại & & \\
+title & VARCHAR(255) & Có & — & Tiêu đề & & \\
+content & TEXT & Có & — & Nội dung & & \\
+status & partner\_appeal\_status & Có & — & PENDING/... & 1 pending/partner & \\
+\dictfoot\normalsize
+
+\dicttable{system\_logs}
+\small\dicthead
+id & BIGSERIAL & Có & PK & ID log & & \\
+action & VARCHAR(100) & Có & — & Hành động & RB-12 & \\
+entity & VARCHAR(100) & Không & — & Loại entity & & \\
+details & JSONB & Không & — & Chi tiết & & \\
+ip\_address & VARCHAR(45) & Không & — & IP client & & \\
+\dictfoot\normalsize
+
+\section{Ghi Chú}
+\textbf{NOTE: Nhóm cần đối chiếu lại file schema/migration để bổ sung kiểu dữ liệu chính xác nếu schema thay đổi sau này.}

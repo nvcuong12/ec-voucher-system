@@ -1,0 +1,38 @@
+\section{Các Bên Liên Quan}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.70\linewidth}}
+\toprule
+\textbf{Bên liên quan} & \textbf{Vai trò trong hệ thống}\\
+\midrule
+\endhead
+Khách hàng (Customer) & Tìm kiếm, mua voucher, thanh toán, nhận mã, đánh giá, khiếu nại. Bằng chứng: \texttt{frontend/src/pages/VouchersPage.jsx}, \texttt{CartPage.jsx}.\\
+Đối tác (Partner) & Đăng ký hồ sơ, tạo voucher, gửi duyệt, quét/xác nhận mã, xem báo cáo. Bằng chứng: \texttt{PartnerDashboardPage.jsx}, \texttt{partner.controller.js}.\\
+Quản trị viên (Admin) & Duyệt đối tác/voucher, quản lý đơn, nội dung, khiếu nại, nhật ký. Bằng chứng: \texttt{AdminDashboardPage.jsx}, \texttt{admin.controller.js}.\\
+Hệ thống thanh toán & VNPay/PayPal sandbox và thanh toán mô phỏng COD. Bằng chứng: \texttt{vnpay.js}, \texttt{paypal.js}, \texttt{order.controller.js}.\\
+Cơ sở dữ liệu PostgreSQL & Lưu trữ thực thể nghiệp vụ. Bằng chứng: \texttt{backend/src/config/init.sql}.\\
+\bottomrule
+\end{longtable}
+
+\section{Quy Trình Nghiệp Vụ Tổng Quát}
+Luồng tổng quát: (1) Đối tác đăng ký và được admin duyệt; (2) Đối tác tạo voucher và gửi duyệt; (3) Admin duyệt voucher (RB-01); (4) Khách hàng tìm kiếm, mua, thanh toán; (5) Hệ thống phát hành mã (RB-05); (6) Khách dùng mã tại chi nhánh; (7) Đối tác xác nhận sử dụng; (8) Admin giám sát qua dashboard và nhật ký.
+
+\textbf{NOTE: Nhóm cần bổ sung hình BPMN hoặc Activity Diagram cho luồng nghiệp vụ tại đây.}
+
+\section{Luồng Nghiệp Vụ Mua Voucher}
+Khách hàng duyệt danh sách voucher đã APPROVED (\texttt{listVouchers}), xem chi tiết, thêm vào giỏ (\texttt{CartContext}), tạo đơn (\texttt{createOrder}), chọn phương thức thanh toán và hoàn tất (\texttt{payOrder} hoặc VNPay/PayPal). Hệ thống kiểm RB-01, RB-04, RB-15 trước khi ghi nhận đơn.
+
+\textbf{NOTE: Nhóm cần bổ sung Activity Diagram/BPMN dạng hình cho luồng này.}
+
+\section{Luồng Đối Tác Tạo Và Gửi Duyệt Voucher}
+Đối tác APPROVED truy cập \texttt{PartnerVoucherForm.jsx}, nhập thông tin (giá, stock, thời gian, chi nhánh), lưu DRAFT hoặc \texttt{PENDING\_APPROVAL}. Admin xem \texttt{/admin/vouchers} và phê duyệt.
+
+\section{Luồng Quản Trị Viên Duyệt Voucher}
+Admin lấy danh sách \texttt{GET /api/admin/vouchers/pending}, xem chi tiết, gọi \texttt{approveVoucher} hoặc \texttt{rejectVoucher}. Voucher APPROVED mới hiển thị cho khách hàng.
+
+\section{Luồng Sử Dụng Và Xác Thực Voucher}
+Khách nhận mã từ \texttt{MyVouchersPage}. Đối tác nhập mã tại \texttt{PartnerVoucherScan.jsx}, gọi \texttt{checkVoucher} (tra cứu) hoặc \texttt{scanVoucher} (xác nhận USED). RB-07, RB-08, RB-09 được kiểm tra tại \texttt{partner.controller.js}.
+
+\section{Luồng Khiếu Nại}
+Khách gửi khiếu nại qua \texttt{POST /api/users/complaints} (\texttt{user.controller.js}). Admin xử lý qua \texttt{GET/PATCH /api/admin/complaints}. Đối tác bị khóa có thể gửi \texttt{partner\_appeals}.
+
+\section{Nhận Xét Liên Hệ Nghiệp Vụ Và Codebase}
+Các trạng thái nghiệp vụ được ánh xạ rõ sang enum PostgreSQL (\texttt{voucher\_status}, \texttt{order\_status}, \texttt{issued\_voucher\_status}). Logic nghiệp vụ tập trung ở controller layer; frontend phản ánh qua \texttt{ProtectedRoute} và \texttt{usePartnerStatus}. Điểm còn thiếu so với BRD: job tự động hết hạn, audit log đầy đủ, refund tự động — \textbf{Chưa tìm thấy trong codebase} hoặc chỉ \textbf{một phần}.

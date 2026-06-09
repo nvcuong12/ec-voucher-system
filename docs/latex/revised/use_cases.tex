@@ -1,0 +1,175 @@
+\section{Tổng Quan}
+Hệ thống có ba actor: Khách hàng, Đối tác, Quản trị viên. Bảng tổng hợp liệt kê use case chính; mỗi use case quan trọng có đặc tả chi tiết theo template thống nhất.
+
+\section{Bảng Tổng Hợp Use Case}
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.26\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.34\linewidth}}
+\toprule
+\textbf{Mã} & \textbf{Tên} & \textbf{Actor} & \textbf{Bằng chứng codebase}\\
+\midrule
+\endhead
+UC-CUS-01 & Đăng ký tài khoản & Khách hàng & \texttt{auth.routes.js}, \texttt{RegisterPage.jsx}\\
+UC-CUS-02 & Đăng nhập & Khách hàng & \texttt{LoginPage.jsx}, \texttt{auth.controller.js}\\
+UC-CUS-03 & Tìm kiếm/lọc voucher & Khách hàng & \texttt{VouchersPage.jsx}, \texttt{listVouchers}\\
+UC-CUS-04 & Xem chi tiết voucher & Khách hàng & \texttt{VoucherDetailPage.jsx}\\
+UC-CUS-05 & Thêm vào giỏ hàng & Khách hàng & \texttt{CartContext.jsx}\\
+UC-CUS-06 & Tạo đơn hàng & Khách hàng & \texttt{order.controller.js}, \texttt{CartPage.jsx}\\
+UC-CUS-07 & Thanh toán và nhận code & Khách hàng & \texttt{payOrder}, \texttt{MyVouchersPage.jsx}\\
+UC-CUS-08 & Đánh giá/khiếu nại & Khách hàng & \texttt{review.controller.js}, \texttt{user.routes.js}\\
+UC-PAR-01 & Đăng ký hồ sơ đối tác & Đối tác & \texttt{registerPartner}, \texttt{RegisterPage.jsx}\\
+UC-PAR-02 & Tạo voucher & Đối tác & \texttt{createVoucher}, \texttt{PartnerVoucherForm.jsx}\\
+UC-PAR-03 & Gửi duyệt voucher & Đối tác & Status \texttt{PENDING\_APPROVAL}\\
+UC-PAR-04 & Kiểm tra voucher code & Đối tác & \texttt{checkVoucher}, \texttt{PartnerVoucherScan.jsx}\\
+UC-PAR-05 & Xác nhận sử dụng & Đối tác & \texttt{scanVoucher}\\
+UC-ADM-01 & Duyệt đối tác & Admin & \texttt{approvePartner}, \texttt{AdminDashboardPage.jsx}\\
+UC-ADM-02 & Duyệt/từ chối voucher & Admin & \texttt{approveVoucher}, \texttt{AdminVoucherReview.jsx}\\
+UC-ADM-03 & Quản lý đơn hàng & Admin & \texttt{getOrders}, \texttt{updateOrderStatus}\\
+UC-ADM-04 & Xử lý khiếu nại & Admin & \texttt{updateComplaintStatus}\\
+UC-ADM-05 & Dashboard/nhật ký & Admin & \texttt{getDashboard}, \texttt{getLogs}\\
+\bottomrule
+\end{longtable}
+\normalsize
+
+% Macro-like repeated structure for use cases
+\newcommand{\uctitle}[2]{\subsection{#1 --- #2}}
+
+\uctitle{UC-CUS-01}{Đăng Ký Tài Khoản}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Khách hàng (hoặc Đối tác khi chọn role PARTNER).\\
+Mục tiêu & Tạo tài khoản mới trên hệ thống.\\
+Tiền điều kiện & Email/phone chưa tồn tại.\\
+Hậu điều kiện & Bản ghi \texttt{users} mới; JWT trả về (nếu auto-login).\\
+Luồng chính & 1. Mở \texttt{/register}. 2. Nhập thông tin. 3. POST \texttt{/api/auth/register}. 4. Hệ thống hash mật khẩu, insert user. 5. Hiển thị thành công.\\
+Luồng thay thế & A1: Đăng ký đối tác → tạo thêm \texttt{partners} PENDING.\\
+Ngoại lệ & E1: Trùng email/phone → lỗi validation.\\
+Dữ liệu đầu vào & email/phone, password, full\_name, role.\\
+Dữ liệu đầu ra & user object, token.\\
+RB liên quan & —\\
+Bằng chứng & \texttt{auth.controller.js} (\texttt{register}), \texttt{RegisterPage.jsx}, bảng \texttt{users}.\\
+Ghi chú & Xác thực email mô phỏng.\\
+\end{longtable}
+
+\uctitle{UC-CUS-02}{Đăng Nhập}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Khách hàng / Đối tác / Admin.\\
+Mục tiêu & Xác thực và nhận phiên JWT.\\
+Tiền điều kiện & Tài khoản tồn tại, \texttt{is\_active=true}.\\
+Hậu điều kiện & Token lưu localStorage qua \texttt{AuthContext}.\\
+Luồng chính & 1. POST \texttt{/api/auth/login}. 2. So khớp bcrypt. 3. Trả JWT. 4. Redirect theo role.\\
+Ngoại lệ & E1: Sai mật khẩu → 401. E2: Tài khoản khóa.\\
+RB liên quan & —\\
+Bằng chứng & \texttt{LoginPage.jsx}, \texttt{auth.controller.js}, \texttt{ProtectedRoute.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-03}{Tìm Kiếm Và Lọc Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Khách hàng.\\
+Mục tiêu & Tìm voucher phù hợp.\\
+Tiền điều kiện & Có voucher APPROVED.\\
+Luồng chính & 1. \texttt{VouchersPage} gọi GET \texttt{/api/vouchers}. 2. Truyền query lọc/sort. 3. Hiển thị danh sách.\\
+Ngoại lệ & E1: Không có kết quả.\\
+RB liên quan & RB-01 (chỉ APPROVED).\\
+Bằng chứng & \texttt{voucher.controller.js} (\texttt{listVouchers}), \texttt{VouchersPage.jsx}.\\
+Ghi chú & Lọc khu vực: \textbf{Cần kiểm tra thêm}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-04}{Xem Chi Tiết Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Bằng chứng & \texttt{VoucherDetailPage.jsx}, \texttt{getVoucherById}, \texttt{review.routes.js}.\\
+RB liên quan & RB-01.\\
+Luồng chính & Hiển thị giá, hạn, chi nhánh (\texttt{voucher\_applicable\_branches}), đánh giá.\\
+\end{longtable}
+
+\uctitle{UC-CUS-05}{Thêm Voucher Vào Giỏ Hàng}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Bằng chứng & \texttt{CartContext.jsx} (\texttt{addItem}), \texttt{VoucherDetailPage.jsx}.\\
+Hậu điều kiện & Item trong localStorage giỏ hàng.\\
+Ngoại lệ & E1: Chưa đăng nhập CUSTOMER khi checkout (chặn ở route).\\
+\end{longtable}
+
+\uctitle{UC-CUS-06}{Tạo Đơn Hàng}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & POST \texttt{/api/orders} với items từ giỏ; kiểm APPROVED, stock, thời gian bán.\\
+Hậu điều kiện & Order \texttt{PENDING}.\\
+RB liên quan & RB-01, RB-04, RB-15.\\
+Bằng chứng & \texttt{order.controller.js} (\texttt{createOrder}), \texttt{CartPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-07}{Thanh Toán Và Nhận Voucher Code}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & COD: \texttt{payOrder}; VNPay: \texttt{createVnpayPaymentUrl} → callback; sau PAID sinh \texttt{issued\_vouchers}.\\
+RB liên quan & RB-05, RB-06, RB-11.\\
+Bằng chứng & \texttt{order.controller.js}, \texttt{MyVouchersPage.jsx}, \texttt{VnpayReturnPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-08}{Gửi Đánh Giá/Khiếu Nại}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & Review: POST \texttt{/api/reviews}. Khiếu nại: POST \texttt{/api/users/complaints}.\\
+RB liên quan & RB-10.\\
+Bằng chứng & \texttt{review.controller.js}, \texttt{user.controller.js} (\texttt{createComplaint}).\\
+\end{longtable}
+
+\uctitle{UC-PAR-01}{Đối Tác Đăng Ký Hồ Sơ}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Hậu điều kiện & \texttt{partners.status=PENDING}.\\
+Bằng chứng & \texttt{registerPartner}, \texttt{RegisterPage.jsx}, \texttt{PartnerDashboardPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-02}{Đối Tác Tạo Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Tiền điều kiện & Partner APPROVED (\texttt{usePartnerStatus.js}).\\
+RB liên quan & RB-02, RB-03.\\
+Bằng chứng & \texttt{createVoucher}, \texttt{PartnerVoucherForm.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-03}{Đối Tác Gửi Duyệt Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & Lưu voucher với \texttt{status=PENDING\_APPROVAL}.\\
+Bằng chứng & \texttt{voucher.controller.js}, \texttt{PartnerVouchers.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-04}{Đối Tác Kiểm Tra Voucher Code}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & POST \texttt{/api/partner/vouchers/check} với code + branch\_id.\\
+RB liên quan & RB-08, RB-09.\\
+Bằng chứng & \texttt{checkVoucher}, \texttt{PartnerVoucherScan.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-05}{Đối Tác Xác Nhận Sử Dụng Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & POST scan → cập nhật USED, \texttt{used\_at}, \texttt{used\_at\_branch}.\\
+RB liên quan & RB-07, RB-09.\\
+Bằng chứng & \texttt{scanVoucher}, ghi \texttt{system\_logs}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-01}{Quản Trị Viên Duyệt Đối Tác}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Luồng chính & PATCH \texttt{/api/admin/partners/:id/approve|reject}.\\
+Bằng chứng & \texttt{admin.controller.js}, tab Đối tác trong \texttt{AdminDashboardPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-02}{Quản Trị Viên Duyệt/Từ Chối Voucher}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+RB liên quan & RB-01 (kích hoạt bán).\\
+Bằng chứng & \texttt{approveVoucher}, \texttt{rejectVoucher}, \texttt{AdminVoucherReview.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-03}{Quản Trị Viên Quản Lý Đơn Hàng}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Bằng chứng & \texttt{getOrders}, \texttt{updateOrderStatus}, bảng \texttt{orders}.\\
+Ghi chú & Hoàn tiền tự động: \textbf{Một phần} (REFUNDED thủ công).\\
+\end{longtable}
+
+\uctitle{UC-ADM-04}{Quản Trị Viên Xử Lý Khiếu Nại}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Bằng chứng & \texttt{getComplaints}, \texttt{updateComplaintStatus}, bảng \texttt{complaints}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-05}{Quản Trị Viên Xem Dashboard/Nhật Ký}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Bằng chứng & \texttt{getDashboard}, \texttt{getLogs}, \texttt{AdminDashboardPage.jsx}.\\
+Ghi chú & RB-12: log chưa đầy đủ mọi hành động admin.\\
+\end{longtable}
+
+\section{Luồng Ngoại Lệ Chung}
+Trùng email, voucher chưa duyệt, hết stock, thanh toán thất bại, scan sai đối tác, review không thuộc khách — xử lý qua \texttt{BusinessException} và \texttt{error.middleware.js}.
