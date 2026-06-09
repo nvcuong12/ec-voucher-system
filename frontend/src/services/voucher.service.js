@@ -29,3 +29,13 @@ export const getVoucherByIdRequest = async (id) => {
   const voucher = data.data?.voucher || data.voucher;
   return normalizeVoucher(voucher);
 };
+
+export const deleteVoucherRequest = async (id) => {
+  const res = await api.delete(`/partners/vouchers/${id}`);
+  return res.data.data;
+};
+
+export const cancelVoucherRequest = async (id) => {
+  const res = await api.post(`/partners/vouchers/${id}/cancel`);
+  return res.data.data;
+};

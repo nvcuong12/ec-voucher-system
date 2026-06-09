@@ -16,6 +16,7 @@ import {
   updatePartnerBranch,
   updatePartnerProfile,
 } from "../controllers/partner.controller.js";
+import { deleteVoucher, cancelVoucher } from "../controllers/voucher.controller.js";
 
 const router = Router();
 
@@ -115,6 +116,20 @@ router.post(
   authenticate,
   authorize("PARTNER"),
   asyncHandler(scanVoucher)
+);
+
+router.delete(
+  "/vouchers/:id",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(deleteVoucher)
+);
+
+router.post(
+  "/vouchers/:id/cancel",
+  authenticate,
+  authorize("PARTNER"),
+  asyncHandler(cancelVoucher)
 );
 
 export default router;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { deleteVoucherRequest, cancelVoucherRequest } from "../services/voucher.service";
 import usePartnerStatus from "../hooks/usePartnerStatus";
 import "./PartnerVouchers.css";
 
@@ -66,6 +67,25 @@ const PartnerVouchers = () => {
     fetchVouchers(status);
   }, [status]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa voucher này vĩnh viễn không?")) return;
+    try {
+      await deleteVoucherRequest(id);
+      fetchVouchers(status);
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể xóa voucher");
+    }
+  };
+
+  const handleCancel = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn ngưng bán voucher này? Khách hàng sẽ không thể mua thêm được nữa.")) return;
+    try {
+      await cancelVoucherRequest(id);
+      fetchVouchers(status);
+    } catch (err) {
+      alert(err.response?.data?.error?.message || "Không thể ngưng bán voucher");
+    }
+  };
   const statusCount = useMemo(() => vouchers.length, [vouchers]);
 
   return (
@@ -135,7 +155,7 @@ const PartnerVouchers = () => {
                 </span>
               </div>
 
-              <div className="pv-actions">
+              <div className="pv-actions" style={{ display: 'flex', gap: '8px' }}>
                 <Link
                   className={`btn btn-outline btn-sm${isRestricted ? " pv-action-disabled" : ""}`}
                   to={isRestricted ? "#" : `/partner/vouchers/${voucher.id}/edit`}
@@ -144,6 +164,26 @@ const PartnerVouchers = () => {
                 >
                   Sửa voucher
                 </Link>
+                
+                {!isRestricted && (voucher.status === "DRAFT" || voucher.status === "REJECTED") && (
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                    onClick={() => handleDelete(voucher.id)}
+                  >
+                    Xóa
+                  </button>
+                )}
+
+                {!isRestricted && (voucher.status === "APPROVED" || voucher.status === "PENDING_APPROVAL") && (
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    style={{ color: '#f59e0b', borderColor: '#f59e0b' }}
+                    onClick={() => handleCancel(voucher.id)}
+                  >
+                    Ngưng bán
+                  </button>
+                )}
               </div>
             </article>
           ))}

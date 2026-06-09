@@ -21,6 +21,8 @@ import {
   listPartnerVouchersQuery,
   countPublicVouchersQuery,
   countPartnerVouchersQuery,
+  deleteVoucherQuery,
+  cancelVoucherQuery,
 } from "../models/voucher.queries.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -527,6 +529,77 @@ export const listVouchers = async (req, res, next) => {
         page,
         limit,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * [Partner] Xóa voucher (chỉ DRAFT / REJECTED)
+ */
+export const deleteVoucher = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const partner = await getPartnerForUser(req.user.id);
+    if (!partner) {
+      return res.status(403).json({ error: { message: "Không có quyền đối tác." } });
+    }
+
+    const deletedId = await withTransaction(async (client) => {
+      // Xoá danh sách chi nhánh áp dụng trước để tránh lỗi Foreign Key
+      await client.query(deleteVoucherBranchesQuery, [id]);
+
+      // Check ownership and delete
+      const result = await client.query(deleteVoucherQuery, [
+        id,
+        partner.id,
+        [VOUCHER_STATUS.DRAFT, VOUCHER_STATUS.REJECTED]
+      ]);
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+      return result.rows[0].id;
+    });
+
+    if (!deletedId) {
+      return res.status(400).json({ error: { message: "Không thể xóa voucher này hoặc bạn không có quyền." } });
+    }
+
+    return res.json({
+      message: "Đã xóa voucher thành công",
+      data: { id }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * [Partner] Hủy/Ngưng bán voucher (chỉ APPROVED / PENDING_APPROVAL)
+ */
+export const cancelVoucher = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const partner = await getPartnerForUser(req.user.id);
+    if (!partner) {
+      return res.status(403).json({ error: { message: "Không có quyền đối tác." } });
+    }
+
+    const result = await query(cancelVoucherQuery, [
+      id,
+      partner.id,
+      [VOUCHER_STATUS.APPROVED, VOUCHER_STATUS.PENDING_APPROVAL]
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: { message: "Không thể ngưng bán voucher này hoặc bạn không có quyền." } });
+    }
+
+    return res.json({
+      message: "Đã ngưng bán voucher thành công",
+      data: { id }
     });
   } catch (err) {
     next(err);
