@@ -64,6 +64,7 @@ const PartnerDashboardPage = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [profileForm, setProfileForm] = useState({
     business_name: "",
@@ -139,9 +140,13 @@ const PartnerDashboardPage = () => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
     try {
       await updatePartnerProfileRequest(profileForm);
       await loadAll();
+      setSuccess("Lưu hồ sơ đối tác thành công!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không thể cập nhật hồ sơ đối tác");
     }
@@ -270,6 +275,7 @@ const PartnerDashboardPage = () => {
       </div>
 
       {error && <div className="partner-error-box">{error}</div>}
+      {success && <div className="partner-success-box">{success}</div>}
 
       {/* ── No partner yet: Registration Form ── */}
       {!dashboard && (
