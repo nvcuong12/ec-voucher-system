@@ -26,7 +26,7 @@ const getRequestIp = (req) =>
   null;
 
 const requirePartner = async (userId) => {
-  const result = await query(getPartnerByUserIdQuery, [userId]);
+  const result = await query(selectPartnerByUserIdQuery, [userId]);
   return result.rows[0] ?? null;
 };
 

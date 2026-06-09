@@ -66,6 +66,7 @@ const PartnerDashboardPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     business_name: "",
     representative: "",
@@ -146,6 +147,7 @@ const PartnerDashboardPage = () => {
       await updatePartnerProfileRequest(profileForm);
       await loadAll();
       setSuccess("Lưu hồ sơ đối tác thành công!");
+      setIsEditingProfile(false);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.error?.message || "Không thể cập nhật hồ sơ đối tác");
@@ -501,34 +503,76 @@ const PartnerDashboardPage = () => {
           {/* ── TAB: PROFILE ── */}
           {activeTab === "profile" && (
             <div className="partner-section-card">
-              <h2><RiUserLine /> Hồ sơ đối tác</h2>
-              <form onSubmit={handleProfileUpdate}>
-                <div className="partner-form-grid">
-                  <div className="form-group">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                <h2 style={{ marginBottom: 0 }}><RiUserLine /> Hồ sơ đối tác</h2>
+                {!isEditingProfile && (
+                  <button className="btn btn-outline btn-sm" onClick={() => setIsEditingProfile(true)}>
+                    Chỉnh sửa
+                  </button>
+                )}
+              </div>
+
+              {!isEditingProfile ? (
+                <div className="partner-profile-view">
+                  <div className="profile-info-group">
                     <label>Tên doanh nghiệp</label>
-                    <input className="input" value={profileForm.business_name}
-                      onChange={(e) => setProfileForm({ ...profileForm, business_name: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.business_name || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Người đại diện</label>
-                    <input className="input" value={profileForm.representative}
-                      onChange={(e) => setProfileForm({ ...profileForm, representative: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.representative || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Giấy phép kinh doanh</label>
-                    <input className="input" value={profileForm.business_license}
-                      onChange={(e) => setProfileForm({ ...profileForm, business_license: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.business_license || "Chưa cập nhật"}</div>
                   </div>
-                  <div className="form-group">
+                  <div className="profile-info-group">
                     <label>Địa chỉ</label>
-                    <input className="input" value={profileForm.address}
-                      onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} />
+                    <div className="profile-info-value">{profileForm.address || "Chưa cập nhật"}</div>
                   </div>
                 </div>
-                <div className="partner-form-footer">
-                  <button className="btn btn-primary" type="submit">Lưu thay đổi</button>
-                </div>
-              </form>
+              ) : (
+                <form onSubmit={handleProfileUpdate}>
+                  <div className="partner-form-grid">
+                    <div className="form-group">
+                      <label>Tên doanh nghiệp</label>
+                      <input className="input" value={profileForm.business_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, business_name: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Người đại diện</label>
+                      <input className="input" value={profileForm.representative}
+                        onChange={(e) => setProfileForm({ ...profileForm, representative: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Giấy phép kinh doanh</label>
+                      <input className="input" value={profileForm.business_license}
+                        onChange={(e) => setProfileForm({ ...profileForm, business_license: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                      <label>Địa chỉ</label>
+                      <input className="input" value={profileForm.address}
+                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="partner-form-footer" style={{ gap: "0.75rem" }}>
+                    <button className="btn btn-outline" type="button" onClick={() => {
+                        setIsEditingProfile(false);
+                        if (dashboard?.partner) {
+                          setProfileForm({
+                            business_name: dashboard.partner.business_name || "",
+                            representative: dashboard.partner.representative || "",
+                            business_license: dashboard.partner.business_license || "",
+                            address: dashboard.partner.address || "",
+                          });
+                        }
+                      }}>
+                      Hủy
+                    </button>
+                    <button className="btn btn-primary" type="submit">Lưu thay đổi</button>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
