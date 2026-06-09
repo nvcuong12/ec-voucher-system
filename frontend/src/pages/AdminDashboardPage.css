@@ -503,7 +503,269 @@
   margin-top: 1rem;
 }
 
-/* Animations */
+/* ─── Confirm Dialog ─────────────────────────────────────── */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: confirmFadeIn 0.2s ease;
+}
+@keyframes confirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.confirm-modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: 100%;
+  max-width: 430px;
+  position: relative;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: confirmScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes confirmScaleIn { from { transform: scale(0.88); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.confirm-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: all var(--transition);
+}
+.confirm-close-btn:hover { background: var(--color-bg); color: var(--color-text); }
+
+.confirm-icon-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 1.25rem;
+}
+.confirm-icon-danger  { background: rgba(239, 68, 68, 0.12); color: var(--color-danger); }
+.confirm-icon-warning { background: rgba(245, 158, 11, 0.12); color: var(--color-warning); }
+.confirm-icon-success { background: rgba(22, 163, 74, 0.12);  color: var(--color-success); }
+.confirm-icon-primary { background: rgba(15, 118, 110, 0.12); color: var(--color-primary); }
+
+.confirm-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+.confirm-msg {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+  margin-bottom: 0.25rem;
+}
+.confirm-input-wrap {
+  margin-top: 1rem;
+  text-align: left;
+}
+.confirm-input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.4rem;
+}
+.confirm-action-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+.confirm-action-row .btn {
+  flex: 1;
+  max-width: 170px;
+}
+
+/* ─── Enhanced Toast ─────────────────────────────────────── */
+.admin-toast {
+  display: flex !important;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 290px;
+  max-width: 420px;
+  padding: 0.9rem 1.1rem !important;
+  border-radius: var(--radius-md) !important;
+}
+.toast-icon { font-size: 1.15rem; flex-shrink: 0; }
+.toast-text { flex: 1; font-size: 0.875rem; line-height: 1.45; }
+.toast-close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--transition);
+}
+.toast-close-btn:hover { color: white; }
+
+/* ─── Search wrap ────────────────────────────────────────── */
+.admin-search-wrap {
+  position: relative;
+  flex: 1;
+}
+.admin-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  pointer-events: none;
+}
+.admin-search-wrap .input {
+  padding-left: 2.5rem;
+  width: 100%;
+}
+
+/* ─── Toolbar ────────────────────────────────────────────── */
+.admin-toolbar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ─── User detail modal ──────────────────────────────────── */
+.admin-user-detail-modal {
+  max-width: 500px;
+}
+.admin-user-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.admin-user-detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* ─── Log filter ─────────────────────────────────────────── */
+.admin-log-filter-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+/* ─── Bar chart ──────────────────────────────────────────── */
+.admin-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  height: 150px;
+  padding-top: 1.5rem;
+}
+.admin-bar-chart-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  position: relative;
+  cursor: default;
+}
+.admin-bar-chart-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  margin-top: auto;
+  transition: opacity 0.18s;
+}
+.admin-bar-chart-wrapper:hover .admin-bar-chart-bar { opacity: 0.75; }
+.admin-bar-chart-label {
+  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
+  text-align: center;
+  line-height: 1.45;
+}
+.admin-bar-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.9);
+}
+
+/* ─── Donut chart ────────────────────────────────────────── */
+.admin-donut-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+.admin-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.admin-donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+.admin-donut-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ─── Animations ─────────────────────────────────────────── */
 .fade-in {
   animation: fadeIn 0.35s ease;
 }
