@@ -1,0 +1,947 @@
+﻿\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{longtable,booktabs,tabularx,array,multirow,xcolor}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{etoolbox}
+\usepackage[hidelinks,unicode,linktoc=all]{hyperref}
+\usepackage{bookmark}
+\makeatletter
+\g@addto@macro\UrlBreaks{\do\/\do\-\do\.\do\_\do\@\do\:}
+\makeatother
+\newcommand{\codepath}[1]{\begingroup\Urlmuskip=0mu plus 3mu\path{#1}\endgroup}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{3em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\tabcolsep}{1.5pt}
+\renewcommand{\arraystretch}{1.18}
+\AtBeginEnvironment{longtable}{\scriptsize}
+\AtEndEnvironment{longtable}{\normalsize}
+\begin{document}
+\pagenumbering{gobble}
+% ==================== Báo Cáo Tổng Hợp Đồ Án ====================
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+\rule{0.92\textwidth}{0.8pt}\par\vspace{2mm}\rule{0.90\textwidth}{0.4pt}
+\vspace{0.8cm} \\
+{\bfseries ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH\par}
+{\bfseries TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN\par}
+{\bfseries KHOA CÔNG NGHỆ THÔNG TIN\par}
+\vspace{1cm}
+% TODO: Chèn logo Trường Đại học Khoa học Tự nhiên tại đây
+\includegraphics[width=3cm]{LogoKHTN.png} \\
+\vspace{0.8cm}
+{\Large\bfseries BÁO CÁO ĐỒ ÁN CUỐI KỲ\par}
+\vspace{0.5cm}
+{\Large\bfseries Đề tài: Xây dựng hệ thống thương mại điện tử bán voucher giảm giá trực tuyến\par}
+\vfill
+\begin{tabular}{rl}
+Nhóm: & Nhóm đồ án Thương mại điện tử\\
+Lớp: & CQ2023/1 \\
+Giảng viên hướng dẫn: & Thầy Nguyễn Đức Huy\\
+& Thầy Lương Vĩ Minh\\
+Thành viên thực hiện: & 23120116 - Nguyễn Việt Cường\\
+& 23120162 - Lê Hải Sơn\\
+& 23120265 - Nguyễn Thái Hoàng\\
+& 23120141 - Lê Văn Lộc
+\end{tabular}
+\vfill
+{\bfseries TP. Hồ Chí Minh, năm 2026\par}
+\vspace{0.8cm}
+\rule{0.90\textwidth}{0.4pt}\par\vspace{2mm}\rule{0.92\textwidth}{0.8pt}
+\end{titlepage}
+\clearpage
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{Giới Thiệu Đề Tài}
+
+\section{Giới thiệu}
+Đề tài xây dựng hệ thống thương mại điện tử bán voucher giảm giá trực tuyến. Hệ thống cần hỗ trợ ba vai trò: khách hàng, đối tác và quản trị viên. Tài liệu BRD yêu cầu các luồng mua voucher, phát hành code, xác nhận sử dụng, báo cáo, quản lý nội dung và kiểm toán.
+
+\section{Bối Cảnh Và Mục Tiêu}
+Mục tiêu hệ thống là cung cấp kênh bán voucher trực tuyến có quy trình duyệt rõ ràng, kiểm soát tồn kho và trạng thái, có phân quyền và có khả năng báo cáo quản trị.
+
+\section{Phạm Vi Hệ Thống}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Khách hàng: tìm kiếm, giỏ hàng, mua, thanh toán, nhận voucher code, đánh giá và khiếu nại.
+  \item Đối tác: đăng ký hồ sơ, tạo voucher, gửi duyệt, quản lý voucher, kiểm tra và xác nhận sử dụng.
+  \item Quản trị viên: duyệt đối tác, duyệt voucher, quản lý đơn hàng, nội dung, dashboard và nhật ký.
+\end{itemize}
+
+\chapter{Tổng Quan Codebase}
+\section{Công nghệ}
+Frontend dùng React 18, React Router, Axios. Backend dùng Node.js, Express, PostgreSQL, JWT, bcryptjs. Bằng chứng: \codepath{frontend/package.json}, \codepath{backend/package.json}.
+
+\section{Cấu trúc Repository}
+
+\subsection{Backend Architecture}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.34\linewidth}>{\raggedright\arraybackslash}p{0.58\linewidth}}
+\toprule
+\textbf{Đường dẫn} & \textbf{Vai trò}\\
+\midrule
+\endhead
+
+\multicolumn{2}{l}{\textbf{Khởi tạo và Routing}}\\
+\codepath{backend/src/index.js} & Entry point, cấu hình server, đăng ký database, lắng nghe port 5000.\\
+\codepath{backend/src/app.js} & Khởi tạo Express app, CORS, middleware, mount toàn bộ routes, error handlers.\\
+
+\multicolumn{2}{l}{\textbf{Định nghĩa API (Routes)}}\\
+\codepath{backend/src/routes/auth.routes.js} & POST /register, /login, /forgot-password, /reset-password; GET /me; POST /change-password.\\
+\codepath{backend/src/routes/user.routes.js} & GET /me, /vouchers; PUT /profile; POST /change-password.\\
+\codepath{backend/src/routes/voucher.routes.js} & GET /categories, /list; PARTNER: POST/, PUT/:id, GET/:id; PUBLIC: GET/.\\
+\codepath{backend/src/routes/order.routes.js} & CUSTOMER: POST /, GET /my, POST /:id/pay; VNPAY: POST /:id/vnpay-url, POST /:id/vnpay-verify, GET /vnpay-ipn.\\
+\codepath{backend/src/routes/partner.routes.js} & GET /dashboard, /branches, /reports, /appeals; POST /register, /branches, /appeals; PATCH /branches/:id; PUT /profile.\\
+\codepath{backend/src/routes/admin.routes.js} & GET /dashboard, /vouchers, /vouchers/pending, /partners, /orders, /complaints, /appeals, /logs, /users, /content/*; PATCH endpoints duyệt, từ chối, cập nhật.\\
+\codepath{backend/src/routes/review.routes.js} & GET /voucher/:id, POST /, PATCH /:id.\\
+\codepath{backend/src/routes/user.routes.js} & GET/POST /complaints (khách hàng).\\
+
+\multicolumn{2}{l}{\textbf{Xử lý Nghiệp vụ (Controllers)}}\\
+\codepath{backend/src/controllers/auth.controller.js} & register, login, forgotPassword, resetPassword, changePassword, getMe (JWT, bcryptjs).\\
+\codepath{backend/src/controllers/user.controller.js} & updateProfile, getMe, getMyVouchers.\\
+\codepath{backend/src/controllers/voucher.controller.js} & createVoucher, updateVoucher, listVouchers, getVoucherById, listVoucherCategories (lọc, phân trang).\\
+\codepath{backend/src/controllers/order.controller.js} & createOrder, payOrder, listMyOrders, createVnpayPaymentUrl, verifyVnpayPayment, vnpayIPN, paypalHandle.\\
+\codepath{backend/src/controllers/partner.controller.js} & registerPartner, getDashboard, createBranch, updateBranch, updateProfile, getReports, createAppeal, getAppeals.\\
+\codepath{backend/src/controllers/admin.controller.js} & getDashboard, approvePartner, rejectPartner, approveVoucher, rejectVoucher, getComplaints, updateComplaintStatus, updateAppeal, CRUD categories/banners/pages/popups.\\
+\codepath{backend/src/controllers/review.controller.js} & getReviewsByVoucher, createReview, updateReview.\\
+\codepath{backend/src/controllers/user.controller.js} & createComplaint, getMyComplaints.\\
+
+\multicolumn{2}{l}{\textbf{Middleware}}\\
+\codepath{backend/src/middleware/auth.middleware.js} & authenticate (kiểm tra JWT), authorize (kiểm tra vai trò), extractUser từ token.\\
+\codepath{backend/src/middleware/error.middleware.js} & errorHandler (centralize error), notFoundHandler (404), trả về JSON với mã lỗi.\\
+\codepath{backend/src/middleware/validation.middleware.js} & validateInput (express-validator), kiểm tra body/params/query.\\
+\codepath{backend/src/middleware/asyncHandler.js} & Wrapper để catch lỗi async/await trong route handlers.\\
+
+\multicolumn{2}{l}{\textbf{Database Layer}}\\
+\codepath{backend/src/models/voucher.queries.js} & SQL queries: tạo, sửa, xóa, lọc voucher, kiểm stock, status.\\
+\codepath{backend/src/models/order.queries.js} & SQL queries: tạo, cập nhật đơn hàng, phát hành voucher code, trạng thái thanh toán.\\
+\codepath{backend/src/models/partner.queries.js} & SQL queries: duyệt đối tác, chi nhánh, báo cáo, khiếu nại.\\
+\codepath{backend/src/models/admin.queries.js} & SQL queries: dashboard, audit log, nội dung quản lý.\\
+
+\multicolumn{2}{l}{\textbf{Cấu hình}}\\
+\codepath{backend/src/config/database.js} & Kết nối PostgreSQL, pool connections, error handling.\\
+\codepath{backend/src/config/init.sql} & Schema (users, vouchers, orders, issued\_vouchers, etc.), enums (status, role), constraints, indexes, seed data.\\
+\codepath{backend/src/config/seed-data.sql} & Dữ liệu ban đầu: admin, partner, voucher mẫu.\\
+
+\multicolumn{2}{l}{\textbf{Utilities}}\\
+\codepath{backend/src/utils/BusinessException.js} & Custom error class cho business logic.\\
+\codepath{backend/src/utils/paypal.js} & PayPal API integration (create order, verify payment).\\
+\codepath{backend/src/utils/vnpay.js} & VNPay API integration (generate payment URL, verify signature).\\
+
+\bottomrule
+\end{longtable}
+
+\subsection{Frontend Architecture}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.34\linewidth}>{\raggedright\arraybackslash}p{0.58\linewidth}}
+\toprule
+\textbf{Đường dẫn} & \textbf{Vai trò}\\
+\midrule
+\endhead
+
+\multicolumn{2}{l}{\textbf{Routing}}\\
+\codepath{frontend/src/App.jsx} & BrowserRouter, Routes, ProtectedRoute theo vai trò (ADMIN, PARTNER, CUSTOMER, public).\\
+\codepath{frontend/src/index.jsx} & React app mount point, CSS global.\\
+
+\multicolumn{2}{l}{\textbf{Trang Khách hàng (Customer Pages)}}\\
+\codepath{frontend/src/pages/HomePage.jsx} & Slider banner, danh mục, voucher flash sale, popup nội dung.\\
+\codepath{frontend/src/pages/VouchersPage.jsx} & Danh sách voucher, lọc (giá, chiết khấu, danh mục, khu vực), phân trang, sắp xếp.\\
+\codepath{frontend/src/pages/VoucherDetailPage.jsx} & Chi tiết voucher, hình ảnh, giá, branch áp dụng, thêm giỏ hàng, đánh giá.\\
+\codepath{frontend/src/pages/CartPage.jsx} & Giỏ hàng, chỉnh sửa số lượng, chọn phương thức thanh toán (COD, VNPAY, PAYPAL).\\
+\codepath{frontend/src/pages/OrdersPage.jsx} & Lịch sử đơn hàng, trạng thái, danh sách voucher code, xem mã/QR, khiếu nại.\\
+\codepath{frontend/src/pages/MyVouchersPage.jsx} & Alias của OrdersPage (Voucher của tôi).\\
+\codepath{frontend/src/pages/VnpayReturnPage.jsx} & Xử lý callback từ VNPay, hiển thị trạng thái thanh toán, redirect.\\
+
+\multicolumn{2}{l}{\textbf{Trang Đối tác (Partner Pages)}}\\
+\codepath{frontend/src/pages/PartnerDashboardPage.jsx} & Tổng quan: trạng thái đối tác, chi nhánh, khiếu nại.\\
+\codepath{frontend/src/pages/PartnerVouchers.jsx} & Danh sách voucher của đối tác, tạo mới, sửa, xóa.\\
+\codepath{frontend/src/pages/PartnerVoucherForm.jsx} & Form tạo/sửa voucher, chọn chi nhánh, upload hình, giá, thời gian.\\
+\codepath{frontend/src/pages/PartnerVoucherScan.jsx} & Quét/nhập mã voucher, chọn chi nhánh, kiểm tra/xác nhận trạng thái.\\
+\codepath{frontend/src/pages/PartnerReports.jsx} & Báo cáo doanh thu, số lượng phát hành, sử dụng, hết hạn theo voucher.\\
+
+\multicolumn{2}{l}{\textbf{Trang Quản trị (Admin Pages)}}\\
+\codepath{frontend/src/pages/AdminDashboardPage.jsx} & Dashboard tổng hợp: đối tác, đơn hàng, khiếu nại, voucher, nội dung, người dùng, settings.\\
+\codepath{frontend/src/pages/AdminVoucherReview.jsx} & Duyệt voucher chờ, duyệt/từ chối với lý do.\\
+
+\multicolumn{2}{l}{\textbf{Trang Chung}}\\
+\codepath{frontend/src/pages/LoginPage.jsx} & Đăng nhập email/phone + password, ghi nhớ, chuyển hướng theo vai trò.\\
+\codepath{frontend/src/pages/RegisterPage.jsx} & Đăng ký (khách hàng/đối tác/quản trị), mật khẩu, điều khoản.\\
+\codepath{frontend/src/pages/ForgotPasswordPage.jsx} & Quên mật khẩu, tạo mã reset, đặt mật khẩu mới.\\
+\codepath{frontend/src/pages/ProfilePage.jsx} & Cập nhật thông tin cá nhân, số điện thoại, đổi mật khẩu.\\
+\codepath{frontend/src/pages/ContentPage.jsx} & Trang nội dung động (chính sách, điều khoản, hướng dẫn).\\
+
+\multicolumn{2}{l}{\textbf{Components}}\\
+\codepath{frontend/src/components/Navbar.jsx} & Navigation, mega menu danh mục, search, giỏ hàng, user menu, dashboard link.\\
+\codepath{frontend/src/components/CustomerFooter.jsx} & Footer với chính sách, thông tin, ẩn ở admin/partner.\\
+\codepath{frontend/src/components/ProtectedRoute.jsx} & Bảo vệ route: kiểm tra JWT, vai trò, redirect /login nếu không auth.\\
+\codepath{frontend/src/components/PayPalButton.jsx} & PayPal SDK button, tạo order, xử lý thanh toán.\\
+
+\multicolumn{2}{l}{\textbf{Context (Global State)}}\\
+\codepath{frontend/src/context/AuthContext.jsx} & user, loading, login, register, logout, updateUser, getDefaultRedirectPath.\\
+\codepath{frontend/src/context/CartContext.jsx} & items, addItem, removeItem, updateQuantity, clearCart, total, count (localStorage).\\
+
+\multicolumn{2}{l}{\textbf{Services (API Calls)}}\\
+\codepath{frontend/src/services/api.js} & Axios instance, baseURL=/api, interceptors (JWT, 401 redirect).\\
+\codepath{frontend/src/services/auth.service.js} & login, register, forgotPassword, resetPassword, changePassword, getMe.\\
+\codepath{frontend/src/services/voucher.service.js} & getVouchers, getVoucherById, getVoucherCategories (lọc, phân trang).\\
+\codepath{frontend/src/services/order.service.js} & createOrder, payOrder, getMyOrders, getMyIssuedVouchers, createVnpayUrl, verifyVnpay.\\
+\codepath{frontend/src/services/partner.service.js} & registerPartner, getPartnerDashboard, createBranch, updateBranch, getPartnerReports, checkVoucher, scanVoucher.\\
+\codepath{frontend/src/services/admin.service.js} & dashboards, partner CRUD, voucher approval, order/complaint/appeal management, content CRUD.\\
+\codepath{frontend/src/services/review.service.js} & getReviewsByVoucher, createReview.\\
+\codepath{frontend/src/services/complaint.service.js} & createComplaint, getMyComplaints.\\
+\codepath{frontend/src/services/content.service.js} & getActivePopup, getActiveBanners, getContentPage.\\
+
+\multicolumn{2}{l}{\textbf{Custom Hooks}}\\
+\codepath{frontend/src/hooks/usePartnerStatus.js} & Lấy trạng thái đối tác (PENDING/APPROVED/REJECTED/SUSPENDED), isRestricted, canAppeal.\\
+
+\multicolumn{2}{l}{\textbf{Styling}}\\
+\codepath{frontend/src/index.css} & CSS variables (brand colors, neutral, radius, shadow), global utilities, grid/flex helpers.\\
+\codepath{frontend/src/pages/*.css} & Styling từng trang (HomePage, LoginPage, CartPage, AdminDashboard, Partner pages, etc.).\\
+
+\bottomrule
+\end{longtable}
+
+\subsection{Công nghệ Chi tiết}
+
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Backend}: Node.js, Express.js, PostgreSQL (pg driver), JWT (jsonwebtoken), bcryptjs, UUID, Morgan (logging), CORS.
+  \item \textbf{Frontend}: React 18, React Router DOM v6, Axios, react-icons, react-slider, CSS-in-JS.
+  \item \textbf{Authentication}: JWT bearer tokens, bcryptjs password hashing, role-based authorization (ADMIN, PARTNER, CUSTOMER).
+  \item \textbf{Payment Integration}: VNPay (IPN callback), PayPal SDK (Sandbox), thanh toán mô phỏng (COD).
+  \item \textbf{Database}: PostgreSQL schema với enums (user\_role, voucher\_status, order\_status, issued\_status), constraints, indexes, foreign keys.
+\end{itemize}
+
+\chapter{Chức Năng Đã Xây Dựng}
+Tóm tắt phạm vi đã triển khai (chi tiết use case, UI và đối chiếu yêu cầu xem các chương sau):
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Xác thực}: đăng ký, đăng nhập, JWT, phân quyền ba vai trò.
+  \item \textbf{Khách hàng}: tìm voucher, giỏ hàng, đặt hàng, thanh toán, nhận mã, đánh giá/khiếu nại.
+  \item \textbf{Đối tác}: hồ sơ, chi nhánh, tạo/gửi duyệt voucher, quét mã, báo cáo.
+  \item \textbf{Quản trị}: duyệt đối tác/voucher, đơn hàng, nội dung, dashboard, nhật ký (một phần).
+\end{itemize}
+
+\chapter{Mô Hình Nghiệp Vụ}
+\input{revised/business_model}
+
+\chapter{Đối Chiếu Yêu Cầu}
+\input{revised/traceability}
+
+\chapter{Cơ Sở Dữ Liệu Và Dữ Liệu Mẫu}
+Schema: \codepath{backend/src/config/init.sql}; seed mở rộng: \texttt{seed-data.sql}. Các bảng chính liệt kê ở Chương ERD và Từ Điển Dữ Liệu. Tài khoản demo: admin \codepath{admin@vouchersystem.com}, customer \codepath{customer@vouchersystem.com}, partner \codepath{partner@vouchersystem.com} (xem Chương Hướng Dẫn Cài Đặt).
+
+\chapter{Định Hướng Tiếp Theo}
+Ưu tiên: \\
+(1) bổ sung hình ERD/BPMN/UI và kết quả test thực tế;\\ 
+(2) mở rộng \codepath{system_logs};\\ 
+(3) job vòng đời voucher/code;\\ 
+(4) tách \codepath{AdminDashboardPage.jsx};\\ 
+(5) hoàn thiện refund mô phỏng.
+\chapter{Đặc Tả Yêu Cầu Phần Mềm (SRS)}
+\input{revised/srs}
+
+\chapter{Đặc Tả Use Case}
+\input{revised/use_cases}
+
+\chapter{ERD Và Mô Hình Dữ Liệu}
+\input{revised/erd}
+
+\chapter{Biểu Đồ Xử Lý Nghiệp Vụ}
+\input{revised/activity_diagrams}
+
+\chapter{Từ Điển Dữ Liệu}
+\input{revised/data_dictionary}
+
+\chapter{Đặc Tả Thiết Kế Giao Diện}
+\input{revised/ui_design}
+
+\chapter{Kế Hoạch Kiểm Thử}
+\input{revised/test_plan}
+
+\chapter{Hướng Dẫn Cài Đặt Và Sử Dụng}
+
+\section{Yêu Cầu Môi Trường}
+
+\subsection{Cách 1: Docker (Khuyến Nghị - Đơn Giản Nhất)}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Docker Desktop 4.x hoặc mới hơn (bao gồm Docker Compose v2+).
+  \item Hệ điều hành: Windows 10+, macOS 10.15+, hoặc Linux (Ubuntu 20.04+).
+  \item RAM tối thiểu 4GB, ổ cứng còn trống 5GB.
+  \item Internet để tải các Docker image.
+\end{itemize}
+
+\subsection{Cách 2: Native (Chạy Trực Tiếp Trên Máy)}
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Node.js}: phiên bản 18.x hoặc 20.x LTS.
+  \item \textbf{npm}: phiên bản 9.x hoặc 10.x (đi kèm Node.js).
+  \item \textbf{PostgreSQL}: phiên bản 14 hoặc 15 (cài riêng trên máy).
+  \item \textbf{Git}: phiên bản 2.x để clone repo.
+  \item \textbf{Text Editor}: VS Code, WebStorm, hoặc tương tự.
+\end{itemize}
+
+\section{Cấu Trúc Công Nghệ}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.29\linewidth}>{\raggedright\arraybackslash}p{0.46\linewidth}}
+\toprule
+\textbf{Lớp} & \textbf{Công Nghệ} & \textbf{Chi Tiết}\\
+\midrule
+\endhead
+Frontend & React 18, React Router v6, Axios & Ứng dụng web, lấy dữ liệu từ API, routing theo vai trò.\\
+Backend & Node.js 20, Express 4, ES Modules & REST API server, JWT auth, middleware validation.\\
+Database & PostgreSQL 15 & Lưu trữ dữ liệu, enums (status, role), constraints, indexes.\\
+Auth & JWT + bcryptjs & Token-based auth, mật khẩu hash, phân quyền vai trò.\\
+Payments & VNPay Sandbox, PayPal Sandbox & Thanh toán mô phỏng cho mục đích demo.\\
+Container & Docker, Docker Compose & Orchestration cho dev environment, auto-scaling đơn giản.\\
+\bottomrule
+\end{longtable}
+
+\section{Cách 1: Cài Đặt Với Docker (Đơn Giản - 5 Phút)}
+
+\subsection{Bước 1: Clone Repository}
+
+\begin{verbatim}
+git clone <repository-url>
+cd ec-voucher-system
+\end{verbatim}
+
+\subsection{Bước 2: Tạo File Biến Môi Trường}
+
+\begin{verbatim}
+cp .env.example .env
+\end{verbatim}
+
+Kiểm tra file \texttt{.env} có chứa:
+
+\begin{verbatim}
+NODE_ENV=development
+PORT=5000
+DATABASE_URL=postgresql://voucheruser:voucherpass@db:5432/voucherdb
+JWT_SECRET=supersecretjwtkey_change_in_production
+FRONTEND_URL=http://localhost:3000
+VNPAY_TMN_CODE=GQLUAGKN
+VNPAY_HASH_SECRET=XBIAGQQKOZ9ZG5OYI6GQAS6ZKUVHYLY3
+VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+VNPAY_RETURN_URL=http://localhost:3000/payment/vnpay-return
+PAYPAL_CLIENT_ID=(để trống nếu không dùng PayPal demo)
+PAYPAL_CLIENT_SECRET=(để trống nếu không dùng PayPal demo)
+\end{verbatim}
+
+\subsection{Bước 3: Khởi Động Hệ Thống}
+
+\begin{verbatim}
+docker compose up --build
+\end{verbatim}
+
+Chờ cho đến khi thấy thông báo như:
+
+\begin{verbatim}
+voucher_backend | Listening on port 5000
+voucher_frontend | webpack compiled successfully
+\end{verbatim}
+
+\subsection{Bước 4: Truy Cập Ứng Dụng}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.34\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}}
+\toprule
+\textbf{Service} & \textbf{URL} & \textbf{Mô Tả}\\
+\midrule
+\endhead
+Frontend & \codepath{http://localhost:3000} & Giao diện React, đăng nhập/đăng ký.\\
+Backend API & \codepath{http://localhost:5001/api} & REST API endpoints, tài liệu GET /api.\\
+Health Check & \codepath{http://localhost:5001/health} & Kiểm tra backend có sẵn (nên trả về \{status: ok\}).\\
+Database & \codepath{localhost:5499} & PostgreSQL, dùng client như DBeaver để kết nối.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Bước 5: Kiểm Tra Dữ Liệu Seed}
+
+Dữ liệu mẫu (admin, partner, customer, voucher) tự động được tạo qua:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \codepath{backend/src/config/init.sql} — schema database.
+  \item \codepath{backend/src/config/seed-data.sql} — dữ liệu mẫu ban đầu.
+\end{itemize}
+
+Nếu lần đầu tiên chạy, Docker sẽ tự chạy hai file này. Nếu tái chạy và DB đã tồn tại, seed sẽ không chạy lại.
+
+\textbf{Để reset database:}
+
+\begin{verbatim}
+docker compose down -v
+docker compose up --build
+\end{verbatim}
+
+\section{Cách 2: Cài Đặt Native (Chạy Trực Tiếp - 10-15 Phút)}
+
+\subsection{Bước 1: Clone Repository}
+
+\begin{verbatim}
+git clone <repository-url>
+cd ec-voucher-system
+\end{verbatim}
+
+\subsection{Bước 2: Cài Đặt PostgreSQL Cục Bộ}
+
+Tải từ \codepath{https://www.postgresql.org/download/} hoặc dùng package manager:
+
+\begin{verbatim}
+# macOS
+brew install postgresql@15
+brew services start postgresql@15
+
+# Ubuntu
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
+
+# Windows: Tải installer từ postgresql.org
+\end{verbatim}
+
+Tạo database:
+
+\begin{verbatim}
+psql -U postgres
+CREATE DATABASE voucherdb;
+CREATE USER voucheruser WITH PASSWORD 'voucherpass';
+ALTER ROLE voucheruser SET client_encoding TO 'utf8';
+GRANT ALL PRIVILEGES ON DATABASE voucherdb TO voucheruser;
+\exit
+\end{verbatim}
+
+\subsection{Bước 3: Chạy Schema Và Seed}
+
+\begin{verbatim}
+psql -U voucheruser -d voucherdb -f backend/src/config/init.sql
+psql -U voucheruser -d voucherdb -f backend/src/config/seed-data.sql
+\end{verbatim}
+
+\subsection{Bước 4: Tạo File .env}
+
+\begin{verbatim}
+cp .env.example .env
+\end{verbatim}
+
+Chỉnh sửa \codepath{DATABASE_URL} để trỏ tới PostgreSQL cục bộ:
+
+\begin{verbatim}
+DATABASE_URL=postgresql://voucheruser:voucherpass@localhost:5432/voucherdb
+\end{verbatim}
+
+\subsection{Bước 5: Cài Dependencies Backend}
+
+\begin{verbatim}
+cd backend
+npm install
+\end{verbatim}
+
+\subsection{Bước 6: Cài Dependencies Frontend}
+
+\begin{verbatim}
+cd frontend
+npm install
+\end{verbatim}
+
+\subsection{Bước 7: Chạy Backend (Terminal 1)}
+
+\begin{verbatim}
+cd backend
+npm run dev
+\end{verbatim}
+
+Kỳ vọng: \texttt{Listening on port 5000}
+
+\subsection{Bước 8: Chạy Frontend (Terminal 2)}
+
+\begin{verbatim}
+cd frontend
+npm start
+\end{verbatim}
+
+Trình duyệt tự động mở \codepath{http://localhost:3000}.
+
+\section{Tài Khoản Mẫu Để Đăng Nhập}
+
+\subsection{Quản Trị Viên (Admin)}
+
+Có toàn quyền quản lý hệ thống.
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.30\linewidth}}
+\toprule
+\textbf{Vai Trò} & \textbf{Email} & \textbf{Mật Khẩu}\\
+\midrule
+\endhead
+Admin & \codepath{admin@vouchersystem.com} & \codepath{Admin@123}\\
+\bottomrule
+\end{longtable}
+
+\subsection{Đối Tác (Partner)}
+
+Các đối tác đã được duyệt (status: APPROVED):
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.30\linewidth}}
+\toprule
+\textbf{Tên Doanh Nghiệp} & \textbf{Email} & \textbf{Mật Khẩu}\\
+\midrule
+\endhead
+Demo Partner & \codepath{partner@vouchersystem.com} & \codepath{Customer@123}\\
+Green Spa & \codepath{partner2@vouchersystem.com} & \codepath{Customer@123}\\
+Sunrise Eats & \codepath{partner3@vouchersystem.com} & \codepath{Customer@123}\\
+Lotus Beauty & \codepath{partner4@vouchersystem.com} & \codepath{Customer@123}\\
+(Xem thêm 16 đối tác khác trong \codepath{test_accounts.md}) & \ldots & \codepath{Customer@123}\\
+\bottomrule
+\end{longtable}
+
+\textbf{Đối tác chờ duyệt (để test luồng duyệt):}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Email: \codepath{partner-pending@vouchersystem.com}, mật khẩu: \codepath{Customer@123}.
+\end{itemize}
+
+\textbf{Đối tác bị tạm khóa (để test luồng appeal):}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Email: \codepath{partner-suspended@vouchersystem.com}, mật khẩu: \codepath{Customer@123}.
+\end{itemize}
+
+\subsection{Khách Hàng (Customer)}
+
+Tài khoản khách hàng mẫu:
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.30\linewidth}}
+\toprule
+\textbf{Mô Tả} & \textbf{Email} & \textbf{Mật Khẩu}\\
+\midrule
+\endhead
+Demo Customer & \codepath{customer@vouchersystem.com} & \codepath{Customer@123}\\
+(Có thể đăng ký tài khoản mới tự do) & - & -\\
+\bottomrule
+\end{longtable}
+
+\section{Hướng Dẫn Sử Dụng Chi Tiết Theo Vai Trò}
+
+\subsection{Hướng Dẫn Cho Khách Hàng (Customer)}
+
+\subsubsection{Bước 1: Đăng Ký Hoặc Đăng Nhập}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Truy cập \codepath{http://localhost:3000}.
+  \item Chọn \textbf{``Đăng ký tài khoản''} hoặc đăng nhập bằng tài khoản demo \codepath{customer@vouchersystem.com}.
+  \item Nếu đăng ký, nhập email/phone, mật khẩu, chọn vai trò là \textbf{``Khách hàng''}.
+\end{enumerate}
+
+\subsubsection{Bước 2: Tìm Kiếm Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào trang \textbf{``Danh sách voucher''} (\codepath{/vouchers}).
+  \item Có thể lọc theo: giá, mức giảm (\%), danh mục, khu vực, sắp xếp (mới nhất, giá tăng/giảm).
+  \item Sử dụng thanh tìm kiếm trên top để gõ tên voucher.
+\end{enumerate}
+
+\subsubsection{Bước 3: Xem Chi Tiết Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Nhấp vào voucher muốn xem chi tiết.
+  \item Xem: hình ảnh, giá gốc, giá bán, chiết khấu, hạn sử dụng, chi nhánh áp dụng, điều kiện.
+  \item Xem đánh giá của khách hàng khác (nếu có).
+\end{enumerate}
+
+\subsubsection{Bước 4: Thêm Vào Giỏ Hàng}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Nhấp nút \textbf{``Thêm vào giỏ hàng''} trên trang chi tiết.
+  \item Có thể thêm nhiều lần hoặc chỉnh sửa số lượng.
+  \item Giỏ hàng lưu trong \texttt{localStorage}, vẫn còn sau khi tắt trình duyệt.
+\end{enumerate}
+
+\subsubsection{Bước 5: Checkout Và Thanh Toán}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào \textbf{``Giỏ hàng''} (\codepath{/cart}) hoặc nhấp biểu tượng giỏ ở Navbar.
+  \item Kiểm tra danh sách, có thể sửa số lượng hoặc xóa item.
+  \item Nhập thông tin người nhận (tên, số điện thoại, email, ghi chú tùy chọn).
+  \item Chọn phương thức thanh toán:
+    \begin{itemize}[leftmargin=1.2cm]
+      \item \textbf{``Thanh toán mô phỏng''}: đơn hàng được ghi nhận là đã thanh toán ngay lập tức.
+      \item \textbf{``VNPay Sandbox''}: được chuyển sang trang VNPay demo để xác nhận.
+      \item \textbf{``PayPal Sandbox''}: sử dụng PayPal sandbox (nếu được cấu hình).
+    \end{itemize}
+  \item Nhấp \textbf{``Thanh Toán''} để hoàn tất.
+\end{enumerate}
+
+\subsubsection{Bước 6: Nhận Mã Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Sau thanh toán thành công, hệ thống tự động chuyển sang trang \textbf{``Voucher của tôi''} (\codepath{/my-vouchers}).
+  \item Xem danh sách đơn hàng, trạng thái, và từng voucher code.
+  \item Nhấp \textbf{``Xem mã / QR''} để xem mã voucher unique (code).
+  \item Mã này sẽ được sử dụng tại chi nhánh áp dụng hoặc cung cấp cho đối tác.
+\end{enumerate}
+
+\subsubsection{Bước 7: Đánh Giá Hoặc Khiếu Nại (Sau Khi Sử Dụng)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Nếu voucher đã được sử dụng, khách hàng có thể \textbf{``Đánh giá''} voucher đó.
+  \item Nếu có vấn đề (ví dụ: đối tác từ chối, lỗi hệ thống), nhấp \textbf{``Khiếu nại''}.
+  \item Điền tiêu đề, mô tả chi tiết, và gửi. Admin sẽ xem xét và phản hồi.
+\end{enumerate}
+
+\subsubsection{Bước 8: Cập Nhật Hồ Sơ Cá Nhân}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào \textbf{``Hồ sơ cá nhân''} (\codepath{/profile}).
+  \item Cập nhật tên đầy đủ, số điện thoại.
+  \item Đổi mật khẩu nếu cần.
+\end{enumerate}
+
+\subsection{Hướng Dẫn Cho Đối Tác (Partner)}
+
+\subsubsection{Tiền Điều Kiện}
+
+Tài khoản đối tác phải có trạng thái \textbf{APPROVED} mới có thể tạo voucher. Nếu chưa được duyệt, khách hàng sẽ thấy thông báo chặn.
+
+\subsubsection{Bước 1: Đăng Nhập Tài Khoản Đối Tác}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Truy cập \codepath{http://localhost:3000} và đăng nhập bằng email đối tác (ví dụ: \codepath{partner@vouchersystem.com}, mật khẩu: \codepath{Customer@123}).
+  \item Kiểm tra vai trò là \textbf{``PARTNER''} bằng cách nhấp avatar/username ở top-right.
+\end{enumerate}
+
+\subsubsection{Bước 2: Truy Cập Dashboard Đối Tác}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Sau khi đăng nhập, hệ thống tự động chuyển sang \textbf{``Partner Dashboard''} (\codepath{/partner}).
+  \item Xem trạng thái tài khoản (APPROVED, PENDING, REJECTED, hoặc SUSPENDED).
+  \item Xem số lượng voucher, doanh thu, đơn hàng, khiếu nại.
+\end{enumerate}
+
+\subsubsection{Bước 3: Quản Lý Chi Nhánh}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Hồ sơ \& Chi Nhánh''}.
+  \item Cập nhật thông tin doanh nghiệp: tên, địa chỉ, người đại diện, giấy phép kinh doanh.
+  \item Thêm chi nhánh mới (tên, địa chỉ, số điện thoại).
+  \item Kích hoạt/vô hiệu hóa chi nhánh nếu cần.
+\end{enumerate}
+
+\subsubsection{Bước 4: Tạo Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào \textbf{``Voucher của tôi''} (\codepath{/partner/vouchers}) hoặc nhấp \textbf{``Tạo Voucher Mới''}.
+  \item Điền thông tin voucher:
+    \begin{itemize}[leftmargin=1.2cm]
+      \item Tên voucher (ví dụ: ``Giảm 20\% Spa'').
+      \item Mô tả, danh mục (Ẩm thực, Du lịch, Làm đẹp, v.v.).
+      \item Giá gốc, giá bán (giá bán phải nhỏ hơn gốc).
+      \item Tồn kho (số lượng voucher cần bán).
+      \item Thời gian bán (ngày/giờ bắt đầu - kết thúc).
+      \item Thời gian sử dụng (hạn sử dụng voucher).
+      \item Điều kiện sử dụng (mô tả chi tiết).
+      \item Tải lên hình ảnh (URL hoặc upload).
+      \item Chọn chi nhánh áp dụng.
+    \end{itemize}
+  \item Nhấp \textbf{``Lưu Và Gửi Duyệt''} hoặc \textbf{``Lưu Bản Nháp''}.
+\end{enumerate}
+
+\subsubsection{Bước 5: Quản Lý Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Xem danh sách voucher của mình (đã duyệt, chưa duyệt, bị từ chối).
+  \item Chỉnh sửa voucher (nếu còn chưa duyệt).
+  \item Xóa voucher nếu cần.
+  \item Theo dõi trạng thái duyệt.
+\end{enumerate}
+
+\subsubsection{Bước 6: Kiểm Tra Và Xác Nhận Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào \textbf{``Quét Voucher''} (\codepath{/partner/scan}).
+  \item Nhập hoặc quét mã voucher, chọn chi nhánh (nếu có nhiều).
+  \item Chọn chế độ:
+    \begin{itemize}[leftmargin=1.2cm]
+      \item \textbf{``Kiểm tra''}: chỉ xem trạng thái, không thay đổi.
+      \item \textbf{``Xác nhận sử dụng''}: chuyển trạng thái voucher sang ``Đã sử dụng''.
+    \end{itemize}
+  \item Nếu code hợp lệ (chưa dùng, chưa hết hạn, đúng chi nhánh), hệ thống xác nhận thành công.
+\end{enumerate}
+
+\subsubsection{Bước 7: Xem Báo Cáo}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào \textbf{``Báo Cáo''} (\codepath{/partner/reports}).
+  \item Xem tổng doanh thu, số bán, số phát hành, số sử dụng, số hết hạn.
+  \item Xem bảng chi tiết theo từng voucher: doanh thu, tỷ lệ sử dụng.
+\end{enumerate}
+
+\subsubsection{Bước 8: Gửi Khiếu Nại (Nếu Bị Tạm Khóa)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Nếu tài khoản bị SUSPENDED, có thể gửi khiếu nại để yêu cầu admin xem xét.
+  \item Vào tab \textbf{``Khiếu Nại''} trong dashboard.
+  \item Nhấp \textbf{``Gửi Khiếu Nại Mới''}, nhập tiêu đề, nội dung chi tiết, URL bằng chứng (tùy chọn).
+  \item Gửi và chờ admin phản hồi.
+\end{enumerate}
+
+\subsection{Hướng Dẫn Cho Quản Trị Viên (Admin)}
+
+\subsubsection{Bước 1: Đăng Nhập Admin}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Truy cập \codepath{http://localhost:3000} và đăng nhập bằng email admin: \codepath{admin@vouchersystem.com}, mật khẩu: \codepath{Admin@123}.
+  \item Kiểm tra vai trò là \textbf{``ADMIN''}.
+\end{enumerate}
+
+\subsubsection{Bước 2: Truy Cập Admin Dashboard}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Sau khi đăng nhập, tự động chuyển sang \textbf{``Admin Dashboard''} (\codepath{/admin/*}).
+  \item Xem tổng hợp: số người dùng, đối tác, đơn hàng, voucher, khiếu nại.
+\end{enumerate}
+
+\subsubsection{Bước 3: Duyệt Đối Tác}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Đối Tác''}.
+  \item Xem danh sách đối tác đang chờ duyệt (status: PENDING).
+  \item Nhấp vào đối tác để xem chi tiết: tên doanh nghiệp, người đại diện, giấy phép kinh doanh, email.
+  \item Chọn \textbf{``Duyệt''} (chuyển sang APPROVED) hoặc \textbf{``Từ chối''} (nhập lý do từ chối).
+\end{enumerate}
+
+\subsubsection{Bước 4: Duyệt Voucher}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Duyệt Voucher''} hoặc \textbf{``Voucher''}.
+  \item Xem danh sách voucher chờ duyệt.
+  \item Nhấp vào voucher để xem chi tiết (tên, giá, mô tả, chi nhánh, hình ảnh).
+  \item Chọn \textbf{``Duyệt''} (status: APPROVED, có thể bán) hoặc \textbf{``Từ chối''} (status: REJECTED, nhập lý do).
+\end{enumerate}
+
+\subsubsection{Bước 5: Quản Lý Đơn Hàng}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Đơn Hàng''}.
+  \item Xem danh sách các order: trạng thái (PENDING, PAID, CANCELLED, REFUNDED), phương thức thanh toán, tổng tiền.
+  \item Có thể xem chi tiết, cập nhật trạng thái nếu cần.
+\end{enumerate}
+
+\subsubsection{Bước 6: Xử Lý Khiếu Nại}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Khiếu Nại''}.
+  \item Xem danh sách khiếu nại từ khách hàng.
+  \item Nhấp vào khiếu nại để xem chi tiết: liên quan voucher nào, lý do, đối tác.
+  \item Cập nhật trạng thái (PENDING, IN\_REVIEW, RESOLVED, REJECTED) và nhập phản hồi.
+\end{enumerate}
+
+\subsubsection{Bước 7: Quản Lý Nội Dung}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Nội Dung''} hoặc \textbf{``Content Management''}.
+  \item Quản lý:
+    \begin{itemize}[leftmargin=1.2cm]
+      \item \textbf{Danh mục}: thêm, sửa, xóa danh mục voucher.
+      \item \textbf{Banner}: tạo banner quảng cáo ở trang chủ, chọn hình, link, sắp xếp thứ tự.
+      \item \textbf{Trang nội dung}: chính sách hoàn/hủy, điều khoản sử dụng, hướng dẫn.
+      \item \textbf{Popup}: thông báo sự kiện, ưu đãi, hiển thị với bao lâu.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Bước 8: Xem Nhật Ký Hệ Thống}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Vào tab \textbf{``Nhật Ký''}.
+  \item Xem lịch sử thao tác: tác nhân, hành động (CREATE, UPDATE, DELETE, APPROVE), entity (voucher, order, user), thời gian.
+  \item Có thể lọc theo ngày, loại hành động, entity.
+\end{enumerate}
+
+\section{Các Lỗi Thường Gặp Và Cách Khắc Phục}
+
+\subsection{Docker Không Khởi Động Được}
+
+\textbf{Triệu chứng:} \texttt{docker compose up} báo lỗi, services không chạy.
+
+\textbf{Nguyên nhân phổ biến:}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Docker Desktop chưa được khởi động.
+  \item Cổng 3000, 5001, 5499 đã bị chiếm dụng.
+  \item File \texttt{.env} chưa được tạo.
+\end{itemize}
+
+\textbf{Giải pháp:}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Kiểm tra Docker Desktop đang chạy: \texttt{docker ps}.
+  \item Xem quy trình sử dụng cổng: \codepath{lsof -i :3000} (macOS/Linux) hoặc \codepath{netstat -ano | findstr :3000} (Windows).
+  \item Tạo file \texttt{.env} từ \texttt{.env.example}: \texttt{cp .env.example .env}.
+  \item Reset Docker: \texttt{docker compose down -v; docker compose up --build}.
+\end{itemize}
+
+\subsection{Frontend Không Kết Nối Được API}
+
+\textbf{Triệu chứng:} Frontend hiển thị lỗi kết nối, API call không thành công.
+
+\textbf{Nguyên nhân:}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Backend chưa khởi động.
+  \item CORS không được cấu hình.
+  \item Cổng API sai trong frontend config.
+\end{itemize}
+
+\textbf{Giải pháp:}
+\begin{itemize}[leftmargin=1.5cm]
+  \item Kiểm tra backend chạy: \codepath{curl http://localhost:5001/health}.
+  \item Kiểm tra CORS trong \codepath{backend/src/app.js} có chứa \codepath{http://localhost:3000}.
+  \item Kiểm tra file \codepath{frontend/src/services/api.js} có baseURL đúng.
+\end{itemize}
+
+\subsection{Database Không Kết Nối}
+
+\textbf{Triệu chứng:} Backend báo lỗi \codepath{ECONNREFUSED} hoặc \texttt{database connection failed}.
+
+\textbf{Nguyên nhân:}
+\begin{itemize}[leftmargin=1.2cm]
+  \item PostgreSQL container chưa sẵn sàng.
+  \item \codepath{DATABASE_URL} sai trong \texttt{.env}.
+  \item Dữ liệu PostgreSQL bị hỏng.
+\end{itemize}
+
+\textbf{Giải pháp:}
+\begin{itemize}[leftmargin=1.5cm]
+  \item Kiểm tra container: \texttt{docker compose ps}.
+  \item Kiểm tra logs: \texttt{docker compose logs db}.
+  \item Reset: \texttt{docker compose down -v; docker compose up --build}.
+  \item Nếu chạy native: \texttt{psql -U voucheruser -d voucherdb -c "\textbackslash dt"} để liệt kê bảng.
+\end{itemize}
+
+\subsection{Token JWT Hết Hạn (401 Unauthorized)}
+
+\textbf{Triệu chứng:} Sau vài giờ, bị logout tự động.
+
+\textbf{Nguyên nhân:}
+\begin{itemize}[leftmargin=1.2cm]
+  \item JWT token hết hạn (mặc định 7 ngày theo \codepath{JWT_EXPIRES_IN} trong \texttt{.env}).
+\end{itemize}
+
+\textbf{Giải pháp:}
+\begin{itemize}[leftmargin=1.5cm]
+  \item Đăng nhập lại.
+  \item Nếu cần token sống lâu hơn, chỉnh \codepath{JWT_EXPIRES_IN} trong \texttt{.env} (ví dụ: \texttt{30d}).
+\end{itemize}
+
+\subsection{Package Dependencies Lỗi}
+
+\textbf{Triệu chứng:} \texttt{npm install} báo conflict, hoặc app khởi động với cảnh báo.
+
+\textbf{Giải pháp:}
+\begin{itemize}[leftmargin=1.5cm]
+  \item Xóa \codepath{package-lock.json} và \codepath{node_modules}: \codepath{rm -rf node_modules package-lock.json} (Linux/macOS) hoặc \codepath{rmdir /s node_modules & del package-lock.json} (Windows).
+  \item Cài lại: \texttt{npm install}.
+  \item Nếu vẫn lỗi, dùng \texttt{npm ci} thay vì \texttt{npm install}.
+\end{itemize}
+
+\section{Workflow Demo Từng Bước}
+
+\subsection{Kịch Bản Demo Đầy Đủ (30 Phút)}
+
+Để demo hệ thống, làm theo trình tự sau:
+
+\subsubsection{Phần 1: Admin Duyệt Voucher (5 Phút)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Đăng nhập admin: \codepath{admin@vouchersystem.com} / \codepath{Admin@123}.
+  \item Vào \textbf{``Duyệt Voucher''}, xem danh sách voucher chưa duyệt từ các đối tác.
+  \item Chọn một voucher, xem chi tiết (tên, giá, mô tả).
+  \item Nhấp \textbf{``Duyệt''} để xác nhận, hoặc \textbf{``Từ chối''} để demo luồng lỗi.
+  \item Kiểm tra trạng thái thay đổi sang \textbf{APPROVED}.
+\end{enumerate}
+
+\subsubsection{Phần 2: Khách Hàng Mua Voucher (10 Phút)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Đăng xuất admin, đăng nhập khách hàng: \codepath{customer@vouchersystem.com} / \codepath{Customer@123}.
+  \item Vào trang \textbf{``Danh Sách Voucher''}, tìm voucher vừa được duyệt (nên đã hiển thị).
+  \item Xem chi tiết, nhấp \textbf{``Thêm Vào Giỏ Hàng''}.
+  \item Vào \textbf{``Giỏ Hàng''}, nhập thông tin người nhận.
+  \item Chọn phương thức thanh toán \textbf{``Thanh Toán Mô Phỏng''}, nhấp \textbf{``Thanh Toán''}.
+  \item Hệ thống chuyển sang \textbf{``Voucher Của Tôi''}, hiển thị mã voucher đã tạo.
+  \item Nhấp \textbf{``Xem Mã / QR''} để xem mã unique.
+\end{enumerate}
+
+\subsubsection{Phần 3: Đối Tác Scan Voucher (5 Phút)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Đăng xuất khách hàng, đăng nhập đối tác: \codepath{partner@vouchersystem.com} / \codepath{Customer@123}.
+  \item Vào \textbf{``Quét Voucher''} (\codepath{/partner/scan}).
+  \item Sao chép mã từ phần demo khách hàng ở trên, dán vào ô ``Mã voucher''.
+  \item Chọn chế độ \textbf{``Kiểm Tra''}, nhấp \textbf{``Kiểm Tra''} để xem trạng thái.
+  \item Sau đó chọn chế độ \textbf{``Xác Nhận Sử Dụng''}, nhấp \textbf{``Xác Nhận''} để chuyển sang ``Đã Sử Dụng''.
+  \item Xem kết quả: mã không thể sử dụng lần thứ 2.
+\end{enumerate}
+
+\subsubsection{Phần 4: Admin Xem Dashboard (5 Phút)}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Đăng nhập lại admin.
+  \item Xem \textbf{``Dashboard''}: số đơn hàng, doanh thu, voucher đã bán, sử dụng, v.v.
+  \item Xem tab \textbf{``Đơn Hàng''}: danh sách order, trạng thái PAID, payment method, tổng tiền.
+  \item Xem tab \textbf{``Nhật Ký''}: lịch sử các thao tác (create, approve, scan).
+\end{enumerate}
+
+\subsection{Kịch Bản Demo Khác (Tuỳ Chọn)}
+
+\subsubsection{Demo Luồng Khiếu Nại}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Khách hàng sử dụng voucher, nếu gặp sự cố (ví dụ: đối tác từ chối), nhấp \textbf{``Khiếu Nại''}.
+  \item Admin vào tab \textbf{``Khiếu Nại''}, xem danh sách, cập nhật trạng thái, nhập phản hồi.
+\end{enumerate}
+
+\subsubsection{Demo Luồng Đối Tác Chưa Duyệt}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Đăng nhập tài khoản \codepath{partner-pending@vouchersystem.com}.
+  \item Sẽ thấy thông báo chặn: ``Tài khoản đang chờ duyệt''.
+  \item Admin duyệt tài khoản này, sau đó đối tác có thể truy cập.
+\end{enumerate}
+
+\section{Ghi Chú Bổ Sung}
+
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{VNPay Sandbox}: Sử dụng tài khoản và khóa từ VNPay demo, không thanh toán thực tế.
+  \item \textbf{PayPal Sandbox}: Cần cấu hình Client ID/Secret từ \codepath{https://sandbox.paypal.com}.
+  \item \textbf{Dữ liệu Mẫu}: Tất cả dữ liệu seed được xóa khi docker compose down -v. Để giữ dữ liệu, không dùng flag -v.
+  \item \textbf{Production}: Trước khi deploy lên production, thay đổi \codepath{JWT_SECRET}, \codepath{DATABASE_PASSWORD}, cấu hình HTTPS, sử dụng real VNPay/PayPal credentials.
+  \item \textbf{Documentation}: Chi tiết API endpoints tại \codepath{backend/src/routes/*.routes.js}.
+\end{itemize}
+\chapter{Tóm Tắt Thuyết Trình}
+\section{Giới Thiệu}
+Đề tài xây dựng hệ thống thương mại điện tử bán voucher giảm giá trực tuyến.
+\section{Lý Do Chọn Đề Tài}
+Đề tài phù hợp với nghiệp vụ thương mại điện tử, có đủ luồng khách hàng, đối tác và quản trị viên.
+\section{Mục Tiêu}
+Mua voucher, phát hành code sau thanh toán, xác nhận sử dụng, báo cáo và kiểm toán.
+\section{Chức Năng Chính}
+Đăng ký/đăng nhập, quản lý voucher, giỏ hàng, thanh toán, phát hành code, scan code, dashboard.
+\section{Kiến Trúc}
+React frontend, Express backend, PostgreSQL database, JWT auth.
+\section{Dữ Liệu}
+Schema có users, partners, vouchers, orders, issued vouchers, reviews, complaints, logs.
+\section{Kết Quả}
+Đã có luồng nghiệp vụ chính và dữ liệu mẫu đủ để demo.
+\section{Hạn Chế}
+Audit log chưa chắc phủ hết, một số rule vòng đời voucher cần kiểm tra thêm, admin UI còn lớn.
+\section{Hướng Phát Triển}
+Hoàn thiện logging, test, rule hết hạn, hoàn tiền, và tách nhỏ module admin.
+\section{Script Thuyết Trình}
+Giới thiệu đề tài -> demo mua voucher -> demo duyệt voucher -> demo scan code -> kết luận.
+
+\chapter{Kết Luận}
+\input{revised/conclusion}
+
+\chapter{Danh Sách Nội Dung Cần Nhóm Tự Bổ Sung}
+\input{revised/team_notes}
+
+\end{document}
+

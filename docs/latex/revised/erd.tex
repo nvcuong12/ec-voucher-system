@@ -1,0 +1,95 @@
+\section{Tổng Quan}
+Schema PostgreSQL định nghĩa tại \texttt{backend/src/config/init.sql}. Dữ liệu mẫu bổ sung trong \texttt{seed-data.sql}.
+
+\textbf{NOTE: Nhóm cần xuất ERD từ database hoặc vẽ lại bằng draw.io rồi chèn hình tại đây.}
+
+\section{Bảng Danh Sách Entity}
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.50\linewidth}>{\raggedright\arraybackslash}p{0.20\linewidth}}
+\toprule
+\textbf{Entity/Bảng} & \textbf{Mô tả nghiệp vụ} & \textbf{File schema}\\
+\midrule
+\endhead
+users & Tài khoản đăng nhập, phân quyền & \texttt{init.sql} L22--32\\
+partners & Hồ sơ doanh nghiệp đối tác & L35--46\\
+partner\_branches & Chi nhánh áp dụng voucher & L49--57\\
+vouchers & Sản phẩm voucher & L60--82\\
+voucher\_applicable\_branches & N-N voucher--chi nhánh & L85--90\\
+orders & Đơn hàng khách & L93--107\\
+order\_items & Chi tiết đơn & L119--127\\
+issued\_vouchers & Mã phát hành & L131--143\\
+reviews & Đánh giá & L147--158\\
+complaints & Khiếu nại khách & L161--175\\
+partner\_appeals & Khiếu nại đối tác bị khóa & L178--191\\
+categories, banners, content\_pages, popups & Quản trị nội dung & L194--232\\
+system\_logs & Nhật ký hệ thống & L235--244\\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\section{Bảng Khóa Chính Và Khóa Ngoại}
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.58\linewidth}}
+\toprule
+\textbf{Bảng} & \textbf{PK} & \textbf{FK chính}\\
+\midrule
+\endhead
+users & id (UUID) & —\\
+partners & id & user\_id → users(id)\\
+partner\_branches & id & partner\_id → partners(id)\\
+vouchers & id & partner\_id → partners(id)\\
+orders & id & customer\_id → users(id)\\
+order\_items & id & order\_id → orders(id); voucher\_id → vouchers(id)\\
+issued\_vouchers & id & order\_item\_id, voucher\_id, customer\_id, partner\_id; used\_at\_branch → partner\_branches\\
+reviews & id & voucher\_id, customer\_id, issued\_voucher\_id\\
+complaints & id & customer\_id; optional voucher\_id, issued\_voucher\_id, order\_id\\
+partner\_appeals & id & partner\_id, user\_id\\
+system\_logs & id (BIGSERIAL) & user\_id → users(id) nullable\\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\section{Bảng Quan Hệ Giữa Các Entity}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.10\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.46\linewidth}}
+\toprule
+\textbf{Entity A} & \textbf{QH} & \textbf{Entity B} & \textbf{Ghi chú}\\
+\midrule
+users & 1--1/1--n & partners & Một user PARTNER có một partner profile.\\
+partners & 1--n & partner\_branches & Chi nhánh vật lý.\\
+partners & 1--n & vouchers & Đối tác sở hữu voucher.\\
+vouchers & n--n & partner\_branches & Qua \texttt{voucher\_applicable\_branches}.\\
+users & 1--n & orders & Khách đặt hàng.\\
+orders & 1--n & order\_items & Chi tiết mua.\\
+order\_items & 1--n & issued\_vouchers & Mỗi quantity có thể nhiều mã.\\
+issued\_vouchers & 1--1 & reviews & UNIQUE issued\_voucher\_id.\\
+users & 1--n & complaints & Khiếu nại.\\
+\bottomrule
+\end{longtable}
+
+\section{Mapping Yêu Cầu Dữ Liệu Nghiệp Vụ}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.30\linewidth}>{\raggedright\arraybackslash}p{0.48\linewidth}}
+\toprule
+\textbf{Yêu cầu} & \textbf{Dữ liệu nghiệp vụ} & \textbf{Bảng/trường}\\
+\midrule
+BR-01/RB-01 & Trạng thái duyệt voucher & \texttt{vouchers.status}\\
+BR-04/RB-15 & Tồn kho & \texttt{vouchers.stock}\\
+BR-05/RB-05 & Mã sau thanh toán & \texttt{issued\_vouchers} sau \texttt{orders.status=PAID}\\
+BR-05/RB-07 & Vòng đời mã & \texttt{issued\_vouchers.status}, \texttt{used\_at}\\
+BR-CUS-08 & Đánh giá & \texttt{reviews}\\
+BR-ADM-07/RB-12 & Audit & \texttt{system\_logs}\\
+\bottomrule
+\end{longtable}
+
+\section{Mã Mermaid Gợi Ý (Chuyển Thành Hình)}
+\begin{verbatim}
+erDiagram
+  users ||--o| partners : has
+  partners ||--{ partner_branches : owns
+  partners ||--{ vouchers : creates
+  vouchers }o--o{ partner_branches : applicable
+  users ||--{ orders : places
+  orders ||--{ order_items : contains
+  order_items ||--{ issued_vouchers : generates
+  issued_vouchers ||--o| reviews : has
+  users ||--{ complaints : files
+\end{verbatim}
