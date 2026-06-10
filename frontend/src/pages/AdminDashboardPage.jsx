@@ -13,7 +13,6 @@ import {
   RiInformationLine,
   RiLockLine,
   RiLockUnlockLine,
-  RiPieChartLine,
   RiSearchLine,
   RiStore2Line,
   RiTicket2Line,
@@ -130,52 +129,6 @@ const BarChart = ({ data, valueKey, labelKey, formatValue, color = "var(--color-
   );
 };
 
-/* ─── Mini Donut Chart ────────────────────────────────────── */
-const DonutChart = ({ data }) => {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-  if (!total) return <p className="text-muted" style={{ fontSize: "0.85rem" }}>Không có dữ liệu.</p>;
-  const size = 120;
-  const sw = 22;
-  const r = (size - sw) / 2;
-  const circ = 2 * Math.PI * r;
-  let offset = 0;
-  const segments = data.map((d) => {
-    const dash = (d.value / total) * circ;
-    const gap = circ - dash;
-    const seg = { ...d, dash, gap, offset };
-    offset += dash;
-    return seg;
-  });
-  return (
-    <div className="admin-donut-wrapper">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
-        {segments.map((seg, i) => (
-          <circle
-            key={i}
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={seg.color}
-            strokeWidth={sw}
-            strokeDasharray={`${seg.dash} ${seg.gap}`}
-            strokeDashoffset={-seg.offset}
-          />
-        ))}
-      </svg>
-      <div className="admin-donut-legend">
-        {data.map((d, i) => (
-          <div key={i} className="admin-donut-legend-item">
-            <div className="admin-donut-legend-dot" style={{ background: d.color }} />
-            <span>
-              {d.label}: <strong>{d.value}</strong>
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 /* ─── Component ───────────────────────────────────────────── */
 const AdminDashboardPage = () => {
@@ -1066,33 +1019,21 @@ const AdminDashboardPage = () => {
                 </section>
 
                 {/* Charts row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2rem" }}>
-                  {dashboard.revenue_by_day?.length > 0 && (
-                    <div className="card admin-section" style={{ marginBottom: 0 }}>
-                      <h2><RiBarChartLine /> Doanh thu 7 ngày gần nhất</h2>
-                      <BarChart
-                        data={dashboard.revenue_by_day.map((d) => ({
-                          ...d,
-                          label: new Date(d.day).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-                        }))}
-                        valueKey="revenue"
-                        labelKey="label"
-                        formatValue={formatMoney}
-                        color="var(--color-primary)"
-                      />
-                    </div>
-                  )}
-                  <div className="card admin-section" style={{ marginBottom: 0 }}>
-                    <h2><RiPieChartLine /> Trạng thái voucher</h2>
-                    <DonutChart
-                      data={[
-                        { label: "Đã duyệt", value: dashboard.vouchers.approved || 0, color: "#16a34a" },
-                        { label: "Chờ duyệt", value: dashboard.vouchers.pending || 0, color: "#f59e0b" },
-                        { label: "Từ chối", value: dashboard.vouchers.rejected || 0, color: "#ef4444" },
-                      ]}
+                {dashboard.revenue_by_day?.length > 0 && (
+                  <div className="card admin-section" style={{ marginBottom: "2rem" }}>
+                    <h2><RiBarChartLine /> Doanh thu 7 ngày gần nhất</h2>
+                    <BarChart
+                      data={dashboard.revenue_by_day.map((d) => ({
+                        ...d,
+                        label: new Date(d.day).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+                      }))}
+                      valueKey="revenue"
+                      labelKey="label"
+                      formatValue={formatMoney}
+                      color="var(--color-primary)"
                     />
                   </div>
-                </div>
+                )}
               </>
             )}
 
