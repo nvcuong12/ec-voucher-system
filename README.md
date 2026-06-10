@@ -26,12 +26,16 @@ Hệ thống thương mại điện tử cho phép đối tác đăng ký bán v
 ### Các bước
 
 ```bash
-# Bước 1 — Tạo file cấu hình
+# Bước 1 — Clone repository
+git clone https://github.com/nvcuong12/ec-voucher-system.git
+cd ec-voucher-system
+
+# Bước 2 — Tạo file cấu hình
 # Windows (PowerShell):  Copy-Item .env.example .env
 # Windows (cmd):         copy .env.example .env
 # macOS / Linux / WSL:   cp .env.example .env
 
-# Bước 2 — Khởi động toàn bộ hệ thống
+# Bước 3 — Khởi động toàn bộ hệ thống
 docker compose up -d
 ```
 

@@ -14,13 +14,19 @@
 
 ## Bước 1 — Lấy Mã Nguồn
 
-Giải nén file nộp (hoặc clone từ repository nếu có):
+Clone repository từ GitHub:
+
+```bash
+git clone https://github.com/nvcuong12/ec-voucher-system.git
+cd ec-voucher-system
+```
+
+Hoặc giải nén file nộp trực tiếp. Cấu trúc thư mục:
 
 ```
-voucher-system/
+ec-voucher-system/
 ├── backend/          ← API Node.js/Express
 ├── frontend/         ← Giao diện React
-├── docs/             ← Tài liệu nghiệp vụ
 ├── docker-compose.yml
 ├── .env.example
 └── ...
