@@ -16,16 +16,26 @@ UC-CUS-05 & Thêm vào giỏ hàng & Khách hàng & \texttt{CartContext.jsx}\\
 UC-CUS-06 & Tạo đơn hàng & Khách hàng & \texttt{order.controller.js}, \texttt{CartPage.jsx}\\
 UC-CUS-07 & Thanh toán và nhận code & Khách hàng & \texttt{payOrder}, \texttt{MyVouchersPage.jsx}\\
 UC-CUS-08 & Đánh giá/khiếu nại & Khách hàng & \texttt{review.controller.js}, \texttt{user.routes.js}\\
+UC-CUS-09 & Quản lý hồ sơ cá nhân & Khách hàng & \texttt{ProfilePage.jsx}, \texttt{user.routes.js}, \texttt{auth.routes.js}\\
+UC-CUS-10 & Xem đơn hàng/voucher đã mua & Khách hàng & \texttt{OrdersPage.jsx}, \texttt{MyVouchersPage.jsx}, \texttt{listMyOrders}\\
+UC-CUS-11 & Xem nội dung công khai & Khách hàng & \texttt{ContentPage.jsx}, \texttt{content.service.js}\\
 UC-PAR-01 & Đăng ký hồ sơ đối tác & Đối tác & \texttt{registerPartner}, \texttt{RegisterPage.jsx}\\
 UC-PAR-02 & Tạo voucher & Đối tác & \texttt{createVoucher}, \texttt{PartnerVoucherForm.jsx}\\
 UC-PAR-03 & Gửi duyệt voucher & Đối tác & Status \texttt{PENDING\_APPROVAL}\\
 UC-PAR-04 & Kiểm tra voucher code & Đối tác & \texttt{checkVoucher}, \texttt{PartnerVoucherScan.jsx}\\
 UC-PAR-05 & Xác nhận sử dụng & Đối tác & \texttt{scanVoucher}\\
+UC-PAR-06 & Quản lý hồ sơ và chi nhánh & Đối tác & \texttt{updatePartnerProfile}, \texttt{createBranch}, \texttt{updatePartnerBranch}\\
+UC-PAR-07 & Xem dashboard/báo cáo & Đối tác & \texttt{getPartnerDashboard}, \texttt{getPartnerReport}, \texttt{PartnerReports.jsx}\\
+UC-PAR-08 & Gửi khiếu nại mở khóa & Đối tác & \texttt{createPartnerAppeal}, \texttt{PartnerDashboardPage.jsx}\\
+UC-PAR-09 & Phản hồi đánh giá & Đối tác & \texttt{replyReview}, \texttt{review.routes.js}\\
 UC-ADM-01 & Duyệt đối tác & Admin & \texttt{approvePartner}, \texttt{AdminDashboardPage.jsx}\\
 UC-ADM-02 & Duyệt/từ chối voucher & Admin & \texttt{approveVoucher}, \texttt{AdminVoucherReview.jsx}\\
 UC-ADM-03 & Quản lý đơn hàng & Admin & \texttt{getOrders}, \texttt{updateOrderStatus}\\
 UC-ADM-04 & Xử lý khiếu nại & Admin & \texttt{updateComplaintStatus}\\
 UC-ADM-05 & Dashboard/nhật ký & Admin & \texttt{getDashboard}, \texttt{getLogs}\\
+UC-ADM-06 & Quản lý người dùng & Admin & \texttt{getUsers}, \texttt{updateUserStatus}, \texttt{updateUserRole}\\
+UC-ADM-07 & Quản lý nội dung & Admin & CRUD \texttt{categories/banners/pages/popups}\\
+UC-ADM-08 & Quản lý đối tác mở rộng & Admin & \texttt{updatePartnerStatusAny}, \texttt{getPartnerBranches}, \texttt{updatePartnerAppealStatus}\\
 \bottomrule
 \end{longtable}
 \normalsize
@@ -109,6 +119,34 @@ RB liên quan & RB-10.\\
 Bằng chứng & \texttt{review.controller.js}, \texttt{user.controller.js} (\texttt{createComplaint}).\\
 \end{longtable}
 
+\uctitle{UC-CUS-09}{Quản Lý Hồ Sơ Cá Nhân}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Người dùng đã đăng nhập.\\
+Mục tiêu & Xem/cập nhật thông tin cá nhân và đổi mật khẩu.\\
+Tiền điều kiện & Có JWT hợp lệ.\\
+Luồng chính & 1. Mở \texttt{/profile}. 2. GET \texttt{/api/users/profile}. 3. PUT \texttt{/api/users/profile} để cập nhật hồ sơ hoặc POST \texttt{/api/auth/change-password} để đổi mật khẩu.\\
+Ngoại lệ & E1: Token hết hạn hoặc mật khẩu hiện tại sai.\\
+Bằng chứng & \texttt{ProfilePage.jsx}, \texttt{user.controller.js}, \texttt{auth.controller.js}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-10}{Xem Đơn Hàng Và Voucher Đã Mua}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Khách hàng.\\
+Mục tiêu & Theo dõi lịch sử đơn hàng và danh sách mã voucher đã phát hành.\\
+Tiền điều kiện & Khách hàng đã đăng nhập.\\
+Luồng chính & 1. Mở \texttt{/orders} hoặc \texttt{/my-vouchers}. 2. GET \texttt{/api/orders/my} hoặc GET \texttt{/api/users/vouchers}. 3. Hiển thị trạng thái đơn, item, code và trạng thái sử dụng.\\
+Hậu điều kiện & Khách hàng nắm được mã voucher UNUSED/USED/EXPIRED.\\
+Bằng chứng & \texttt{OrdersPage.jsx}, \texttt{MyVouchersPage.jsx}, \texttt{order.controller.js}, \texttt{user.controller.js}.\\
+\end{longtable}
+
+\uctitle{UC-CUS-11}{Xem Nội Dung Công Khai}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Khách hàng hoặc người dùng chưa đăng nhập.\\
+Mục tiêu & Xem banner, popup và các trang nội dung như điều khoản, chính sách, hướng dẫn.\\
+Luồng chính & 1. Trang chủ lấy banner/popup đang active. 2. Người dùng mở \texttt{/pages/:slug}. 3. GET \texttt{/api/admin/content/pages/public/:slug}.\\
+Bằng chứng & \texttt{HomePage.jsx}, \texttt{ContentPage.jsx}, \texttt{content.service.js}, \texttt{admin.routes.js}.\\
+\end{longtable}
+
 \uctitle{UC-PAR-01}{Đối Tác Đăng Ký Hồ Sơ}
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
 Hậu điều kiện & \texttt{partners.status=PENDING}.\\
@@ -142,6 +180,44 @@ RB liên quan & RB-07, RB-09.\\
 Bằng chứng & \texttt{scanVoucher}, ghi \texttt{system\_logs}.\\
 \end{longtable}
 
+\uctitle{UC-PAR-06}{Quản Lý Hồ Sơ Và Chi Nhánh}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Đối tác.\\
+Mục tiêu & Cập nhật thông tin doanh nghiệp và quản lý chi nhánh áp dụng voucher.\\
+Tiền điều kiện & Đối tác đã đăng nhập; một số thao tác chi nhánh yêu cầu status APPROVED.\\
+Luồng chính & 1. Mở Partner Dashboard. 2. PUT \texttt{/api/partner/profile}. 3. POST \texttt{/api/partner/branches} hoặc PATCH \texttt{/api/partner/branches/:id}.\\
+Ngoại lệ & E1: Partner chưa APPROVED bị chặn khi tạo/cập nhật chi nhánh.\\
+Bằng chứng & \texttt{PartnerDashboardPage.jsx}, \texttt{partner.controller.js}, \texttt{partner.service.js}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-07}{Xem Dashboard Và Báo Cáo}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Đối tác.\\
+Mục tiêu & Theo dõi voucher, doanh thu, số lượng bán/phát hành/sử dụng.\\
+Luồng chính & 1. GET \texttt{/api/partner/dashboard}. 2. GET \texttt{/api/partner/reports}. 3. Hiển thị KPI và bảng báo cáo theo voucher.\\
+Bằng chứng & \texttt{PartnerDashboardPage.jsx}, \texttt{PartnerReports.jsx}, \texttt{getPartnerDashboard}, \texttt{getPartnerReport}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-08}{Gửi Khiếu Nại Mở Khóa}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Đối tác bị tạm khóa.\\
+Mục tiêu & Gửi yêu cầu admin xem xét mở khóa tài khoản đối tác.\\
+Tiền điều kiện & Partner có status \texttt{SUSPENDED}.\\
+Luồng chính & 1. Đối tác nhập tiêu đề, nội dung, bằng chứng. 2. POST \texttt{/api/partner/appeals}. 3. Hệ thống lưu \texttt{partner\_appeals.status=PENDING}.\\
+Ngoại lệ & E1: Đối tác không bị khóa hoặc đã có appeal PENDING.\\
+Bằng chứng & \texttt{createPartnerAppeal}, \texttt{PartnerDashboardPage.jsx}, bảng \texttt{partner\_appeals}.\\
+\end{longtable}
+
+\uctitle{UC-PAR-09}{Phản Hồi Đánh Giá}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Đối tác.\\
+Mục tiêu & Phản hồi review của khách hàng đối với voucher thuộc đối tác.\\
+Tiền điều kiện & Partner APPROVED và review thuộc voucher của đối tác.\\
+Luồng chính & 1. Đối tác nhập phản hồi. 2. POST \texttt{/api/reviews/:id/reply}. 3. Cập nhật \texttt{partner\_reply}.\\
+Ngoại lệ & E1: Review không tồn tại hoặc không thuộc đối tác.\\
+Bằng chứng & \texttt{replyReview}, \texttt{review.routes.js}, \texttt{review.controller.js}.\\
+\end{longtable}
+
 \uctitle{UC-ADM-01}{Quản Trị Viên Duyệt Đối Tác}
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
 Luồng chính & PATCH \texttt{/api/admin/partners/:id/approve|reject}.\\
@@ -169,6 +245,33 @@ Bằng chứng & \texttt{getComplaints}, \texttt{updateComplaintStatus}, bảng 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
 Bằng chứng & \texttt{getDashboard}, \texttt{getLogs}, \texttt{AdminDashboardPage.jsx}.\\
 Ghi chú & RB-12: log chưa đầy đủ mọi hành động admin.\\
+\end{longtable}
+
+\uctitle{UC-ADM-06}{Quản Trị Viên Quản Lý Người Dùng}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Quản trị viên.\\
+Mục tiêu & Xem danh sách người dùng, khóa/mở tài khoản, thay đổi vai trò khi cần.\\
+Luồng chính & 1. GET \texttt{/api/admin/users}. 2. PATCH \texttt{/api/admin/users/:id/status}. 3. PATCH \texttt{/api/admin/users/:id/role}.\\
+Ngoại lệ & E1: User không tồn tại hoặc role không hợp lệ.\\
+Bằng chứng & \texttt{getUsers}, \texttt{updateUserStatus}, \texttt{updateUserRole}, \texttt{AdminDashboardPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-07}{Quản Trị Viên Quản Lý Nội Dung}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Quản trị viên.\\
+Mục tiêu & Quản lý danh mục, banner, trang nội dung và popup hiển thị ở frontend.\\
+Luồng chính & Sử dụng các API CRUD \texttt{/api/admin/content/categories}, \texttt{/banners}, \texttt{/pages}, \texttt{/popups}.\\
+Hậu điều kiện & Nội dung public được frontend lấy qua \texttt{content.service.js}.\\
+Bằng chứng & \texttt{admin.controller.js}, \texttt{admin.routes.js}, \texttt{AdminDashboardPage.jsx}, \texttt{ContentPage.jsx}.\\
+\end{longtable}
+
+\uctitle{UC-ADM-08}{Quản Trị Viên Quản Lý Đối Tác Mở Rộng}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+Actor chính & Quản trị viên.\\
+Mục tiêu & Quản lý trạng thái đối tác, chi nhánh đối tác và các yêu cầu mở khóa.\\
+Luồng chính & 1. PATCH \texttt{/api/admin/partners/:id/status}. 2. GET \texttt{/api/admin/partners/:id/branches}. 3. PATCH \texttt{/api/admin/partners/branches/:id}. 4. GET/PATCH \texttt{/api/admin/partner-appeals}.\\
+Ngoại lệ & E1: Partner/branch/appeal không tồn tại hoặc trạng thái cập nhật không hợp lệ.\\
+Bằng chứng & \texttt{updatePartnerStatusAny}, \texttt{getPartnerBranches}, \texttt{updatePartnerBranchStatus}, \texttt{updatePartnerAppealStatus}.\\
 \end{longtable}
 
 \section{Luồng Ngoại Lệ Chung}

@@ -1,8 +1,6 @@
 \section{Tổng Quan}
 Giao diện chia theo vai trò; routing tại \texttt{frontend/src/App.jsx}. Nguyên tắc: rõ luồng mua hàng, hiển thị trạng thái, phân quyền qua \texttt{ProtectedRoute}.
 
-\textbf{NOTE: Nhóm cần chụp màn hình giao diện và chèn vào mục này.}
-
 \section{Màn Hình Khách Hàng}
 \small
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.52\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}}
@@ -15,7 +13,7 @@ Danh sách voucher & CUSTOMER, public & \texttt{VouchersPage.jsx}: lọc, sort, 
 Chi tiết voucher & CUSTOMER, public & \texttt{VoucherDetailPage.jsx}: giá, chi nhánh, thêm giỏ, review & —\\
 Giỏ hàng & CUSTOMER & \texttt{CartPage.jsx}: sửa SL, người nhận, chọn TT & Validate client\\
 Thanh toán & CUSTOMER & Tích hợp trong Cart; VNPay \texttt{VnpayReturnPage.jsx} & —\\
-Voucher của tôi & CUSTOMER & \texttt{MyVouchersPage.jsx}: đơn, mã, QR mô phỏng & Chụp screenshot\\
+Voucher của tôi & CUSTOMER & \texttt{MyVouchersPage.jsx}: đơn, mã, QR mô phỏng & —\\
 Đánh giá/khiếu nại & CUSTOMER & Form trên Orders/MyVouchers; \texttt{complaint.service.js} & —\\
 Hồ sơ cá nhân & All auth & \texttt{ProfilePage.jsx}: sửa profile, đổi MK & —\\
 \bottomrule
