@@ -27,10 +27,9 @@ Hệ thống thương mại điện tử cho phép đối tác đăng ký bán v
 
 ```bash
 # Bước 1 — Tạo file cấu hình
-# Windows (PowerShell):
-Copy-Item .env.example .env
-# macOS / Linux:
-cp .env.example .env
+# Windows (PowerShell):  Copy-Item .env.example .env
+# Windows (cmd):         copy .env.example .env
+# macOS / Linux / WSL:   cp .env.example .env
 
 # Bước 2 — Khởi động toàn bộ hệ thống
 docker compose up -d

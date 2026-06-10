@@ -33,13 +33,13 @@ voucher-system/
 Sao chép file mẫu và đặt tên lại:
 
 ```bash
-# Windows (Command Prompt)
+# Windows (Command Prompt / cmd)
 copy .env.example .env
 
 # Windows (PowerShell)
 Copy-Item .env.example .env
 
-# macOS / Linux
+# macOS / Linux / WSL (bash)
 cp .env.example .env
 ```
 
