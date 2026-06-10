@@ -191,6 +191,7 @@ const AdminDashboardPage = () => {
   const [rejectingVoucher, setRejectingVoucher] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedPartner, setSelectedPartner] = useState(null);
 
   /* Toast state */
   const [toasts, setToasts] = useState([]);
@@ -939,6 +940,77 @@ const AdminDashboardPage = () => {
         </div>
       )}
 
+      {/* ─── Partner profile modal ─── */}
+      {selectedPartner && (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={() => setSelectedPartner(null)}>
+          <div className="admin-voucher-modal card admin-partner-profile-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="section-header-row">
+              <div>
+                <h2><RiStore2Line /> {selectedPartner.business_name}</h2>
+                <p className="text-muted">Hồ sơ đăng ký đối tác</p>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={() => setSelectedPartner(null)}>Đóng</button>
+            </div>
+
+            <div className="admin-partner-profile-grid">
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Tên doanh nghiệp</span>
+                <strong>{selectedPartner.business_name || "-"}</strong>
+              </div>
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Người đại diện</span>
+                <strong>{selectedPartner.representative || "-"}</strong>
+              </div>
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Mã giấy phép kinh doanh</span>
+                <strong>{selectedPartner.business_license || "-"}</strong>
+              </div>
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Email đăng ký</span>
+                <strong>{selectedPartner.partner_email || "-"}</strong>
+              </div>
+              <div className="admin-partner-profile-field" style={{ gridColumn: "1 / -1" }}>
+                <span className="admin-profile-label">Địa chỉ doanh nghiệp</span>
+                <strong>{selectedPartner.address || "-"}</strong>
+              </div>
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Ngày nộp hồ sơ</span>
+                <strong>{formatDate(selectedPartner.created_at)}</strong>
+              </div>
+              <div className="admin-partner-profile-field">
+                <span className="admin-profile-label">Trạng thái hiện tại</span>
+                <span className={`badge ${selectedPartner.status === "APPROVED" ? "badge-green" : selectedPartner.status === "PENDING" ? "badge-yellow" : selectedPartner.status === "SUSPENDED" ? "badge-gray" : "badge-red"}`}>
+                  {selectedPartner.status === "APPROVED" ? "Đã duyệt" : selectedPartner.status === "PENDING" ? "Chờ duyệt" : selectedPartner.status === "SUSPENDED" ? "Tạm khóa" : "Từ chối"}
+                </span>
+              </div>
+              {selectedPartner.rejection_reason && (
+                <div className="admin-partner-profile-field admin-partner-rejection-note" style={{ gridColumn: "1 / -1" }}>
+                  <span className="admin-profile-label">Lý do từ chối</span>
+                  <p>{selectedPartner.rejection_reason}</p>
+                </div>
+              )}
+            </div>
+
+            {selectedPartner.status === "PENDING" && (
+              <div className="admin-modal-actions" style={{ marginTop: "1.25rem" }}>
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={() => { setSelectedPartner(null); handlePartner(selectedPartner, "approve"); }}
+                >
+                  <RiCheckLine /> Phê duyệt
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => { setSelectedPartner(null); handlePartner(selectedPartner, "reject"); }}
+                >
+                  Từ chối
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ─── Tab content ─────────────────────────────────────── */}
       <div className="admin-tab-content">
 
@@ -1199,8 +1271,8 @@ const AdminDashboardPage = () => {
                             <strong className="admin-item-title">{partner.business_name}</strong>
                             <p className="text-muted">Đại diện: {partner.representative}</p>
                             <p className="text-muted">Email: {partner.partner_email}</p>
-                            {partner.license_number && (
-                              <p className="text-muted">Mã GPKD: {partner.license_number}</p>
+                            {partner.business_license && (
+                              <p className="text-muted">Mã GPKD: {partner.business_license}</p>
                             )}
                             <p className="text-muted">
                               Trạng thái:{" "}
@@ -1210,6 +1282,9 @@ const AdminDashboardPage = () => {
                             </p>
                           </div>
                           <div className="admin-item-actions">
+                            <button className="btn btn-ghost btn-sm" onClick={() => setSelectedPartner(partner)}>
+                              <RiEyeLine /> Xem hồ sơ
+                            </button>
                             {partner.status === "PENDING" && (
                               <>
                                 <button className="btn btn-success btn-sm" onClick={() => handlePartner(partner, "approve")}>

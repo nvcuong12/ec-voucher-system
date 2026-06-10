@@ -651,12 +651,12 @@ export const updateComplaintStatus = async (req, res, next) => {
 
     const result = await query(
       `UPDATE complaints
-       SET status = $1,
+       SET status = $1::complaint_status,
            admin_response = COALESCE($2, admin_response),
-           resolved_by = CASE WHEN $1 IN ('RESOLVED', 'REJECTED') THEN $3 ELSE resolved_by END,
-           resolved_at = CASE WHEN $1 IN ('RESOLVED', 'REJECTED') THEN NOW() ELSE resolved_at END,
+           resolved_by = CASE WHEN $1::text IN ('RESOLVED', 'REJECTED') THEN $3::uuid ELSE resolved_by END,
+           resolved_at = CASE WHEN $1::text IN ('RESOLVED', 'REJECTED') THEN NOW() ELSE resolved_at END,
            updated_at = NOW()
-       WHERE id = $4
+       WHERE id = $4::uuid
        RETURNING id, customer_id, voucher_id, issued_voucher_id, order_id,
                  subject, message, status, admin_response, resolved_by,
                  resolved_at, created_at, updated_at`,
@@ -745,12 +745,12 @@ export const updatePartnerAppealStatus = async (req, res, next) => {
     const appeal = await database.withTransaction(async (client) => {
       const appealResult = await client.query(
         `UPDATE partner_appeals
-         SET status = $1,
+         SET status = $1::partner_appeal_status,
              admin_response = NULLIF($2, ''),
-             reviewed_by = $3,
+             reviewed_by = $3::uuid,
              reviewed_at = NOW(),
              updated_at = NOW()
-         WHERE id = $4 AND status = 'PENDING'
+         WHERE id = $4::uuid AND status = 'PENDING'
          RETURNING id, partner_id, user_id, title, content, evidence_url,
                    status, admin_response, reviewed_by, reviewed_at, created_at, updated_at`,
         [nextStatus, adminResponse, req.user.id, id]

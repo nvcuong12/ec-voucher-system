@@ -669,6 +669,41 @@
   gap: 0.2rem;
 }
 
+/* ─── Partner profile modal ─────────────────────────────── */
+.admin-partner-profile-modal {
+  max-width: 580px;
+  width: 100%;
+}
+.admin-partner-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem 1.5rem;
+  margin: 1.25rem 0;
+}
+.admin-partner-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.admin-profile-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.admin-partner-rejection-note {
+  background: #fff7f7;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+}
+.admin-partner-rejection-note p {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
 /* ─── Log filter ─────────────────────────────────────────── */
 .admin-log-filter-bar {
   display: grid;
